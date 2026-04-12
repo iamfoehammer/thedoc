@@ -1,0 +1,43 @@
+# SSH Config Shortcut Examples
+# Add these to ~/.ssh/config to create quick SSH aliases.
+#
+# Usage: ssh myserver (instead of ssh user@192.168.1.50 -p 2222 -i ~/.ssh/mykey)
+#
+# The doc framework can help you set these up interactively.
+
+# ── Example: Local network machine ──────────────────────────────────
+# Host gaming
+#     HostName 192.168.1.100
+#     User myuser
+#     IdentityFile ~/.ssh/id_ed25519
+
+# ── Example: Machine on Tailscale VPN ──────────────────────────────
+# Host remote-server
+#     HostName 100.x.y.z
+#     User myuser
+#     IdentityFile ~/.ssh/id_ed25519
+
+# ── Example: Cloud VM with non-standard port ───────────────────────
+# Host cloud
+#     HostName cloud.example.com
+#     User ubuntu
+#     Port 2222
+#     IdentityFile ~/.ssh/cloud_key
+
+# ── Example: Jump host / bastion ────────────────────────────────────
+# Host internal
+#     HostName 10.0.0.5
+#     User admin
+#     ProxyJump bastion
+#
+# Host bastion
+#     HostName bastion.example.com
+#     User admin
+#     IdentityFile ~/.ssh/bastion_key
+
+# ── Useful defaults ────────────────────────────────────────────────
+# Host *
+#     AddKeysToAgent yes
+#     IdentitiesOnly yes
+#     ServerAliveInterval 60
+#     ServerAliveCountMax 3

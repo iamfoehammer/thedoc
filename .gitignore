@@ -1,0 +1,16 @@
+# Personal/private configs
+.private/
+
+# Instance state (tracked per-instance, not in framework)
+.applied-updates
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/

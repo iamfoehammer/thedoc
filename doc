@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# doc - Entry point for the Emergency Medical Hologram framework
+# Usage:
+#   doc          - Run setup (create or open a doctor instance)
+#   doc setup    - Same as above
+#   doc list     - List existing doctor instances
+#   doc open     - Open an existing instance directly
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+GITHUB_DIR="$(dirname "$SCRIPT_DIR")"
+
+case "${1:-setup}" in
+    setup)
+        exec "$SCRIPT_DIR/setup.sh"
+        ;;
+    list)
+        echo ""
+        echo "  Doctor instances in $GITHUB_DIR/:"
+        echo ""
+        found=0
+        for dir in "$GITHUB_DIR"/*/; do
+            if [ -f "$dir/DOCTOR.md" ]; then
+                name="$(basename "$dir")"
+                doctor_type="unknown"
+                if grep -q "Claude Code" "$dir/DOCTOR.md" 2>/dev/null; then
+                    doctor_type="Claude Code"
+                elif grep -q "OpenClaw" "$dir/DOCTOR.md" 2>/dev/null; then
+                    doctor_type="OpenClaw"
+                elif grep -q "Gemini" "$dir/DOCTOR.md" 2>/dev/null; then
+                    doctor_type="Gemini CLI"
+                fi
+                echo "    $name  ($doctor_type)"
+                found=1
+            fi
+        done
+        if [ "$found" -eq 0 ]; then
+            echo "    (none found - run 'doc setup' to create one)"
+        fi
+        echo ""
+        ;;
+    open)
+        instance="${2:-}"
+        if [ -z "$instance" ]; then
+            echo "Usage: doc open <instance-name>"
+            echo "Run 'doc list' to see available instances."
+            exit 1
+        fi
+        instance_dir="$GITHUB_DIR/$instance"
+        if [ ! -d "$instance_dir" ] || [ ! -f "$instance_dir/DOCTOR.md" ]; then
+            echo "Not a doctor instance: $instance_dir"
+            echo "Run 'doc list' to see available instances."
+            exit 1
+        fi
+        cd "$instance_dir"
+        exec claude
+        ;;
+    help|--help|-h)
+        echo ""
+        echo "  doc - Emergency Medical Hologram framework"
+        echo ""
+        echo "  Commands:"
+        echo "    doc setup    Create or open a doctor instance (default)"
+        echo "    doc list     List existing doctor instances"
+        echo "    doc open     Open an existing instance: doc open <name>"
+        echo "    doc help     Show this help"
+        echo ""
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Run 'doc help' for usage."
+        exit 1
+        ;;
+esac

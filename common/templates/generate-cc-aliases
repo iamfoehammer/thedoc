@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# Generate cc-*/cn-* aliases for each project folder in ~/GitHub/
+# cc-* = claude --continue (resume last conversation)
+# cn-* = claude (new conversation)
+# Prefix d = --dangerously-skip-permissions
+#
+# All aliases run inside a single tmux session ("claude").
+# Each project gets a named window. If the window already exists,
+# the alias switches to it instead of creating a duplicate.
+
+GITHUB_DIR="$HOME/GitHub"
+ALIAS_FILE="$HOME/.cc-project-aliases"
+TMUX_SESSION="claude"
+
+: > "$ALIAS_FILE"
+
+# Helper function: open (or switch to) a named tmux window and run a command
+cat >> "$ALIAS_FILE" << 'FUNC'
+_cc_tmux() {
+    local session="claude"
+    local win_name="$1"
+    local work_dir="$2"
+    shift 2
+    local cmd="$*"
+
+    # If the session doesn't exist, create it detached
+    if ! tmux has-session -t "$session" 2>/dev/null; then
+        tmux new-session -d -s "$session" -n "$win_name" -c "$work_dir" "$cmd"
+        tmux attach-session -t "$session"
+        return
+    fi
+
+    # If a window with this name already exists, switch to it
+    if tmux list-windows -t "$session" -F '#W' | grep -qx "$win_name"; then
+        if [ -n "$TMUX" ]; then
+            tmux select-window -t "${session}:${win_name}"
+        else
+            tmux attach-session -t "${session}:${win_name}"
+        fi
+        return
+    fi
+
+    # Already inside tmux: repurpose the current window
+    if [ -n "$TMUX" ]; then
+        tmux rename-window "$win_name"
+        cd "$work_dir" || return 1
+        exec $cmd
+        return
+    fi
+
+    # Outside tmux: create a new window and attach
+    tmux new-window -t "$session" -n "$win_name" -c "$work_dir" "$cmd"
+    tmux attach-session -t "${session}:${win_name}"
+}
+FUNC
+
+for dir in "$GITHUB_DIR"/*/; do
+    [ -d "$dir" ] || continue
+
+    folder_name="$(basename "$dir")"
+
+    # Skip hidden folders and special prefixes
+    [[ "$folder_name" == .* ]] && continue
+    [[ "$folder_name" == _* ]] && continue
+
+    # Build short alias from initials of hyphenated parts
+    # e.g. command-line-voice -> clv, no-more-time-blindness-android -> nmtba
+    short="$(echo "$folder_name" | sed 's/\([a-zA-Z0-9]\)[a-zA-Z0-9]*/\1/g; s/-//g')"
+
+    # Continue aliases
+    echo "alias cc-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude --continue'" >> "$ALIAS_FILE"
+    echo "alias dcc-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions --continue'" >> "$ALIAS_FILE"
+    # New conversation aliases
+    echo "alias cn-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude'" >> "$ALIAS_FILE"
+    echo "alias dcn-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions'" >> "$ALIAS_FILE"
+    if [ "$short" != "$folder_name" ]; then
+        echo "alias cc-${short}='_cc_tmux \"${short}\" \"${dir}\" claude --continue'" >> "$ALIAS_FILE"
+        echo "alias dcc-${short}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions --continue'" >> "$ALIAS_FILE"
+        echo "alias cn-${short}='_cc_tmux \"${short}\" \"${dir}\" claude'" >> "$ALIAS_FILE"
+        echo "alias dcn-${short}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions'" >> "$ALIAS_FILE"
+    fi
+done
+
+# Generate the reminder message shown at shell startup
+{
+    echo ""
+    echo "function _cc_project_reminder() {"
+    echo "    echo ''"
+    echo "    echo '  Claude Code project shortcuts (tmux session: claude):'"
+    echo "    echo '    cc-*  = continue last conversation    cn-*  = new conversation'"
+    echo "    echo '    dcc-* = continue (skip permissions)   dcn-* = new (skip permissions)'"
+    echo "    echo ''"
+} >> "$ALIAS_FILE"
+
+for dir in "$GITHUB_DIR"/*/; do
+    [ -d "$dir" ] || continue
+    folder_name="$(basename "$dir")"
+    [[ "$folder_name" == .* ]] && continue
+    [[ "$folder_name" == _* ]] && continue
+    short="$(echo "$folder_name" | sed 's/\([a-zA-Z0-9]\)[a-zA-Z0-9]*/\1/g; s/-//g')"
+    echo "    echo '    cc-${short} / cn-${short} / dcc-${short} / dcn-${short}  ->  ${folder_name}'" >> "$ALIAS_FILE"
+done
+
+{
+    echo "    echo ''"
+    echo "}"
+    echo "_cc_project_reminder"
+} >> "$ALIAS_FILE"
+
+echo "# Generated $(date -Iseconds)" >> "$ALIAS_FILE"
