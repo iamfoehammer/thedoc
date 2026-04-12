@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# doc - Entry point for the Emergency Medical Hologram framework
+# thedoc - Entry point for the Emergency Medical Hologram framework
 # Usage:
-#   doc          - Run setup (create or open a doctor instance)
-#   doc setup    - Same as above
-#   doc list     - List existing doctor instances
-#   doc open     - Open an existing instance directly
+#   thedoc          - Run setup (create or open a doctor instance)
+#   thedoc setup    - Same as above
+#   thedoc list     - List existing doctor instances
+#   thedoc open     - Open an existing instance directly
 
 set -euo pipefail
 
@@ -36,21 +36,21 @@ case "${1:-setup}" in
             fi
         done
         if [ "$found" -eq 0 ]; then
-            echo "    (none found - run 'doc setup' to create one)"
+            echo "    (none found - run 'thedoc setup' to create one)"
         fi
         echo ""
         ;;
     open)
         instance="${2:-}"
         if [ -z "$instance" ]; then
-            echo "Usage: doc open <instance-name>"
-            echo "Run 'doc list' to see available instances."
+            echo "Usage: thedoc open <instance-name>"
+            echo "Run 'thedoc list' to see available instances."
             exit 1
         fi
         instance_dir="$GITHUB_DIR/$instance"
         if [ ! -d "$instance_dir" ] || [ ! -f "$instance_dir/DOCTOR.md" ]; then
             echo "Not a doctor instance: $instance_dir"
-            echo "Run 'doc list' to see available instances."
+            echo "Run 'thedoc list' to see available instances."
             exit 1
         fi
         cd "$instance_dir"
@@ -58,18 +58,18 @@ case "${1:-setup}" in
         ;;
     help|--help|-h)
         echo ""
-        echo "  doc - Emergency Medical Hologram framework"
+        echo "  thedoc - Emergency Medical Hologram framework"
         echo ""
         echo "  Commands:"
-        echo "    doc setup    Create or open a doctor instance (default)"
-        echo "    doc list     List existing doctor instances"
-        echo "    doc open     Open an existing instance: doc open <name>"
-        echo "    doc help     Show this help"
+        echo "    thedoc setup    Create or open a doctor instance (default)"
+        echo "    thedoc list     List existing doctor instances"
+        echo "    thedoc open     Open an existing instance: thedoc open <name>"
+        echo "    thedoc help     Show this help"
         echo ""
         ;;
     *)
         echo "Unknown command: $1"
-        echo "Run 'doc help' for usage."
+        echo "Run 'thedoc help' for usage."
         exit 1
         ;;
 esac
