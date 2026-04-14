@@ -23,7 +23,7 @@ One command. It asks where your projects live, clones thedoc there, sets up your
 **Linux / macOS / WSL2 / Git Bash**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/iamfoehammer/thedoc/main/bootstrap.sh | bash
+bash <(curl -fsSL https://raw.githubusercontent.com/iamfoehammer/thedoc/main/bootstrap.sh)
 ```
 
 **Windows (PowerShell 7)** - coming soon. For now, use Git Bash or WSL.

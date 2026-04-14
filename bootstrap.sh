@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # thedoc bootstrap - one-liner installer
-# curl -fsSL https://raw.githubusercontent.com/iamfoehammer/thedoc/main/bootstrap.sh | bash
+# bash <(curl -fsSL https://raw.githubusercontent.com/iamfoehammer/thedoc/main/bootstrap.sh)
 set -euo pipefail
 
 REPO="https://github.com/iamfoehammer/thedoc.git"
@@ -19,10 +19,6 @@ git clone --quiet "$REPO" "$TMP_DIR"
 echo "  Done."
 echo ""
 
-# Hand off to setup.sh which handles everything:
-# - EMH greeting, tricorder scan, projects folder selection
-# - Moves thedoc from temp to the chosen projects folder
-# - Sets up PATH, secrets sourcing
-# - Doctor type, engine, setup mode
+# Hand off to setup.sh which handles everything
 export THEDOC_BOOTSTRAP_DIR="$TMP_DIR"
-exec "$TMP_DIR/setup.sh" < /dev/tty
+exec "$TMP_DIR/setup.sh"
