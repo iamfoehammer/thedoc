@@ -41,19 +41,28 @@ With `llm-secrets`:
 
 If you only want `llm-secrets`, no doctor framework needed:
 
+**Bash (Linux/macOS/WSL/Git Bash)**
+
 ```bash
-# Bash (Linux/macOS/WSL)
+mkdir -p ~/.local/bin
 curl -o ~/.local/bin/llm-secrets https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets
 chmod +x ~/.local/bin/llm-secrets
 echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
+**PowerShell 7 (Windows)**
+
 ```powershell
-# PowerShell (Windows)
-# Add to your $PROFILE:
-if (Test-Path "$HOME/.secrets.ps1") { . "$HOME/.secrets.ps1" }
-function llm-secrets { & "C:\path\to\llm-secrets.ps1" @args }
+# Download
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets.ps1" -OutFile "$HOME\llm-secrets.ps1"
+
+# Add to your profile (run: notepad $PROFILE)
+if (Test-Path "$HOME\.secrets.ps1") { . "$HOME\.secrets.ps1" }
+function llm-secrets { & "$HOME\llm-secrets.ps1" @args }
+
+# Reload
+. $PROFILE
 ```
 
 ### Usage
@@ -102,9 +111,37 @@ You run `thedoc`, answer a few questions, and get a dedicated doctor for your sp
 
 ### Quick Start
 
+**Linux / macOS / WSL2 (bash)**
+
 ```bash
 git clone https://github.com/iamfoehammer/thedoc.git ~/GitHub/thedoc
 echo 'export PATH="$HOME/GitHub/thedoc:$PATH"' >> ~/.bashrc
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+thedoc
+```
+
+**Windows (PowerShell 7)**
+
+```powershell
+git clone https://github.com/iamfoehammer/thedoc.git $HOME\GitHub\thedoc
+
+# Add to your PowerShell profile (run: notepad $PROFILE)
+$env:PATH = "$HOME\GitHub\thedoc;$env:PATH"
+if (Test-Path "$HOME\.secrets.ps1") { . "$HOME\.secrets.ps1" }
+function llm-secrets { & "$HOME\GitHub\thedoc\llm-secrets.ps1" @args }
+
+# Then reload and run
+. $PROFILE
+thedoc
+```
+
+**Windows (Git Bash)**
+
+```bash
+git clone https://github.com/iamfoehammer/thedoc.git ~/GitHub/thedoc
+echo 'export PATH="$HOME/GitHub/thedoc:$PATH"' >> ~/.bashrc
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
 source ~/.bashrc
 thedoc
 ```
