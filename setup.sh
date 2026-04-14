@@ -78,7 +78,7 @@ pick_random() {
 }
 
 # Typing effect - prints text character by character
-# Press space to skip the animation and dump remaining text instantly
+# Press space at the "press any key" prompts to skip all future typing
 SKIP_TYPING=0
 typeit() {
     local text="$1"
@@ -91,14 +91,7 @@ typeit() {
     fi
     for ((i=0; i<${#text}; i++)); do
         printf '%s' "${text:$i:1}"
-        # Check for keypress without blocking
-        if read -rsn1 -t "$delay" key 2>/dev/null; then
-            if [[ "$key" == " " ]]; then
-                SKIP_TYPING=1
-                printf '%s\n' "${text:$((i+1))}"
-                return
-            fi
-        fi
+        sleep "$delay"
     done
     echo ""
 }
@@ -167,29 +160,77 @@ print_greeting() {
 }
 
 CHOICE_IDX=0
+
+# Draw a menu with arrow key navigation
+# Sets CHOICE_IDX to the selected index (0-based)
 prompt_choice() {
     local prompt_text="$1"
     shift
     local options=("$@")
+    local selected=0
+    local count=${#options[@]}
 
     echo -e "  ${BOLD}${prompt_text}${RESET}"
     echo ""
 
-    local i=1
-    for opt in "${options[@]}"; do
-        echo -e "    ${GREEN}[${i}]${RESET} ${opt}"
-        i=$((i + 1))
-    done
-    echo ""
+    # Draw menu
+    draw_menu() {
+        local i=0
+        for opt in "${options[@]}"; do
+            if [ "$i" -eq "$selected" ]; then
+                echo -e "  ${GREEN}> ${BOLD}${opt}${RESET}"
+            else
+                echo -e "    ${DIM}${opt}${RESET}"
+            fi
+            i=$((i + 1))
+        done
+        echo ""
+        echo -e "  ${DIM}Arrow keys to move, Enter to select${RESET}"
+    }
 
-    local choice
+    draw_menu
+
     while true; do
-        read -rp "  > " choice
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#options[@]}" ]; then
-            CHOICE_IDX=$((choice - 1))
+        # Read a keypress
+        read -rsn1 key
+
+        # Handle escape sequences (arrow keys)
+        if [[ "$key" == $'\x1b' ]]; then
+            read -rsn2 -t 0.1 arrow
+            case "$arrow" in
+                '[A') # Up arrow
+                    if [ "$selected" -gt 0 ]; then
+                        selected=$((selected - 1))
+                    else
+                        selected=$((count - 1))
+                    fi
+                    ;;
+                '[B') # Down arrow
+                    if [ "$selected" -lt $((count - 1)) ]; then
+                        selected=$((selected + 1))
+                    else
+                        selected=0
+                    fi
+                    ;;
+            esac
+            # Redraw: move cursor up (count lines + 1 for hint)
+            local lines=$((count + 2))
+            printf '\033[%dA' "$lines"
+            # Clear those lines
+            for ((i=0; i<lines; i++)); do
+                printf '\033[2K\n'
+            done
+            printf '\033[%dA' "$lines"
+            draw_menu
+        elif [[ "$key" == "" ]]; then
+            # Enter key
+            CHOICE_IDX=$selected
+            return 0
+        elif [[ "$key" =~ ^[0-9]$ ]] && [ "$key" -ge 1 ] && [ "$key" -le "$count" ]; then
+            # Number key still works as shortcut
+            CHOICE_IDX=$((key - 1))
             return 0
         fi
-        echo -e "  ${RED}Pick a number between 1 and ${#options[@]}.${RESET}"
     done
 }
 
@@ -228,8 +269,9 @@ detect_platform() {
 }
 
 tricorder_scan() {
-    echo -e "  ${DIM}Press any key to begin the scan...${RESET}"
-    read -rsn1
+    echo -e "  ${DIM}Press any key to begin the scan (space to skip animations)...${RESET}"
+    read -rsn1 key
+    [[ "$key" == " " ]] && SKIP_TYPING=1
     echo ""
 
     # Platform name
@@ -531,8 +573,9 @@ print_structure_explainer() {
     typeit "  and a DOCTOR.md (shared diagnostic instructions)" 0.015
     typeit "- You update thedoc with 'git pull' - your configs are never overwritten" 0.015
     echo ""
-    echo -e "  ${DIM}Press any key to continue...${RESET}"
-    read -rsn1
+    echo -e "  ${DIM}Press any key to continue (space to skip animations)...${RESET}"
+    read -rsn1 key
+    [[ "$key" == " " ]] && SKIP_TYPING=1
     echo ""
 }
 
