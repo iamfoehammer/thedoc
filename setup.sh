@@ -700,7 +700,19 @@ if [ -d "$INSTANCE_DIR" ]; then
     fi
 else
     # Create instance directory
-    mkdir -p "$INSTANCE_DIR"
+    if ! mkdir -p "$INSTANCE_DIR" 2>/dev/null; then
+        # WSL may need cmd.exe to create Windows folders
+        if [ "$IS_WSL" = "yes" ]; then
+            local win_path
+            win_path=$(echo "$INSTANCE_DIR" | sed 's|^/mnt/\([a-z]\)/|\U\1:\\|; s|/|\\|g')
+            cmd.exe /c "mkdir \"$win_path\"" 2>/dev/null || true
+        fi
+        if [ ! -d "$INSTANCE_DIR" ]; then
+            echo -e "  ${RED}Failed to create $(short_path "$INSTANCE_DIR")${RESET}"
+            echo -e "  ${DIM}Try creating it manually and re-running.${RESET}"
+            exit 1
+        fi
+    fi
     echo -e "  ${GREEN}Created${RESET} $(short_path "$INSTANCE_DIR")"
 
     # Copy DOCTOR.md into instance
