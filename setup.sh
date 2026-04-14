@@ -77,6 +77,24 @@ pick_random() {
     echo "${arr[$((RANDOM % ${#arr[@]}))]}"
 }
 
+# Typing effect - prints text character by character
+typeit() {
+    local text="$1"
+    local delay="${2:-0.02}"
+    local prefix="${3:-  }"
+    printf '%s' "$prefix"
+    for ((i=0; i<${#text}; i++)); do
+        printf '%s' "${text:$i:1}"
+        sleep "$delay"
+    done
+    echo ""
+}
+
+# Short path display
+short_path() {
+    echo "$1" | sed "s|^$HOME|~|"
+}
+
 print_box() {
     local text="$1"
     local len=${#text}
@@ -94,22 +112,25 @@ print_greeting() {
     local greeting="${GREETINGS[$idx]}"
 
     print_box "$title activated"
-    echo -e "  ${BOLD}${greeting}${RESET}"
     echo ""
 
     if is_first_run; then
-        echo -e "  ${DIM}...${RESET}"
+        typeit "$greeting" 0.04
         echo ""
-        echo -e "  No emergency? Just a checkup? That's fine too."
-        echo -e "  Contrary to my name, I handle everything from routine"
-        echo -e "  configuration to catastrophic meltdowns."
+        sleep 0.5
+        typeit "..." 0.3
         echo ""
-        echo -e "  Let's get started."
+        typeit "No emergency? Just a checkup? That's fine too."
+        typeit "Contrary to my name, I handle everything from routine"
+        typeit "configuration to catastrophic meltdowns."
+        echo ""
+        typeit "I'm going to need to scan your system first." 0.02
+        typeit "Think of it as a routine physical." 0.02
         echo ""
     else
         local quip
         quip=$(pick_random "${QUIPS[@]}")
-        echo -e "  ${DIM}${quip}${RESET}"
+        typeit "$quip" 0.02
         echo ""
     fi
 }
@@ -150,7 +171,6 @@ detect_platform() {
     elif [ "$(uname -s)" = "Linux" ]; then
         PLATFORM="linux"
     else
-        # Git Bash or MSYS on Windows
         PLATFORM="windows-gitbash"
     fi
 
@@ -174,8 +194,9 @@ detect_platform() {
     fi
 }
 
-print_platform_info() {
-    echo -e "  ${DIM}Scanning your system...${RESET}"
+tricorder_scan() {
+    echo -e "  ${DIM}Press any key to begin the scan...${RESET}"
+    read -rsn1
     echo ""
 
     # Platform name
@@ -188,27 +209,43 @@ print_platform_info() {
         *)                platform_display="$PLATFORM" ;;
     esac
 
-    echo -e "  Platform:    ${BOLD}${platform_display}${RESET}"
-    echo -e "  Shell:       ${BOLD}${SHELL_NAME}${RESET}"
+    local scan_prefix="  ${CYAN}[scan]${RESET} "
 
+    echo -ne "${scan_prefix}Detecting platform..."
+    sleep 0.3
+    echo -e " ${BOLD}${platform_display}${RESET}"
+
+    echo -ne "${scan_prefix}Shell..."
+    sleep 0.2
+    echo -e " ${BOLD}${SHELL_NAME}${RESET}"
+
+    echo -ne "${scan_prefix}tmux..."
+    sleep 0.2
     if [ "$HAS_TMUX" = "yes" ]; then
-        echo -e "  tmux:        ${GREEN}installed${RESET} (${TMUX_VER})"
+        echo -e " ${GREEN}installed${RESET} (${TMUX_VER})"
     else
-        echo -e "  tmux:        ${YELLOW}not found${RESET}"
+        echo -e " ${YELLOW}not found${RESET}"
     fi
 
+    echo -ne "${scan_prefix}git..."
+    sleep 0.2
     if [ "$HAS_GIT" = "yes" ]; then
-        echo -e "  git:         ${GREEN}installed${RESET}"
+        echo -e " ${GREEN}installed${RESET}"
     else
-        echo -e "  git:         ${RED}not found${RESET} (required)"
+        echo -e " ${RED}not found${RESET} (required)"
     fi
 
+    echo -ne "${scan_prefix}claude..."
+    sleep 0.2
     if [ "$HAS_CLAUDE" = "yes" ]; then
-        echo -e "  claude:      ${GREEN}installed${RESET}"
+        echo -e " ${GREEN}installed${RESET}"
     else
-        echo -e "  claude:      ${YELLOW}not found${RESET}"
+        echo -e " ${YELLOW}not found${RESET}"
     fi
 
+    echo ""
+    sleep 0.3
+    typeit "Good. Vitals look stable." 0.02
     echo ""
 }
 
@@ -217,6 +254,7 @@ detect_projects_dirs() {
     CANDIDATE_DIRS=()
     CANDIDATE_COUNTS=()
 
+    # Home directory paths
     local search_paths=(
         "$HOME/GitHub"
         "$HOME/projects"
@@ -227,41 +265,103 @@ detect_projects_dirs() {
         "$HOME/dev"
     )
 
+    # On WSL, also scan Windows drives
+    if [ "$IS_WSL" = "yes" ]; then
+        # Find available Windows drives
+        for drive in /mnt/[a-z]; do
+            [ -d "$drive" ] || continue
+            local letter="${drive##*/}"
+
+            # Scan all user home directories on each drive
+            if [ -d "$drive/Users" ]; then
+                for userdir in "$drive/Users"/*/; do
+                    [ -d "$userdir" ] || continue
+                    local username="$(basename "$userdir")"
+                    # Skip system users
+                    [[ "$username" == "Public" || "$username" == "Default" || "$username" == "Default User" || "$username" == "All Users" ]] && continue
+
+                    search_paths+=(
+                        "${userdir}GitHub"
+                        "${userdir}projects"
+                        "${userdir}repos"
+                        "${userdir}Claude Projects"
+                        "${userdir}code"
+                        "${userdir}workspace"
+                        "${userdir}dev"
+                        "${userdir}Documents/GitHub"
+                        "${userdir}Documents/projects"
+                    )
+                done
+            fi
+
+            # Also check drive root
+            search_paths+=(
+                "$drive/GitHub"
+                "$drive/projects"
+                "$drive/repos"
+                "$drive/code"
+            )
+        done
+    fi
+
+    local scan_prefix="  ${CYAN}[scan]${RESET} "
+
     for dir in "${search_paths[@]}"; do
         if [ -d "$dir" ]; then
             local count
             count=$(find "$dir" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+            # Skip empty folders
+            [ "$count" -eq 0 ] && continue
             CANDIDATE_DIRS+=("$dir")
             CANDIDATE_COUNTS+=("$count")
+            local short
+            short=$(short_path "$dir")
+            echo -e "${scan_prefix}Found ${BOLD}${short}/${RESET} (${count} folders)"
+            sleep 0.15
         fi
     done
 }
 
 prompt_projects_dir() {
-    echo -e "  ${BOLD}Where do you keep your AI projects?${RESET}"
     echo ""
-    echo -e "  ${DIM}Most people have a folder where each subfolder is a separate${RESET}"
-    echo -e "  ${DIM}project or agent workspace. Some call it \"GitHub\", others${RESET}"
-    echo -e "  ${DIM}call it \"Claude Projects\" or just \"projects\".${RESET}"
+    typeit "Now I need to find where you keep your projects." 0.02
+    echo ""
+    typeit "Most people have a folder where each subfolder is a" 0.02
+    typeit "separate project or agent workspace." 0.02
+    typeit "Some call it \"GitHub\", others call it" 0.02
+    typeit "\"Claude Projects\" or just \"projects\"." 0.02
+    echo ""
+    typeit "Let me scan your drives..." 0.02
     echo ""
 
     detect_projects_dirs
 
+    if [ ${#CANDIDATE_DIRS[@]} -eq 0 ]; then
+        echo -e "  ${CYAN}[scan]${RESET} ${YELLOW}No project folders found.${RESET}"
+    fi
+
+    echo ""
+    sleep 0.3
+    typeit "Scan complete." 0.02
+    echo ""
+
+    # Build the menu
     local options=()
     for i in "${!CANDIDATE_DIRS[@]}"; do
         local dir="${CANDIDATE_DIRS[$i]}"
         local count="${CANDIDATE_COUNTS[$i]}"
         local short
-        short=$(echo "$dir" | sed "s|^$HOME|~|")
+        short=$(short_path "$dir")
         if [ "$count" -eq 1 ]; then
-            options+=("${short}/  (${count} folder found)")
+            options+=("${short}/  (${count} folder)")
         else
-            options+=("${short}/  (${count} folders found)")
+            options+=("${short}/  (${count} folders)")
         fi
     done
-    options+=("Enter a custom path")
+    options+=("Browse to a folder")
+    options+=("Type a path")
 
-    echo -e "  ${DIM}I found these on your system:${RESET}"
+    echo -e "  ${BOLD}Which one is your projects folder?${RESET}"
     echo ""
 
     local i=1
@@ -271,22 +371,31 @@ prompt_projects_dir() {
     done
     echo ""
 
+    local total=${#options[@]}
+    local browse_idx=$(( ${#CANDIDATE_DIRS[@]} ))    # 0-based index for "Browse"
+    local custom_idx=$(( ${#CANDIDATE_DIRS[@]} + 1 )) # 0-based index for "Type a path"
+
     local choice
     while true; do
         read -rp "  > " choice
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#options[@]}" ]; then
+        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "$total" ]; then
             break
         fi
-        echo -e "  ${RED}Pick a number between 1 and ${#options[@]}.${RESET}"
+        echo -e "  ${RED}Pick a number between 1 and ${total}.${RESET}"
     done
 
     local idx=$((choice - 1))
 
-    # Custom path
-    if [ "$idx" -eq "${#CANDIDATE_DIRS[@]}" ]; then
+    # Browse to a folder
+    if [ "$idx" -eq "$browse_idx" ]; then
+        browse_for_folder
+        return
+    fi
+
+    # Type a path
+    if [ "$idx" -eq "$custom_idx" ]; then
         echo ""
         read -rp "  Enter the full path: " custom_path
-        # Expand ~ if present
         custom_path="${custom_path/#\~/$HOME}"
         if [ ! -d "$custom_path" ]; then
             echo ""
@@ -299,26 +408,98 @@ prompt_projects_dir() {
             echo -e "  ${GREEN}Created${RESET} $custom_path"
         fi
         PROJECTS_DIR="$custom_path"
-    else
-        PROJECTS_DIR="${CANDIDATE_DIRS[$idx]}"
+        return
     fi
 
-    echo ""
+    PROJECTS_DIR="${CANDIDATE_DIRS[$idx]}"
+}
+
+# ── Folder browser ─────────────────────────────────────────────────
+browse_for_folder() {
+    local current="$HOME"
+
+    # On WSL, start at /mnt to see all drives
+    if [ "$IS_WSL" = "yes" ]; then
+        current="/"
+    fi
+
+    while true; do
+        echo ""
+        local short
+        short=$(short_path "$current")
+        echo -e "  ${BOLD}Browsing: ${short}/${RESET}"
+        echo ""
+
+        # List subdirectories
+        local dirs=()
+        while IFS= read -r d; do
+            [ -n "$d" ] && dirs+=("$d")
+        done < <(find "$current" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort)
+
+        if [ ${#dirs[@]} -eq 0 ]; then
+            echo -e "  ${DIM}(empty directory)${RESET}"
+        else
+            local i=1
+            for d in "${dirs[@]}"; do
+                local name="$(basename "$d")"
+                # Count subfolders to hint at project folders
+                local subcount
+                subcount=$(find "$d" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+                if [ "$subcount" -gt 0 ]; then
+                    echo -e "    ${GREEN}[${i}]${RESET} ${name}/  ${DIM}(${subcount} folders)${RESET}"
+                else
+                    echo -e "    ${GREEN}[${i}]${RESET} ${name}/"
+                fi
+                ((i++))
+            done
+        fi
+
+        echo ""
+        echo -e "    ${YELLOW}[u]${RESET} Up one level"
+        echo -e "    ${YELLOW}[s]${RESET} Select THIS folder (${short}/)"
+        echo -e "    ${YELLOW}[q]${RESET} Cancel"
+        echo ""
+
+        read -rp "  > " nav
+
+        case "$nav" in
+            u|U)
+                current="$(dirname "$current")"
+                ;;
+            s|S)
+                PROJECTS_DIR="$current"
+                return
+                ;;
+            q|Q)
+                echo -e "  ${DIM}Aborting.${RESET}"
+                exit 0
+                ;;
+            *)
+                if [[ "$nav" =~ ^[0-9]+$ ]] && [ "$nav" -ge 1 ] && [ "$nav" -le "${#dirs[@]}" ]; then
+                    current="${dirs[$((nav - 1))]}"
+                else
+                    echo -e "  ${RED}Invalid choice.${RESET}"
+                fi
+                ;;
+        esac
+    done
 }
 
 print_structure_explainer() {
     local short
-    short=$(echo "$PROJECTS_DIR" | sed "s|^$HOME|~|")
-    echo -e "  ${GREEN}Got it.${RESET} Your doctors will live in ${BOLD}${short}/${RESET}"
+    short=$(short_path "$PROJECTS_DIR")
     echo ""
-    echo -e "  ${DIM}Here's how thedoc works:${RESET}"
-    echo -e "  - This framework (thedoc) stays where you cloned it"
-    echo -e "  - Each doctor gets its own folder, like ${short}/claude-doctor/"
-    echo -e "  - The doctor folder has a CLAUDE.md (your personal config)"
-    echo -e "    and a DOCTOR.md (shared diagnostic instructions)"
-    echo -e "  - You update thedoc with 'git pull' - your configs are never overwritten"
+    typeit "Got it. Your doctors will live in ${short}/" 0.02
     echo ""
-    read -rp "  Press Enter to continue... "
+    typeit "Here's how thedoc works:" 0.02
+    typeit "- This framework (thedoc) stays where you cloned it" 0.015
+    typeit "- Each doctor gets its own folder, like ${short}/claude-doctor/" 0.015
+    typeit "- The doctor folder has a CLAUDE.md (your personal config)" 0.015
+    typeit "  and a DOCTOR.md (shared diagnostic instructions)" 0.015
+    typeit "- You update thedoc with 'git pull' - your configs are never overwritten" 0.015
+    echo ""
+    echo -e "  ${DIM}Press any key to continue...${RESET}"
+    read -rsn1
     echo ""
 }
 
@@ -349,10 +530,10 @@ print_greeting
 if is_first_run; then
     FIRST_RUN_DATE="$(date -Iseconds)"
 
-    # Step 1: Show what we detected
-    print_platform_info
+    # Step 1: Tricorder scan
+    tricorder_scan
 
-    # Step 2: Where are your projects?
+    # Step 2: Find projects folder
     prompt_projects_dir
 
     # Step 3: Explain the structure
@@ -364,30 +545,25 @@ else
     fi
 fi
 
-# ── Existing doctor setup flow ─────────────────────────────────────
+# ── Doctor setup flow ──────────────────────────────────────────────
 
-# Step 4: What is this doctor for?
 prompt_choice "What is this doctor for?" "${DOCTOR_TYPES[@]}"
 doctor_idx=$?
 doctor_slug="${DOCTOR_SLUGS[$doctor_idx]}"
 doctor_name="${DOCTOR_TYPES[$doctor_idx]}"
 
-# Check if doctor type is supported (has a DOCTOR.md)
+# Check if doctor type is supported
 if [ ! -f "$SCRIPT_DIR/doctors/${doctor_slug}/DOCTOR.md" ]; then
     echo ""
     echo -e "  ${YELLOW}${doctor_name} doctor templates are coming soon.${RESET}"
     echo -e "  The framework is here - contributions welcome!"
     echo -e "  See ${DIM}doctors/${doctor_slug}/${RESET} to help build it."
     echo ""
-    echo -e "  ${DIM}If you'd like to use Claude Code as the engine to build"
-    echo -e "  this doctor type interactively, re-run and pick an available option.${RESET}"
-    echo ""
     exit 0
 fi
 
 echo ""
 
-# Step 5: Which LLM engine?
 prompt_choice "Which LLM engine will power this doctor?" "${ENGINE_TYPES[@]}"
 engine_idx=$?
 engine_slug="${ENGINE_SLUGS[$engine_idx]}"
@@ -409,17 +585,16 @@ fi
 
 echo ""
 
-# Step 6: Setup mode
 prompt_choice "Setup mode?" "${SETUP_MODES[@]}"
 mode_idx=$?
 setup_mode="${SETUP_SLUGS[$mode_idx]}"
 
 echo ""
 
-# Step 7: Instance name
+# Instance name
 default_instance="${doctor_slug}-doctor"
 echo -e "  ${BOLD}Name for your doctor instance folder?${RESET}"
-echo -e "  ${DIM}This will be created in ${PROJECTS_DIR}/. Press Enter for default.${RESET}"
+echo -e "  ${DIM}This will be created in $(short_path "$PROJECTS_DIR")/. Press Enter for default.${RESET}"
 echo ""
 read -rp "  [$default_instance] > " instance_name
 instance_name="${instance_name:-$default_instance}"
@@ -429,7 +604,7 @@ INSTANCE_DIR="$PROJECTS_DIR/$instance_name"
 # Check if instance already exists
 if [ -d "$INSTANCE_DIR" ]; then
     echo ""
-    echo -e "  ${YELLOW}$INSTANCE_DIR already exists.${RESET}"
+    echo -e "  ${YELLOW}$(short_path "$INSTANCE_DIR") already exists.${RESET}"
     read -rp "  Open existing instance? [Y/n] " open_existing
     if [[ "$open_existing" =~ ^[Nn] ]]; then
         echo -e "  ${DIM}Aborting.${RESET}"
@@ -438,7 +613,7 @@ if [ -d "$INSTANCE_DIR" ]; then
 else
     # Create instance directory
     mkdir -p "$INSTANCE_DIR"
-    echo -e "  ${GREEN}Created${RESET} $INSTANCE_DIR"
+    echo -e "  ${GREEN}Created${RESET} $(short_path "$INSTANCE_DIR")"
 
     # Copy DOCTOR.md into instance
     cp "$SCRIPT_DIR/doctors/${doctor_slug}/DOCTOR.md" "$INSTANCE_DIR/DOCTOR.md"
@@ -447,7 +622,7 @@ else
     # Create updates dir in instance
     mkdir -p "$INSTANCE_DIR/updates"
 
-    # Symlink back to framework updates so git pull brings new ones
+    # Symlink back to framework updates
     ln -sf "$SCRIPT_DIR/doctors/${doctor_slug}/updates" "$INSTANCE_DIR/.framework-updates"
     echo -e "  ${GREEN}Linked${RESET} framework updates"
 
@@ -515,7 +690,7 @@ echo ""
 echo -e "  ${BOLD}Ready to launch.${RESET}"
 echo ""
 
-# Save state (first run or update)
+# Save state
 save_state
 
 # Launch the engine
