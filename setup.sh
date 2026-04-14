@@ -609,8 +609,12 @@ if is_first_run; then
     # Step 1: Tricorder scan
     tricorder_scan
 
-    # Step 2: Find projects folder
-    prompt_projects_dir
+    # Step 2: Find projects folder (skip if bootstrap already set it)
+    if [ -n "${THEDOC_PROJECTS_DIR:-}" ] && [ -d "${THEDOC_PROJECTS_DIR:-}" ]; then
+        PROJECTS_DIR="$THEDOC_PROJECTS_DIR"
+    else
+        prompt_projects_dir
+    fi
 
     # Step 3: Explain the structure
     print_structure_explainer
