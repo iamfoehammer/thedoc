@@ -86,27 +86,94 @@ These are well-known issues across Claude Code installations. Check the instance
 | Settings changes not taking effect | Config cached per session | Start a new Claude Code session |
 | CLAUDE.md not loading | File must be in project root or parent dirs | Verify path and check for typos in filename |
 
-## Setup Capabilities
+## Full Audit Checklist
 
-When doing initial setup or ongoing configuration, you can help with:
+When the user chose "Full" setup mode, OR when asked to do a full audit, run through this entire checklist. Present each item as a numbered recommendation. For each one, show what you found (current state), what you recommend, and ask if they want to apply it. Don't skip items - check every one.
 
-### Shell Integration
-- **tmux configuration** - scroll, copy/paste, mouse behavior (especially WSL2)
-- **Project aliases** - automatic cc-*/cn-*/dcc-*/dcn-* aliases per project folder
-- **SSH shortcuts** - ~/.ssh/config Host entries for quick access to machines
-- **Shell profile** - .bashrc/.zshrc/.profile organization
+Read the Framework path from CLAUDE.md first. Templates live at `<framework>/common/templates/`.
 
-### Claude Code Configuration
-- **Settings** - global and per-project settings.json
-- **Permissions** - tool allow/deny lists, Bash command patterns
-- **Skills/Commands** - custom slash commands in ~/.claude/commands/
-- **Hooks** - pre/post tool execution hooks
-- **CLAUDE.md files** - project instructions, keeping them consistent and concise
-- **Memory** - managing memory files and indexes
+### 1. tmux
+- Check: does `~/.tmux.conf` exist?
+- If not: offer to install the framework template (`<framework>/common/templates/tmux.conf`)
+- If yes: compare against the template and suggest improvements
+- Key features in template: OSC 52 clipboard, drag-to-copy, right-click paste, double/triple-click, cheat sheet status bar, emacs copy mode
 
-### Templates
+### 2. Project Aliases
+- Check: does `~/.cc-project-aliases` exist? Is `generate-cc-aliases` installed?
+- If not: offer to install `<framework>/common/templates/generate-cc-aliases` to `~/.local/bin/`
+- Explain what it does: creates cc-*/cn-*/dcc-*/dcn-* shortcuts for every project folder, opens each in a named tmux window
+- Set up sourcing in `.bashrc` if not already there
+- Run the generator to create initial aliases
 
-The doc framework includes templates in the `common/templates/` directory of the framework repo (path stored in the instance CLAUDE.md under "Framework"). Compare the user's current config against these templates when diagnosing or setting up.
+### 3. SSH Shortcuts
+- Check: does `~/.ssh/config` exist? What Host entries are there?
+- Show the user their current SSH config (if any)
+- Ask if they have machines they frequently SSH into
+- Reference `<framework>/common/templates/ssh-config-examples` for patterns
+- Help them add Host entries for any machines they mention
+
+### 4. Shell Profile
+- Check `.bashrc` or `.zshrc` for: PATH setup, alias sourcing, secrets sourcing
+- Make sure `~/.secrets` is sourced (for llm-secrets)
+- Make sure project aliases are sourced
+- Check for duplicate entries or conflicts
+
+### 5. llm-secrets
+- Check: is `llm-secrets` in PATH?
+- If not: show them how to use it from the framework (`<framework>/llm-secrets`)
+- Explain what it does: securely stores env vars in `~/.secrets` so AI tools can use them without seeing values
+- Offer to set up the `.bashrc` sourcing line
+
+### 6. Claude Code Settings
+- Read `~/.claude/settings.json` and `~/.claude/settings.local.json`
+- Check for common issues (overly broad permissions, missing tool allows)
+- Check for project-level settings conflicts
+
+### 7. Claude Code Commands/Skills
+- Check `~/.claude/commands/` for existing commands
+- Offer to set up useful commands like `/refreshAliases` and `/newProject` from `<framework>/common/skills/`
+
+### 8. CLAUDE.md Files
+- Check if the projects directory has a root CLAUDE.md
+- Check a sample of project folders for individual CLAUDE.md files
+- Explain the inheritance model (root CLAUDE.md applies everywhere, project-specific ones add to it)
+
+### 9. Git Identity
+- Check `git config user.name` and `git config user.email` (global and local)
+- If not set, help them configure it
+
+### 10. Secrets & Git Push
+- Ask if they need to push to GitHub from this machine
+- If yes, help them set up a fine-grained PAT using `llm-secrets`
+- Explain the remote URL approach for per-repo auth
+
+Present the audit as a numbered list of findings/recommendations. Let the user accept or reject each one. Track what was applied in the Known Issues & Fixes table in CLAUDE.md.
+
+## Quick Setup
+
+When the user chose "Quick" setup mode, do a fast scan and report a summary:
+1. Read CLAUDE.md for system info and framework path
+2. Check the 10 items above but just report status (installed/not installed/needs attention)
+3. Present a summary table
+4. Ask what they want to configure first
+
+## Setup Capabilities Reference
+
+The framework includes these templates at `<framework>/common/templates/`:
+
+| Template | What it does |
+|----------|-------------|
+| `tmux.conf` | Windows/WSL2-friendly tmux config with OSC 52 clipboard, status bar cheat sheet, drag-to-copy, right-click paste |
+| `generate-cc-aliases` | Auto-generates cc-*/cn-*/dcc-*/dcn-* project shortcuts for tmux windows |
+| `ssh-config-examples` | SSH Host entry patterns for quick access to machines |
+
+And these tools at `<framework>/`:
+
+| Tool | What it does |
+|------|-------------|
+| `llm-secrets` | Securely store env var secrets (bash) |
+| `llm-secrets.ps1` | Same for PowerShell |
+| `thedoc` | Main framework command |
 
 ## Processing Updates
 
