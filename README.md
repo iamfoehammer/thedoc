@@ -18,11 +18,14 @@ A framework for creating dedicated "doctor" instances that diagnose, configure, 
 
 ## Quick Start
 
+Clone it wherever you keep your projects. The setup wizard will ask.
+
 **Linux / macOS / WSL2 (bash)**
 
 ```bash
-git clone https://github.com/iamfoehammer/thedoc.git ~/GitHub/thedoc
-echo 'export PATH="$HOME/GitHub/thedoc:$PATH"' >> ~/.bashrc
+# Clone to any location - setup will detect your projects folder
+git clone https://github.com/iamfoehammer/thedoc.git ~/thedoc
+echo 'export PATH="$HOME/thedoc:$PATH"' >> ~/.bashrc
 echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
 source ~/.bashrc
 thedoc
@@ -31,12 +34,12 @@ thedoc
 **Windows (PowerShell 7)**
 
 ```powershell
-git clone https://github.com/iamfoehammer/thedoc.git $HOME\GitHub\thedoc
+git clone https://github.com/iamfoehammer/thedoc.git $HOME\thedoc
 
 # Add to your PowerShell profile (run: notepad $PROFILE)
-$env:PATH = "$HOME\GitHub\thedoc;$env:PATH"
+$env:PATH = "$HOME\thedoc;$env:PATH"
 if (Test-Path "$HOME\.secrets.ps1") { . "$HOME\.secrets.ps1" }
-function llm-secrets { & "$HOME\GitHub\thedoc\llm-secrets.ps1" @args }
+function llm-secrets { & "$HOME\thedoc\llm-secrets.ps1" @args }
 
 # Then reload and run
 . $PROFILE
@@ -46,8 +49,8 @@ thedoc
 **Windows (Git Bash)**
 
 ```bash
-git clone https://github.com/iamfoehammer/thedoc.git ~/GitHub/thedoc
-echo 'export PATH="$HOME/GitHub/thedoc:$PATH"' >> ~/.bashrc
+git clone https://github.com/iamfoehammer/thedoc.git ~/thedoc
+echo 'export PATH="$HOME/thedoc:$PATH"' >> ~/.bashrc
 echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
 source ~/.bashrc
 thedoc
