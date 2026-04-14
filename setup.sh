@@ -436,30 +436,11 @@ prompt_projects_dir() {
     options+=("Browse to a folder")
     options+=("Type a path")
 
-    echo -e "  ${BOLD}Which one is your projects folder?${RESET}"
-    echo ""
+    local browse_idx=${#CANDIDATE_DIRS[@]}
+    local custom_idx=$(( ${#CANDIDATE_DIRS[@]} + 1 ))
 
-    local i=1
-    for opt in "${options[@]}"; do
-        echo -e "    ${GREEN}[${i}]${RESET} ${opt}"
-        ((i++))
-    done
-    echo ""
-
-    local total=${#options[@]}
-    local browse_idx=$(( ${#CANDIDATE_DIRS[@]} ))    # 0-based index for "Browse"
-    local custom_idx=$(( ${#CANDIDATE_DIRS[@]} + 1 )) # 0-based index for "Type a path"
-
-    local choice
-    while true; do
-        read -rp "  > " choice
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "$total" ]; then
-            break
-        fi
-        echo -e "  ${RED}Pick a number between 1 and ${total}.${RESET}"
-    done
-
-    local idx=$((choice - 1))
+    prompt_choice "Which one is your projects folder?" "${options[@]}"
+    local idx=$CHOICE_IDX
 
     # Browse to a folder
     if [ "$idx" -eq "$browse_idx" ]; then
@@ -502,8 +483,6 @@ browse_for_folder() {
         echo ""
         local short
         short=$(short_path "$current")
-        echo -e "  ${BOLD}Browsing: ${short}/${RESET}"
-        echo ""
 
         # List subdirectories (only readable ones, skip hidden)
         local dirs=()
@@ -511,52 +490,41 @@ browse_for_folder() {
             [ -n "$d" ] && dirs+=("$d")
         done < <(find "$current" -maxdepth 1 -mindepth 1 -type d -readable -not -name '.*' 2>/dev/null | sort | head -50)
 
-        if [ ${#dirs[@]} -eq 0 ]; then
-            echo -e "  ${DIM}(empty or no readable directories)${RESET}"
-        else
-            local i=1
-            for d in "${dirs[@]}"; do
-                local name="$(basename "$d")"
-                # Count subfolders to hint at project folders
-                local subcount
-                subcount=$(find "$d" -maxdepth 1 -mindepth 1 -type d -readable 2>/dev/null | wc -l)
-                if [ "$subcount" -gt 0 ]; then
-                    echo -e "    ${GREEN}[${i}]${RESET} ${name}/  ${DIM}(${subcount} folders)${RESET}"
-                else
-                    echo -e "    ${GREEN}[${i}]${RESET} ${name}/"
-                fi
-                i=$((i + 1))
-            done
+        # Build options: directories + navigation actions
+        local options=()
+        for d in "${dirs[@]}"; do
+            local name="$(basename "$d")"
+            local subcount
+            subcount=$(find "$d" -maxdepth 1 -mindepth 1 -type d -readable 2>/dev/null | wc -l)
+            if [ "$subcount" -gt 0 ]; then
+                options+=("${name}/  (${subcount} folders)")
+            else
+                options+=("${name}/")
+            fi
+        done
+        local dir_count=${#dirs[@]}
+        options+=("--- Select THIS folder (${short}/) ---")
+        options+=("--- Up one level ---")
+        options+=("--- Cancel ---")
+
+        prompt_choice "Browsing: ${short}/" "${options[@]}"
+        local idx=$CHOICE_IDX
+
+        if [ "$idx" -eq "$dir_count" ]; then
+            # Select this folder
+            PROJECTS_DIR="$current"
+            return
+        elif [ "$idx" -eq $((dir_count + 1)) ]; then
+            # Up one level
+            current="$(dirname "$current")"
+        elif [ "$idx" -eq $((dir_count + 2)) ]; then
+            # Cancel
+            echo -e "  ${DIM}Aborting.${RESET}"
+            exit 0
+        elif [ "$idx" -lt "$dir_count" ]; then
+            # Navigate into selected directory
+            current="${dirs[$idx]}"
         fi
-
-        echo ""
-        echo -e "    ${YELLOW}[u]${RESET} Up one level"
-        echo -e "    ${YELLOW}[s]${RESET} Select THIS folder (${short}/)"
-        echo -e "    ${YELLOW}[q]${RESET} Cancel"
-        echo ""
-
-        read -rp "  > " nav
-
-        case "$nav" in
-            u|U)
-                current="$(dirname "$current")"
-                ;;
-            s|S)
-                PROJECTS_DIR="$current"
-                return
-                ;;
-            q|Q)
-                echo -e "  ${DIM}Aborting.${RESET}"
-                exit 0
-                ;;
-            *)
-                if [[ "$nav" =~ ^[0-9]+$ ]] && [ "$nav" -ge 1 ] && [ "$nav" -le "${#dirs[@]}" ]; then
-                    current="${dirs[$((nav - 1))]}"
-                else
-                    echo -e "  ${RED}Invalid choice.${RESET}"
-                fi
-                ;;
-        esac
     done
 }
 
