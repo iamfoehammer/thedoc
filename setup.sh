@@ -609,14 +609,46 @@ if is_first_run; then
     # Step 1: Tricorder scan
     tricorder_scan
 
-    # Step 2: Find projects folder (skip if bootstrap already set it)
-    if [ -n "${THEDOC_PROJECTS_DIR:-}" ] && [ -d "${THEDOC_PROJECTS_DIR:-}" ]; then
-        PROJECTS_DIR="$THEDOC_PROJECTS_DIR"
-    else
-        prompt_projects_dir
+    # Step 2: Find projects folder
+    prompt_projects_dir
+
+    # Step 3: If launched from bootstrap, move thedoc from temp to projects folder
+    if [ -n "${THEDOC_BOOTSTRAP_DIR:-}" ] && [ -d "${THEDOC_BOOTSTRAP_DIR:-}" ]; then
+        THEDOC_FINAL="$PROJECTS_DIR/thedoc"
+        if [ -d "$THEDOC_FINAL" ]; then
+            echo -e "  ${YELLOW}$(short_path "$THEDOC_FINAL") already exists - updating...${RESET}"
+            cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
+            cp -rf "$THEDOC_BOOTSTRAP_DIR/".* "$THEDOC_FINAL/" 2>/dev/null || true
+        else
+            mv "$THEDOC_BOOTSTRAP_DIR" "$THEDOC_FINAL"
+            echo -e "  ${GREEN}Installed${RESET} thedoc to $(short_path "$THEDOC_FINAL")"
+        fi
+        SCRIPT_DIR="$THEDOC_FINAL"
+
+        # Set up PATH in shell rc
+        SHELL_RC="$HOME/.bashrc"
+        if [ "$(basename "${SHELL:-}")" = "zsh" ]; then
+            SHELL_RC="$HOME/.zshrc"
+        fi
+
+        THEDOC_PATH_LINE="export PATH=\"$THEDOC_FINAL:\$PATH\""
+        if ! grep -qF "thedoc" "$SHELL_RC" 2>/dev/null; then
+            echo "" >> "$SHELL_RC"
+            echo "# thedoc - Emergency Medical Hologram framework" >> "$SHELL_RC"
+            echo "$THEDOC_PATH_LINE" >> "$SHELL_RC"
+            echo -e "  ${GREEN}Added${RESET} thedoc to PATH in $(basename "$SHELL_RC")"
+        fi
+
+        if ! grep -qF ".secrets" "$SHELL_RC" 2>/dev/null; then
+            echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> "$SHELL_RC"
+            echo -e "  ${GREEN}Added${RESET} secrets sourcing to $(basename "$SHELL_RC")"
+        fi
+
+        export PATH="$THEDOC_FINAL:$PATH"
+        echo ""
     fi
 
-    # Step 3: Explain the structure
+    # Step 4: Explain the structure
     print_structure_explainer
 else
     # Returning user - use saved projects dir, fall back to parent of script
