@@ -711,7 +711,6 @@ else
     if ! mkdir -p "$INSTANCE_DIR" 2>/dev/null; then
         # WSL may need cmd.exe to create Windows folders
         if [ "$IS_WSL" = "yes" ]; then
-            local win_path
             win_path=$(echo "$INSTANCE_DIR" | sed 's|^/mnt/\([a-z]\)/|\U\1:\\|; s|/|\\|g')
             cmd.exe /c "mkdir \"$win_path\"" 2>/dev/null || true
         fi
