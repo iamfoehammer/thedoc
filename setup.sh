@@ -127,6 +127,24 @@ print_greeting() {
         typeit "I'm going to need to scan your system first." 0.02
         typeit "Think of it as a routine physical." 0.02
         echo ""
+        echo -e "  ${DIM}Press Enter to continue, or ${BOLD}i${RESET}${DIM} to see an image of${RESET}"
+        echo -e "  ${DIM}my holographic form here in your terminal.${RESET}"
+        echo ""
+        read -rsn1 show_image
+        if [[ "$show_image" == "i" || "$show_image" == "I" ]]; then
+            echo ""
+            if [ -f "$SCRIPT_DIR/thedoc.txt" ]; then
+                echo -e "  ${CYAN}"
+                cat "$SCRIPT_DIR/thedoc.txt"
+                echo -e "  ${RESET}"
+                echo ""
+                echo -e "  ${DIM}The Emergency Medical Hologram, reporting for duty.${RESET}"
+                echo ""
+                echo -e "  ${DIM}Press any key to continue...${RESET}"
+                read -rsn1
+            fi
+        fi
+        echo ""
     else
         local quip
         quip=$(pick_random "${QUIPS[@]}")
