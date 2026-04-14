@@ -583,14 +583,22 @@ if is_first_run; then
     # Step 3: If launched from bootstrap, move thedoc from temp to projects folder
     if [ -n "${THEDOC_BOOTSTRAP_DIR:-}" ] && [ -d "${THEDOC_BOOTSTRAP_DIR:-}" ]; then
         THEDOC_FINAL="$PROJECTS_DIR/thedoc"
+        echo ""
+        typeit "Moving thedoc to your projects folder..." 0.02
         if [ -d "$THEDOC_FINAL" ]; then
             echo -e "  ${YELLOW}$(short_path "$THEDOC_FINAL") already exists - updating...${RESET}"
             cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
-            cp -rf "$THEDOC_BOOTSTRAP_DIR/".* "$THEDOC_FINAL/" 2>/dev/null || true
+            cp -rf "$THEDOC_BOOTSTRAP_DIR/".[!.]* "$THEDOC_FINAL/" 2>/dev/null || true
         else
-            mv "$THEDOC_BOOTSTRAP_DIR" "$THEDOC_FINAL"
-            echo -e "  ${GREEN}Installed${RESET} thedoc to $(short_path "$THEDOC_FINAL")"
+            # mv can fail across filesystems (tmp -> Windows drive), fall back to cp
+            if ! mv "$THEDOC_BOOTSTRAP_DIR" "$THEDOC_FINAL" 2>/dev/null; then
+                mkdir -p "$THEDOC_FINAL"
+                cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
+                cp -rf "$THEDOC_BOOTSTRAP_DIR/".[!.]* "$THEDOC_FINAL/" 2>/dev/null || true
+                rm -rf "$THEDOC_BOOTSTRAP_DIR" 2>/dev/null || true
+            fi
         fi
+        echo -e "  ${GREEN}Installed${RESET} thedoc to $(short_path "$THEDOC_FINAL")"
         SCRIPT_DIR="$THEDOC_FINAL"
 
         # Set up PATH in shell rc
