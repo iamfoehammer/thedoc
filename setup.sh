@@ -78,14 +78,27 @@ pick_random() {
 }
 
 # Typing effect - prints text character by character
+# Press space to skip the animation and dump remaining text instantly
+SKIP_TYPING=0
 typeit() {
     local text="$1"
     local delay="${2:-0.02}"
     local prefix="${3:-  }"
     printf '%s' "$prefix"
+    if [ "$SKIP_TYPING" -eq 1 ]; then
+        printf '%s\n' "$text"
+        return
+    fi
     for ((i=0; i<${#text}; i++)); do
         printf '%s' "${text:$i:1}"
-        sleep "$delay"
+        # Check for keypress without blocking
+        if read -rsn1 -t "$delay" key 2>/dev/null; then
+            if [[ "$key" == " " ]]; then
+                SKIP_TYPING=1
+                printf '%s\n' "${text:$((i+1))}"
+                return
+            fi
+        fi
     done
     echo ""
 }
