@@ -6,16 +6,85 @@ A framework for creating dedicated "doctor" instances that diagnose, configure, 
 
 > "Please state the nature of the CLI emergency."
 
-## What It Does
+## llm-secrets - Secure Secret Storage for AI Coding Tools
 
-You run `thedoc`, answer a few questions, and get a dedicated AI-powered doctor for your specific setup. The doctor knows how to:
+AI coding assistants (Claude Code, Gemini CLI, etc.) can see everything - your env vars, your files, your command output. There's no built-in way to store a secret that your AI tool can **use** without **seeing**.
+
+`llm-secrets` fills that gap. It stores secrets in a separate chmod 600 file that your AI tool has no reason to read, and loads them as standard environment variables.
+
+```
+$ llm-secrets
+What's the secret for? my github pat
+Variable name: MY_GITHUB_PAT
+Paste secret value: ****************************************
+
+Saved! Your variable is: $MY_GITHUB_PAT
+(already in your clipboard)
+```
+
+### Why This Matters
+
+Without `llm-secrets`, every approach leaks your token:
+- Put it in `.bashrc`? AI tools see file diffs.
+- Put it in `.env`? AI tools grep and read files.
+- Type it in the chat? It's in the conversation history.
+- Use the `!` prefix? Output still shows up.
+
+With `llm-secrets`:
+- Secrets live in `~/.secrets` (chmod 600, never monitored)
+- Your shell sources it on startup - standard env vars
+- AI tools can use `$MY_GITHUB_PAT` in commands without seeing the value
+- Masked input (shows `*` for each character)
+- Copies the variable reference to your clipboard on save
+
+### Install (standalone)
+
+If you only want `llm-secrets`, no doctor framework needed:
+
+```bash
+# Bash (Linux/macOS/WSL)
+curl -o ~/.local/bin/llm-secrets https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets
+chmod +x ~/.local/bin/llm-secrets
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+```powershell
+# PowerShell (Windows)
+# Add to your $PROFILE:
+if (Test-Path "$HOME/.secrets.ps1") { . "$HOME/.secrets.ps1" }
+function llm-secrets { & "C:\path\to\llm-secrets.ps1" @args }
+```
+
+### Usage
+
+```
+llm-secrets                       # Interactive (prompts for everything)
+llm-secrets set                   # Same as above
+llm-secrets set 'my github pat'  # Auto-converts to MY_GITHUB_PAT
+llm-secrets set MY_VAR_NAME      # Exact name also works
+llm-secrets my openai key         # Shorthand - skips "set"
+llm-secrets list                  # List secret names (not values)
+llm-secrets remove VAR_NAME      # Remove a secret
+llm-secrets help                  # Show help
+```
+
+---
+
+## The Doctor Framework
+
+Beyond secrets, thedoc creates dedicated AI-powered doctor instances for your tools.
+
+### What It Does
+
+You run `thedoc`, answer a few questions, and get a dedicated doctor for your specific setup. The doctor knows how to:
 
 - **Diagnose** issues with your AI tool configuration
 - **Configure** settings, permissions, shell integrations, and SSH shortcuts
 - **Maintain** health over time with an update mechanism that walks you through changes
 - **Teach** you how your setup works so you can self-diagnose simple issues
 
-## Supported Doctor Types
+### Supported Doctor Types
 
 | Type | Status |
 |------|--------|
@@ -23,7 +92,7 @@ You run `thedoc`, answer a few questions, and get a dedicated AI-powered doctor 
 | OpenClaw | Supported |
 | Gemini CLI | Coming soon |
 
-## Supported Engines (what powers the doctor)
+### Supported Engines (what powers the doctor)
 
 | Engine | Status |
 |--------|--------|
@@ -31,7 +100,7 @@ You run `thedoc`, answer a few questions, and get a dedicated AI-powered doctor 
 | OpenClaw | Coming soon |
 | Gemini CLI | Coming soon |
 
-## Quick Start
+### Quick Start
 
 ```bash
 git clone https://github.com/iamfoehammer/thedoc.git ~/GitHub/thedoc
@@ -40,7 +109,7 @@ source ~/.bashrc
 thedoc
 ```
 
-## Usage
+### Usage
 
 ```
 thedoc              # Create a new doctor instance (or open setup)
@@ -49,8 +118,6 @@ thedoc list         # List existing doctor instances
 thedoc open <name>  # Open an existing instance directly
 thedoc help         # Show help
 ```
-
-## How It Works
 
 ### The Setup Flow
 
@@ -111,7 +178,7 @@ No merge conflicts. Your personal config (`CLAUDE.md`) is never touched by upstr
 
 The framework ships with battle-tested templates in `common/templates/`:
 
-- **tmux.conf** - WSL2-friendly config with working scroll, copy/paste (right-click to copy selection, right-click to paste), and sane defaults
+- **tmux.conf** - Windows/WSL2-friendly config with OSC 52 clipboard, working scroll, drag-to-copy, right-click paste, double/triple-click selection, and a cheat sheet status bar
 - **generate-cc-aliases** - Auto-generates project shortcuts (`cc-*`, `cn-*`, `dcc-*`, `dcn-*`) for every folder in your projects directory
 - **ssh-config-examples** - SSH shortcut patterns for quick access to remote machines
 
@@ -121,6 +188,8 @@ The framework ships with battle-tested templates in `common/templates/`:
 thedoc/                          # The framework (this repo)
   thedoc                         # Main command
   setup.sh                       # Interactive setup wizard
+  llm-secrets                    # Secret storage (bash)
+  llm-secrets.ps1                # Secret storage (PowerShell)
   doctors/
     claude-code/DOCTOR.md        # Claude Code doctor brain
     openclaw/DOCTOR.md           # OpenClaw doctor brain
