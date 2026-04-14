@@ -1,0 +1,1514 @@
+PowerShell 7.5.5
+
+   A new PowerShell stable release is available: v7.6.0
+   Upgrade now, or check out the release page at:
+     https://aka.ms/PowerShell-Release?tag=v7.6.0
+
+Custom commands: cgithub, pin, wslToMyClipboard, cc, cc-<project>
+PS C:\Users\wmchr> # Clone to any location - setup will detect your projects folder
+PS C:\Users\wmchr> git clone https://github.com/iamfoehammer/thedoc.git ~/thedoc
+Cloning into '~/thedoc'...
+remote: Enumerating objects: 62, done.
+remote: Counting objects: 100% (62/62), done.
+remote: Compressing objects: 100% (42/42), done.
+remote: Total 62 (delta 18), reused 54 (delta 13), pack-reused 0 (from 0)
+Receiving objects: 100% (62/62), 31.53 KiB | 2.87 MiB/s, done.
+Resolving deltas: 100% (18/18), done.
+PS C:\Users\wmchr> echo 'export PATH="$HOME/thedoc:$PATH"' >> ~/.bashrc
+PS C:\Users\wmchr> echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+PS C:\Users\wmchr> source ~/.bashrc
+source: The term 'source' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+PS C:\Users\wmchr> thedoc
+thedoc: The term 'thedoc' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+PS C:\Users\wmchr> wsl
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 6.6.87.2-microsoft-standard-WSL2 x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+This message is shown once a day. To disable it please create the
+/home/englamdring/.hushlogin file.
+englamdring@Will-EH:/mnt/c/Users/wmchr$ # Clone to any location - setup will detect your projects folder
+git clone https://github.com/iamfoehammer/thedoc.git ~/thedoc
+echo 'export PATH="$HOME/thedoc:$PATH"' >> ~/.bashrc
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+thedoc
+Cloning into '/home/englamdring/thedoc'...
+remote: Enumerating objects: 62, done.
+remote: Counting objects: 100% (62/62), done.
+remote: Compressing objects: 100% (42/42), done.
+remote: Total 62 (delta 18), reused 54 (delta 13), pack-reused 0 (from 0)
+Receiving objects: 100% (62/62), 31.53 KiB | 10.51 MiB/s, done.
+Resolving deltas: 100% (18/18), done.
+
+  ╔══════════════════════════════════════╗
+  ║  Emergency Agent Hologram activated  ║
+  ╚══════════════════════════════════════╝
+
+  Please state the nature of the agent emergency.
+
+  ...
+
+  No emergency? Just a checkup? That's fine too.
+  Contrary to my name, I handle everything from routine
+  configuration to catastrophic meltdowns.
+
+  Let's get started.
+
+  Scanning your system...
+
+  Platform:    Linux (WSL2 on Windows)
+  Shell:       bash
+  tmux:        installed (3.2)
+  git:         installed
+  claude:      installed
+
+  Where do you keep your AI projects?
+
+  Most people have a folder where each subfolder is a separate
+  project or agent workspace. Some call it "GitHub", others
+  call it "Claude Projects" or just "projects".
+
+  I found these on your system:
+
+    [1] Enter a custom path
+
+  > ls
+  Pick a number between 1 and 1.
+  > ^C
+englamdring@Will-EH:/mnt/c/Users/wmchr$ # Clone to any location - setup will detect your projects folder
+git clone https://github.com/iamfoehammer/thedoc.git ~/thedoc
+echo 'export PATH="$HOME/thedoc:$PATH"' >> ~/.bashrc
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+thedoc
+fatal: destination path '/home/englamdring/thedoc' already exists and is not an empty directory.
+
+  ╔════════════════════════════════════╗
+  ║  Emergency CLI Hologram activated  ║
+  ╚════════════════════════════════════╝
+
+  Please state the nature of the CLI emergency.
+
+  ...
+
+  No emergency? Just a checkup? That's fine too.
+  Contrary to my name, I handle everything from routine
+  configuration to catastrophic meltdowns.
+
+  Let's get started.
+
+  Scanning your system...
+
+  Platform:    Linux (WSL2 on Windows)
+  Shell:       bash
+  tmux:        installed (3.2)
+  git:         installed
+  claude:      installed
+
+  Where do you keep your AI projects?
+
+  Most people have a folder where each subfolder is a separate
+  project or agent workspace. Some call it "GitHub", others
+  call it "Claude Projects" or just "projects".
+
+  I found these on your system:
+
+    [1] Enter a custom path
+
+  >
+  Pick a number between 1 and 1.
+  > ^C
+englamdring@Will-EH:/mnt/c/Users/wmchr$ ls
+ -1.14-windows.xml
+'3D Objects'
+ AndroidStudioProjects
+ AppData
+'Application Data'
+ Collect-MW2Logs.ps1
+ Contacts
+ Cookies
+ CrossDevice
+ Desktop
+ Documents
+ Downloads
+ Favorites
+ Games
+ Intel
+ Links
+'Local Settings'
+ Music
+'My Documents'
+ NTUSER.DAT
+ NTUSER.DAT{6f9a1c59-b55c-11f0-8b04-70d8235bc1d2}.TxR.0.regtrans-ms
+ NTUSER.DAT{6f9a1c59-b55c-11f0-8b04-70d8235bc1d2}.TxR.1.regtrans-ms
+ NTUSER.DAT{6f9a1c59-b55c-11f0-8b04-70d8235bc1d2}.TxR.2.regtrans-ms
+ NTUSER.DAT{6f9a1c59-b55c-11f0-8b04-70d8235bc1d2}.TxR.blf
+ NTUSER.DAT{6f9a1c5a-b55c-11f0-8b04-70d8235bc1d2}.TM.blf
+ NTUSER.DAT{6f9a1c5a-b55c-11f0-8b04-70d8235bc1d2}.TMContainer00000000000000000001.regtrans-ms
+ NTUSER.DAT{6f9a1c5a-b55c-11f0-8b04-70d8235bc1d2}.TMContainer00000000000000000002.regtrans-ms
+ NetHood
+ OneDrive
+ Pictures
+ PinnedWindows.txt
+ PrintHood
+ Recent
+'Saved Games'
+ Searches
+ SendTo
+'Start Menu'
+ Sti_Trace.log
+ Templates
+ Videos
+'Virtual Desktop Pinning.ps1'
+ amazon_dashboard.log
+ ansel
+ apps-script-starter
+ curseforge
+ gaclipboard_log.txt
+ logs.txt
+ mailman
+'move modes.ps1'
+ mumble-server.sqlite
+ ntuser.dat.LOG1
+ ntuser.dat.LOG2
+ ntuser.ini
+ package-lock.json
+ svg.html
+ svg.svg
+ svg.txt
+'~'
+englamdring@Will-EH:/mnt/c/Users/wmchr$ cd ~
+englamdring@Will-EH:~$ ls
+contact-seek-and-find  moltworker  thedoc
+englamdring@Will-EH:~$ rm thedoc
+rm: cannot remove 'thedoc': Is a directory
+englamdring@Will-EH:~$ rm thedocHow do I delete in a Linux folder?
+rm: cannot remove 'thedocHow': No such file or directory
+rm: cannot remove 'do': No such file or directory
+rm: cannot remove 'I': No such file or directory
+rm: cannot remove 'delete': No such file or directory
+rm: cannot remove 'in': No such file or directory
+rm: cannot remove 'a': No such file or directory
+rm: cannot remove 'Linux': No such file or directory
+rm: cannot remove 'folder?': No such file or directory
+englamdring@Will-EH:~$ rmdir thedoc
+rmdir: failed to remove 'thedoc': Directory not empty
+englamdring@Will-EH:~$ rm -rf thedoc/
+englamdring@Will-EH:~$ # Clone to any location - setup will detect your projects folder
+git clone https://github.com/iamfoehammer/thedoc.git ~/thedoc
+echo 'export PATH="$HOME/thedoc:$PATH"' >> ~/.bashrc
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+thedoc
+Cloning into '/home/englamdring/thedoc'...
+remote: Enumerating objects: 71, done.
+remote: Counting objects: 100% (71/71), done.
+remote: Compressing objects: 100% (51/51), done.
+remote: Total 71 (delta 23), reused 56 (delta 13), pack-reused 0 (from 0)
+Receiving objects: 100% (71/71), 39.04 KiB | 587.00 KiB/s, done.
+Resolving deltas: 100% (23/23), done.
+
+  ╔══════════════════════════════════════╗
+  ║  Emergency Agent Hologram activated  ║
+  ╚══════════════════════════════════════╝
+
+
+  Please state the nature of the agent emergency.
+
+  ...
+
+  No emergency? Just a checkup? That's fine too.
+  Contrary to my name, I handle everything from routine
+  configuration to catastrophic meltdowns.
+
+  I'm going to need to scan your system first.
+  Think of it as a routine physical.
+
+  Press Enter to continue, or i to see an image of
+  my holographic form here in your terminal.
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@Bkdbd[ ,L@B%%%%B@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*l
+B@@@@@@@@@@@@@@@@@@@@@@@@@@@@0  'a%*&%8%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Bc.
+qo&B@@@@@@@@@@@@@@@@@@@@@@@@#>  ?8M*#W&8%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@w:
+  '";i~?{|jnULQOmkM8B@@@@@@@Y' .u#M**M&%B@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@M?
+                       '^"!>"   jb&pwWWWW#W%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#[
+                               '{w*pmkoW@@@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B@@@Bm[.
+                                >q#pJp#8BB@@@@@@@@@@@@@@@@@@BBB@@@@@@@@@@@@@@@@@@@@@@@@%Q!
+                                :ubmOdkkdk%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%#aha&@@@@@@@@%aY`
+                                `ubmqm*8B@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@WqU;'
+                                `0*o*8B@@@@BB@@@@B@@@@@@B@@B@@@@@@@@@@@@@@@@@@@@@@@@BB%O,
+                                "0oB%&dkBB@@B@@@@@@@B@@@8@@k8@@@@%B#OM@@@@Bh0a&@@@@@@%#Q`
+                                ipMqj:        .  ;r0Q*@WMB@Wr%Wx'l!        ''.`[LMB@BB%&+
+                                }#dl                `I}+lC%M;<_"                 `|o@@@%u
+                                r&{  `]fzn{_,         .[w#%BL'         ^|mhdO#8Z~.,OBB@BL
+                           Iw{ .Y#> :+l'    "        '-pB@@@@pI    .'>!`"     `?L<.{MB@@m"
+                           :?I ,0W)"!   "X]    ~~..<J<xw@@@@@@#r\):'\*M:  .{vji. ]tQWB@@bl  ;U
+                           ',  lw&bqtIn-{xZqaMB@@@@C\C1#@@@@@@@@@@@BB%hW8%%M&kB@*ZB@@@@@W?  xB
+  ^cQQpc[<'        ';;'    "[: !q&ppbJ*owqhp#@@@@@@B8Ock@@@@@@@@@@@%@B@BB@@@@@@@@@@@@@@@B| "JW
+  IW@@@@MQ.       }#@@@k.  '(+ !p&##WMh*W&%B@@#&B@@*QxzB@@@@@@@@@@@@@8W@@@M**8@@@@@@@@@@@n.:QB
+  'm@@@@@WI       \%@@@@<   [+?;OMW%@@@%B8*h8@@@@BMh0*@@@@@@@@@@@@@@@@@BW%@@@@@@@@@@@@@BBx. :L
+  I8@@B@@%"       {W@@@o"   ~LC'v*#8B@@@@@@@@@@@@WxndB@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@8)._ ,
+  l@@@@@@8+        "<?l     ^QWtxYqo&%@@@@@@@@@@WXqmbM@@@@@@@@@@@@%YB@@@@@@@@@@@@@@@@@@B%Udo+
+   `,`I`            `"       /MJbmrmoW&B@@@@@@@M/CmC]<(pM8%%ab#&%@@W[a@@@@@@@@@@@@@@@@@B%&@@0"
+                    ^l'      !k0CZmpbo*%@@@@@@*~(]`   .  .';I.  .]pBm~B@@@@@@@@@@@@@@@B8W8@@YY
+                    l1:       vOwZZkdmhM%@@@BQ,Y*v  :!,^    .}):  ]@@#Z@@@@@@@@@@@@@@B&%M8@@BB
+          '"'       _vi      'r%8aChapLh&@@Bw<c*p0uu?!r}!t&@@@@@@@@@@@@U8@@@@@@@@@@@@@B&&B@BB@
+                   :0ax;     l[@dnJmM#hM&BBWjjbkm0cLux*%@@BB@@@@@@@@@@@8Q#@@@@@@@@@@@@@%%BBYo@
+                  >h@@@@j    i}#%WQYh***M8%wfkOLqbh%8B@@@@8%@@@@@@@@@@@@@Cm@@@@@@@@@@@%B8%@@@@
+                  ~a@@@@Q    Idz*MOnmkbk#8o-ahpM8%@@@@@@@@@@@@@@@@@@@@@@@@0O@@@@@@@@@@BBQnB@@B
+                  ih@@@@f    lhMU++XOoohM%vCwpxrXmaOn}]jmM&ZxxUwWB@@B&&B@@Wc*@@@@@@@@B8W/>?Z%B
+          `:;     Ib@@%>]0_  !k%B%ZtXm*o*Bzux>^^^.   .,;`"!?1))_".`;I;I1p%@Jq@@@@@@@@%Wa/@BB@@
+           ""'.   ih@*+u? ]t ;kBBBk/Jw*bh@mul `tznqB@@@@@@@@@@@@@@@@@@@mz#@*m@@@@@@@%8h1w@@@@@
+          IuOQ[;  ;bW_x:If`>/:dBB%&f)cZYp&%Xi?O8&aXvnQY["!+~}q*8BB@@@@@@BB@@&@@B@@B#pqf{@@@@@@
+          .,;,'   .t:t!,M@p.~\IMBBBm;~/tv0B%ah#BBB#CucbW8B@B&W&BB@@@@@@@@@@@@@BBB%#0\>!f@@@@@@
+          \%@M]    .Xl+@@@@b,>v?#@BBO'i}liYdwzcUha&@B%*bmb%@@@@@@@@@@@BB@@@@@BMMMkfI"fCv@@@@@@
+          ,rUf"   'u;<a@@B@@Z,!t|%BBBw:`I'"_1xxzQM%&&@@@@@@@@@@@@@@@@%%@@@@@hU]rk\`'O@uQ@@@@@@
+                 .|<`k@@WJ&@@C [[fBBB&u,...luuz0&@@@@@@@@@@@@@@@@@@@@@@@@@B%a-1C].lb@@(k@@@@@@
+             `":I]('d@@@o(M@@@U t_li-({Y~   'l[Ym#p&B@@@@@@@@@@@@@@@@@@@%#mr>(1" <o@@@]W@@@@@@
+__~+v-`)uQdMB@@@@J.Y@@@@p`a@@@Bf.L@@@@BWb0c|" `i-[]/O#B@@@@@@@@@@@BB@B#cl      `(%@@@%]njt/um%
+BBBBO>*@@@O+Q@@@a'(&@@@@C c@@@@#-.d@@@Z<J@@@a+  ."..''It*8amuQqkc0dbJl        ,U@@@@@M}'    "w
+@@@@?zB@@b; Ih@8l;b@@88@( )@88@@d`<M@a~ ,Z@@@z'                              Ih@@@@@@a?.   '|&
+@@@wih@@Wohwkaar'n@@@#--; '-]*@@@c.jhaaOaaM@@M!                            'r@@@@@@@&(-~:(k&@@
+@@@~(@@*<       ;B@@BZ~     >Q@@@@?       l8@@u                          ^XWB@@@@@@hl~]}->:{*@
+@@b Z@@WQUQQQQ) 0@@8h0z!   ;z0k8@@q^~QQQQJQ#@@#`["                  -Od#B@@@@@@@Bk?::+[[[l.!>:
+@@n^%@@8x`iw@@i_W@@@@@& ]q{;k@@@@@81 k@ki`t%@@@]|h<           `]-"^zM%@@@@@@Bpj~. ',~+[[][: '"
+,"''W@@BU^~o@m.cB@@@@@wa@@@aw@@@@@@O,{@&?`zB@@@< 'l-       lLMB@@BB@@@@@@p},' .   `l~??>[[>
+    .~tJqk#8B_!d@@@@@@@@@@@@B&%@@@@B+"k%MapLr-'             U@@@@B&own+  .'.    '.,>~l:[]?^
+ .^:Il!,'.. v [%@@@@@@@@@hf!'  +m@@@C')l                     ?|[i`     .  '",,. .:l!""->-l
+~I:`^.'    ;\ X@@@@@@@@z` ;Jf>r/.~%@B^[~                             '"!l;'.. .";,;'`~<[i.
+`.         +- d@@@@@&r``{f`    If:;ZBtlt                         '^,. '...'`":^"`"'I!>??'
+           [_`@@@@*/.;f{'       .|)'tq.c                         .''`"^`,,'   `l>lli]+~.
+          .[i)@@@|.`Q_            lf"'./l                 ...^'`"`'^^`    ^:>_-_~;-}~:.
+          ^\;X&n',j-               `u> +f       .^^'. ...^''^"`'.``':I;>_---<;:>?]]i
+          "t`t,,x?.                  +\^C       '^:i<+++<<~+<<~<+_-?+~i!,";i++-]]!`
+          ,j  |).                     ;cZ.              .'"":^`''.. .`;~_--???;'
+          ;u[u'                         f;           `I>!<<i~~~+_++-]--!l!:'          'l/_`
+          iL;                                            'I+_+++-+~_<^                'it-^
+                                                          `i+<~_-i<,                    .
+                                                          .!+>++~~l
+
+
+  The Emergency Medical Hologram, reporting for duty.
+
+  Press any key to continue...
+
+  Press any key to begin the scan...
+
+  [scan] Detecting platform... Linux (WSL2 on Windows)
+  [scan] Shell... bash
+  [scan] tmux... installed (3.2)
+  [scan] git... installed
+  [scan] claude... installed
+
+  Good. Vitals look stable.
+
+
+  Now I need to find where you keep your projects.
+
+  Most people have a folder where each subfolder is a
+  separate project or agent workspace.
+  Some call it "GitHub", others call it
+  "Claude Projects" or just "projects".
+
+  Let me scan your drives...
+
+  [scan] Found /mnt/c/Users/wmchr/Documents/GitHub/ (1 folders)
+  [scan] Found /mnt/c/GitHub/ (27 folders)
+
+  Scan complete.
+
+  Which one is your projects folder?
+
+    [1] /mnt/c/Users/wmchr/Documents/GitHub/  (1 folder)
+    [2] /mnt/c/GitHub/  (27 folders)
+    [3] Browse to a folder
+    [4] Type a path
+
+  > 3
+
+  Browsing: //
+
+    [1] Docker/  (1 folders)
+    [2] boot/
+    [3] dev/  (13 folders)
+    [4] etc/  (79 folders)
+    [5] home/  (1 folders)
+englamdring@Will-EH:~$ cd mnt
+-bash: cd: mnt: No such file or directory
+englamdring@Will-EH:~$ thedoc
+
+  ╔════════════════════════════════════════╗
+  ║  Emergency Harness Hologram activated  ║
+  ╚════════════════════════════════════════╝
+
+
+  Please state the nature of the harnes
+s emergency.
+
+
+  .
+.
+.
+
+  No emergen
+cy? Just a checkup? That's fine too.
+  Contrary to my name, I handle everything from routine
+  configuration to catastrophic meltdo
+wns.
+
+  I'm going to need to sc an your system first.
+  Think  of it as a routine physic al.
+
+  Press Enter to continue, or i to see an image of
+  my holographic form here in your terminal.
+
+
+  Press any key to begin the scan...
+
+  [scan] Detecting platform... Linux (WSL2 on Windows)
+  [scan] Shell... bash
+  [scan] tmux... installed (3.2)
+  [scan] git... installed
+  [scan] claude... installed
+
+  Good. Vitals look stable.
+
+
+  Now I need to find where you keep your projects.
+
+  Most people have a folder where each subfolder is a
+  separate project or agent workspace.
+  Some call it "GitHub", others call it
+  "Claude Projects" or just "projects".
+
+  Let me scan your drives...
+
+  [scan] Found /mnt/c/Users/wmchr/Documents/GitHub/ (1 folders)
+  [scan] Found /mnt/c/GitHub/ (27 folders)
+
+  Scan complete.
+
+  Which one is your projects folder?
+
+    [1] /mnt/c/Users/wmchr/Documents/GitHub/  (1 folder)
+    [2] /mnt/c/GitHub/  (27 folders)
+    [3] Browse to a folder
+    [4] Type a path
+
+  >   Pick a number between 1 and 4.
+  >   Pick a number between 1 and 4.
+  >   Pick a number between 1 and 4.
+  >   Pick a number between 1 and 4.
+  > 3
+
+  Browsing: //
+
+    [1] Docker/  (1 folders)
+    [2] boot/
+    [3] dev/  (13 folders)
+    [4] etc/  (79 folders)
+    [5] home/  (1 folders)
+englamdring@Will-EH:~$ rm -rf thedoc/
+englamdring@Will-EH:~$ thedoc
+-bash: /home/englamdring/thedoc/thedoc: No such file or directory
+englamdring@Will-EH:~$ mkdir -p ~/.local/bin
+curl -o ~/.local/bin/llm-secrets https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets
+chmod +x ~/.local/bin/llm-secrets
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  5484  100  5484    0     0  21858      0 --:--:-- --:--:-- --:--:-- 21848
+englamdring@Will-EH:~$ # Clone to any location - setup will detect your projects folder
+git clone https://github.com/iamfoehammer/thedoc.git ~/thedoc
+echo 'export PATH="$HOME/thedoc:$PATH"' >> ~/.bashrc
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+thedoc
+Cloning into '/home/englamdring/thedoc'...
+remote: Enumerating objects: 77, done.
+remote: Counting objects: 100% (77/77), done.
+remote: Compressing objects: 100% (55/55), done.
+remote: Total 77 (delta 27), reused 60 (delta 15), pack-reused 0 (from 0)
+Receiving objects: 100% (77/77), 40.46 KiB | 20.23 MiB/s, done.
+Resolving deltas: 100% (27/27), done.
+
+  ╔═══════════════════════════════════════╗
+  ║  Emergency Config Hologram activated  ║
+  ╚═══════════════════════════════════════╝
+
+
+  Please state the nature of the configuration emergency.
+
+  ...
+
+  No emergency? Just a checkup? That's fine too.
+  Contrary to my name, I handle everything from routine
+  configuration to catastrophic meltdowns.
+
+  I'm going to need to scan your system first.
+  Think of it as a routine physical.
+
+  Press Enter to continue, or i to see an image of
+  my holographic form here in your terminal.
+
+
+  Press any key to begin the scan...
+
+  [scan] Detecting platform... Linux (WSL2 on Windows)
+  [scan] Shell... bash
+  [scan] tmux... installed (3.2)
+  [scan] git... installed
+  [scan] claude... installed
+
+  Good. Vitals look stable.
+
+
+  Now I need to find where you keep your projects.
+
+  Most people have a folder where each subfolder is a
+  separate project or agent workspace.
+  Some call it "GitHub", others call it
+  "Claude Projects" or just "projects".
+
+  Let me scan your drives...
+
+  [scan] Found /mnt/c/Users/wmchr/Documents/GitHub/ (1 folders)
+  [scan] Found /mnt/c/GitHub/ (27 folders)
+
+  Scan complete.
+
+  Which one is your projects folder?
+
+    [1] /mnt/c/Users/wmchr/Documents/GitHub/  (1 folder)
+    [2] /mnt/c/GitHub/  (27 folders)
+    [3] Browse to a folder
+    [4] Type a path
+
+  > 3
+
+  Browsing: /mnt/
+
+    [1] c/  (25 folders)
+    [2] d/  (14 folders)
+    [3] g/
+    [4] h/
+    [5] i/
+    [6] wsl/
+    [7] wslg/  (5 folders)
+
+    [u] Up one level
+    [s] Select THIS folder (/mnt/)
+    [q] Cancel
+
+  > 1
+
+  Browsing: /mnt/c/
+
+    [1] $Recycle.Bin/  (1 folders)
+    [2] 2023-12-28 Steph Iphone Photos/  (7 folders)
+    [3] Battlestate Games/  (1 folders)
+    [4] Focusee/  (1 folders)
+    [5] GitHub/  (27 folders)
+    [6] Intel/  (2 folders)
+    [7] Log/
+    [8] OneDriveTemp/  (1 folders)
+    [9] Program Files/  (78 folders)
+    [10] Program Files (x86)/  (60 folders)
+    [11] ProgramData/  (64 folders)
+    [12] Python312/  (7 folders)
+    [13] ShadowPlay/
+    [14] Unreal/  (13 folders)
+    [15] UnrealTournament/  (11 folders)
+    [16] UserBenchmark/
+    [17] Users/  (3 folders)
+    [18] Windows/  (75 folders)
+    [19] XboxGames/  (5 folders)
+    [20] asa-dedicated-manager/  (3 folders)
+    [21] asmdata/  (5 folders)
+    [22] inetpub/
+    [23] n8n/  (1 folders)
+    [24] root/  (1 folders)
+    [25] tmp/  (1 folders)
+
+    [u] Up one level
+    [s] Select THIS folder (/mnt/c/)
+    [q] Cancel
+
+  > 5
+
+  Browsing: /mnt/c/GitHub/
+
+    [1] _archived/  (6 folders)
+    [2] _future_projects/  (1 folders)
+    [3] api-docs-willSamgungAutomateCloud/  (2 folders)
+    [4] camera-obs-launcher-helper/  (3 folders)
+    [5] claude-code-doctor/  (2 folders)
+    [6] code-to-content/  (5 folders)
+    [7] cold-call-shirt-places/  (1 folders)
+    [8] communication-reviewer-agent/  (5 folders)
+    [9] gamer-ram-saver-transformer/
+    [10] leprechaun-fun/
+    [11] minecraft-boot-helper/  (9 folders)
+    [12] minecraft-wrapper/  (1 folders)
+    [13] mod-helper-minecraft-java/  (8 folders)
+    [14] money-manager/  (4 folders)
+    [15] msg-spreadsheet/  (2 folders)
+    [16] never-twice-money-manager/  (10 folders)
+    [17] steel-trap/  (3 folders)
+    [18] steel-trap-fathom/  (7 folders)
+    [19] the-tester/  (6 folders)
+    [20] thedoc/  (1 folders)
+    [21] twilio-testing/  (2 folders)
+    [22] useful-powershell-scripts/  (2 folders)
+    [23] virtual-desktop-pinning/  (7 folders)
+    [24] win-kill/  (2 folders)
+    [25] win-window-and-desktop-manager/  (7 folders)
+    [26] windows-startup-manager/  (4 folders)
+
+    [u] Up one level
+    [s] Select THIS folder (/mnt/c/GitHub/)
+    [q] Cancel
+
+  > s
+
+  Got it. Your doctors will live in /mnt/c/GitHub/
+
+  Here's how thedoc works:
+  - This framework (thedoc) stays where you cloned it
+  - Each doctor gets its own folder, like /mnt/c/GitHub/claude-doctor/
+  - The doctor folder has a CLAUDE.md (your personal config)
+    and a DOCTOR.md (shared diagnostic instructions)
+  - You update thedoc with 'git pull' - your configs are never overwritten
+
+  Press any key to continue...
+
+  What is this doctor for?
+
+    [1] Claude Code
+    [2] OpenClaw
+    [3] Gemini CLI (not yet supported)
+
+  > 1
+
+  Which LLM engine will power this doctor?
+
+    [1] Claude Code
+    [2] OpenClaw (not yet supported)
+    [3] Gemini CLI (not yet supported)
+
+  > 1
+
+  Setup mode?
+
+    [1] Quick - generate a starter config, refine later
+    [2] Full - interactive audit of your current setup
+
+  > 2
+englamdring@Will-EH:~$ rm -rf thedoc/
+englamdring@Will-EH:~$ # Clone to any location - setup will detect your projects folder
+git clone https://github.com/iamfoehammer/thedoc.git ~/thedoc
+echo 'export PATH="$HOME/thedoc:$PATH"' >> ~/.bashrc
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+thedoc
+Cloning into '/home/englamdring/thedoc'...
+remote: Enumerating objects: 83, done.
+remote: Counting objects: 100% (83/83), done.
+remote: Compressing objects: 100% (59/59), done.
+remote: Total 83 (delta 31), reused 64 (delta 17), pack-reused 0 (from 0)
+Receiving objects: 100% (83/83), 41.46 KiB | 964.00 KiB/s, done.
+Resolving deltas: 100% (31/31), done.
+
+  ╔═══════════════════════════════════════╗
+  ║  Emergency AI Med Hologram activated  ║
+  ╚═══════════════════════════════════════╝
+
+
+  Please state the nature of the medical emergency.
+
+  ...
+
+  No emergency? Just a checkup? That's fine too.
+  Contrary to my name, I handle everything from routine
+  configuration to catastrophic meltdowns.
+
+  I'm going to need to scan your system first.
+  Think of it as a routine physical.
+
+  Press Enter to continue, or i to see an image of
+  my holographic form here in your terminal.
+
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@Bkdbd[ ,L@B%%%%B@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*l
+B@@@@@@@@@@@@@@@@@@@@@@@@@@@@0  'a%*&%8%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Bc.
+qo&B@@@@@@@@@@@@@@@@@@@@@@@@#>  ?8M*#W&8%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@w:
+  '";i~?{|jnULQOmkM8B@@@@@@@Y' .u#M**M&%B@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@M?
+                       '^"!>"   jb&pwWWWW#W%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#[
+                               '{w*pmkoW@@@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@B@@@Bm[.
+                                >q#pJp#8BB@@@@@@@@@@@@@@@@@@BBB@@@@@@@@@@@@@@@@@@@@@@@@%Q!
+                                :ubmOdkkdk%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%#aha&@@@@@@@@%aY`
+                                `ubmqm*8B@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@WqU;'
+                                `0*o*8B@@@@BB@@@@B@@@@@@B@@B@@@@@@@@@@@@@@@@@@@@@@@@BB%O,
+                                "0oB%&dkBB@@B@@@@@@@B@@@8@@k8@@@@%B#OM@@@@Bh0a&@@@@@@%#Q`
+                                ipMqj:        .  ;r0Q*@WMB@Wr%Wx'l!        ''.`[LMB@BB%&+
+                                }#dl                `I}+lC%M;<_"                 `|o@@@%u
+                                r&{  `]fzn{_,         .[w#%BL'         ^|mhdO#8Z~.,OBB@BL
+                           Iw{ .Y#> :+l'    "        '-pB@@@@pI    .'>!`"     `?L<.{MB@@m"
+                           :?I ,0W)"!   "X]    ~~..<J<xw@@@@@@#r\):'\*M:  .{vji. ]tQWB@@bl  ;U
+                           ',  lw&bqtIn-{xZqaMB@@@@C\C1#@@@@@@@@@@@BB%hW8%%M&kB@*ZB@@@@@W?  xB
+  ^cQQpc[<'        ';;'    "[: !q&ppbJ*owqhp#@@@@@@B8Ock@@@@@@@@@@@%@B@BB@@@@@@@@@@@@@@@B| "JW
+  IW@@@@MQ.       }#@@@k.  '(+ !p&##WMh*W&%B@@#&B@@*QxzB@@@@@@@@@@@@@8W@@@M**8@@@@@@@@@@@n.:QB
+  'm@@@@@WI       \%@@@@<   [+?;OMW%@@@%B8*h8@@@@BMh0*@@@@@@@@@@@@@@@@@BW%@@@@@@@@@@@@@BBx. :L
+  I8@@B@@%"       {W@@@o"   ~LC'v*#8B@@@@@@@@@@@@WxndB@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@8)._ ,
+  l@@@@@@8+        "<?l     ^QWtxYqo&%@@@@@@@@@@WXqmbM@@@@@@@@@@@@%YB@@@@@@@@@@@@@@@@@@B%Udo+
+   `,`I`            `"       /MJbmrmoW&B@@@@@@@M/CmC]<(pM8%%ab#&%@@W[a@@@@@@@@@@@@@@@@@B%&@@0"
+                    ^l'      !k0CZmpbo*%@@@@@@*~(]`   .  .';I.  .]pBm~B@@@@@@@@@@@@@@@B8W8@@YY
+                    l1:       vOwZZkdmhM%@@@BQ,Y*v  :!,^    .}):  ]@@#Z@@@@@@@@@@@@@@B&%M8@@BB
+          '"'       _vi      'r%8aChapLh&@@Bw<c*p0uu?!r}!t&@@@@@@@@@@@@U8@@@@@@@@@@@@@B&&B@BB@
+                   :0ax;     l[@dnJmM#hM&BBWjjbkm0cLux*%@@BB@@@@@@@@@@@8Q#@@@@@@@@@@@@@%%BBYo@
+                  >h@@@@j    i}#%WQYh***M8%wfkOLqbh%8B@@@@8%@@@@@@@@@@@@@Cm@@@@@@@@@@@%B8%@@@@
+                  ~a@@@@Q    Idz*MOnmkbk#8o-ahpM8%@@@@@@@@@@@@@@@@@@@@@@@@0O@@@@@@@@@@BBQnB@@B
+                  ih@@@@f    lhMU++XOoohM%vCwpxrXmaOn}]jmM&ZxxUwWB@@B&&B@@Wc*@@@@@@@@B8W/>?Z%B
+          `:;     Ib@@%>]0_  !k%B%ZtXm*o*Bzux>^^^.   .,;`"!?1))_".`;I;I1p%@Jq@@@@@@@@%Wa/@BB@@
+           ""'.   ih@*+u? ]t ;kBBBk/Jw*bh@mul `tznqB@@@@@@@@@@@@@@@@@@@mz#@*m@@@@@@@%8h1w@@@@@
+          IuOQ[;  ;bW_x:If`>/:dBB%&f)cZYp&%Xi?O8&aXvnQY["!+~}q*8BB@@@@@@BB@@&@@B@@B#pqf{@@@@@@
+          .,;,'   .t:t!,M@p.~\IMBBBm;~/tv0B%ah#BBB#CucbW8B@B&W&BB@@@@@@@@@@@@@BBB%#0\>!f@@@@@@
+          \%@M]    .Xl+@@@@b,>v?#@BBO'i}liYdwzcUha&@B%*bmb%@@@@@@@@@@@BB@@@@@BMMMkfI"fCv@@@@@@
+          ,rUf"   'u;<a@@B@@Z,!t|%BBBw:`I'"_1xxzQM%&&@@@@@@@@@@@@@@@@%%@@@@@hU]rk\`'O@uQ@@@@@@
+                 .|<`k@@WJ&@@C [[fBBB&u,...luuz0&@@@@@@@@@@@@@@@@@@@@@@@@@B%a-1C].lb@@(k@@@@@@
+             `":I]('d@@@o(M@@@U t_li-({Y~   'l[Ym#p&B@@@@@@@@@@@@@@@@@@@%#mr>(1" <o@@@]W@@@@@@
+__~+v-`)uQdMB@@@@J.Y@@@@p`a@@@Bf.L@@@@BWb0c|" `i-[]/O#B@@@@@@@@@@@BB@B#cl      `(%@@@%]njt/um%
+BBBBO>*@@@O+Q@@@a'(&@@@@C c@@@@#-.d@@@Z<J@@@a+  ."..''It*8amuQqkc0dbJl        ,U@@@@@M}'    "w
+@@@@?zB@@b; Ih@8l;b@@88@( )@88@@d`<M@a~ ,Z@@@z'                              Ih@@@@@@a?.   '|&
+@@@wih@@Wohwkaar'n@@@#--; '-]*@@@c.jhaaOaaM@@M!                            'r@@@@@@@&(-~:(k&@@
+@@@~(@@*<       ;B@@BZ~     >Q@@@@?       l8@@u                          ^XWB@@@@@@hl~]}->:{*@
+@@b Z@@WQUQQQQ) 0@@8h0z!   ;z0k8@@q^~QQQQJQ#@@#`["                  -Od#B@@@@@@@Bk?::+[[[l.!>:
+@@n^%@@8x`iw@@i_W@@@@@& ]q{;k@@@@@81 k@ki`t%@@@]|h<           `]-"^zM%@@@@@@Bpj~. ',~+[[][: '"
+,"''W@@BU^~o@m.cB@@@@@wa@@@aw@@@@@@O,{@&?`zB@@@< 'l-       lLMB@@BB@@@@@@p},' .   `l~??>[[>
+    .~tJqk#8B_!d@@@@@@@@@@@@B&%@@@@B+"k%MapLr-'             U@@@@B&own+  .'.    '.,>~l:[]?^
+ .^:Il!,'.. v [%@@@@@@@@@hf!'  +m@@@C')l                     ?|[i`     .  '",,. .:l!""->-l
+~I:`^.'    ;\ X@@@@@@@@z` ;Jf>r/.~%@B^[~                             '"!l;'.. .";,;'`~<[i.
+`.         +- d@@@@@&r``{f`    If:;ZBtlt                         '^,. '...'`":^"`"'I!>??'
+           [_`@@@@*/.;f{'       .|)'tq.c                         .''`"^`,,'   `l>lli]+~.
+          .[i)@@@|.`Q_            lf"'./l                 ...^'`"`'^^`    ^:>_-_~;-}~:.
+          ^\;X&n',j-               `u> +f       .^^'. ...^''^"`'.``':I;>_---<;:>?]]i
+          "t`t,,x?.                  +\^C       '^:i<+++<<~+<<~<+_-?+~i!,";i++-]]!`
+          ,j  |).                     ;cZ.              .'"":^`''.. .`;~_--???;'
+          ;u[u'                         f;           `I>!<<i~~~+_++-]--!l!:'          'l/_`
+          iL;                                            'I+_+++-+~_<^                'it-^
+                                                          `i+<~_-i<,                    .
+                                                          .!+>++~~l
+
+
+  The Emergency Medical Hologram, reporting for duty.
+
+  Press any key to continue...
+
+  Press any key to begin the scan...
+
+  [scan] Detecting platform... Linux (WSL2 on Windows)
+  [scan] Shell... bash
+  [scan] tmux... installed (3.2)
+  [scan] git... installed
+  [scan] claude... installed
+
+  Good. Vitals look stable.
+
+
+  Now I need to find where you keep your projects.
+
+  Most people have a folder where each subfolder is a
+  separate project or agent workspace.
+  Some call it "GitHub", others call it
+  "Claude Projects" or just "projects".
+
+  Let me scan your drives...
+
+  [scan] Found /mnt/c/Users/wmchr/Documents/GitHub/ (1 folders)
+  [scan] Found /mnt/c/GitHub/ (27 folders)
+
+  Scan complete.
+
+  Which one is your projects folder?
+
+    [1] /mnt/c/Users/wmchr/Documents/GitHub/  (1 folder)
+    [2] /mnt/c/GitHub/  (27 folders)
+    [3] Browse to a folder
+    [4] Type a path
+
+  > 3
+
+  Browsing: /mnt/
+
+    [1] c/  (25 folders)
+    [2] d/  (14 folders)
+    [3] g/
+    [4] h/
+    [5] i/
+    [6] wsl/
+    [7] wslg/  (5 folders)
+
+    [u] Up one level
+    [s] Select THIS folder (/mnt/)
+    [q] Cancel
+
+  > 1
+
+  Browsing: /mnt/c/
+
+    [1] $Recycle.Bin/  (1 folders)
+    [2] 2023-12-28 Steph Iphone Photos/  (7 folders)
+    [3] Battlestate Games/  (1 folders)
+    [4] Focusee/  (1 folders)
+    [5] GitHub/  (27 folders)
+    [6] Intel/  (2 folders)
+    [7] Log/
+    [8] OneDriveTemp/  (1 folders)
+    [9] Program Files/  (78 folders)
+    [10] Program Files (x86)/  (60 folders)
+    [11] ProgramData/  (64 folders)
+    [12] Python312/  (7 folders)
+    [13] ShadowPlay/
+    [14] Unreal/  (13 folders)
+    [15] UnrealTournament/  (11 folders)
+    [16] UserBenchmark/
+    [17] Users/  (3 folders)
+    [18] Windows/  (75 folders)
+    [19] XboxGames/  (5 folders)
+    [20] asa-dedicated-manager/  (3 folders)
+    [21] asmdata/  (5 folders)
+    [22] inetpub/
+    [23] n8n/  (1 folders)
+    [24] root/  (1 folders)
+    [25] tmp/  (1 folders)
+
+    [u] Up one level
+    [s] Select THIS folder (/mnt/c/)
+    [q] Cancel
+
+  > 5
+
+  Browsing: /mnt/c/GitHub/
+
+    [1] _archived/  (6 folders)
+    [2] _future_projects/  (1 folders)
+    [3] api-docs-willSamgungAutomateCloud/  (2 folders)
+    [4] camera-obs-launcher-helper/  (3 folders)
+    [5] claude-code-doctor/  (2 folders)
+    [6] code-to-content/  (5 folders)
+    [7] cold-call-shirt-places/  (1 folders)
+    [8] communication-reviewer-agent/  (5 folders)
+    [9] gamer-ram-saver-transformer/
+    [10] leprechaun-fun/
+    [11] minecraft-boot-helper/  (9 folders)
+    [12] minecraft-wrapper/  (1 folders)
+    [13] mod-helper-minecraft-java/  (8 folders)
+    [14] money-manager/  (4 folders)
+    [15] msg-spreadsheet/  (2 folders)
+    [16] never-twice-money-manager/  (10 folders)
+    [17] steel-trap/  (3 folders)
+    [18] steel-trap-fathom/  (7 folders)
+    [19] the-tester/  (6 folders)
+    [20] thedoc/  (1 folders)
+    [21] twilio-testing/  (2 folders)
+    [22] useful-powershell-scripts/  (2 folders)
+    [23] virtual-desktop-pinning/  (7 folders)
+    [24] win-kill/  (2 folders)
+    [25] win-window-and-desktop-manager/  (7 folders)
+    [26] windows-startup-manager/  (4 folders)
+
+    [u] Up one level
+    [s] Select THIS folder (/mnt/c/GitHub/)
+    [q] Cancel
+
+  > s
+
+  Got it. Your doctors will live in /mnt/c/GitHub/
+
+  Here's how thedoc works:
+  - This framework (thedoc) stays where you cloned it
+  - Each doctor gets its own folder, like /mnt/c/GitHub/claude-doctor/
+  - The doctor folder has a CLAUDE.md (your personal config)
+    and a DOCTOR.md (shared diagnostic instructions)
+  - You update thedoc with 'git pull' - your configs are never overwritten
+
+  Press any key to continue...
+
+  What is this doctor for? (which LLM harness are you looking to configure or fix?)
+
+    [1] Claude Code
+    [2] OpenClaw
+    [3] Gemini CLI (not yet supported)
+
+  > 1
+
+  Which LLM engine will power this doctor?
+
+    [1] Claude Code
+    [2] OpenClaw (not yet supported)
+    [3] Gemini CLI (not yet supported)
+
+  > 1
+
+  Setup mode?
+
+    [1] Quick - generate a starter config, refine later
+    [2] Full - interactive audit of your current setup
+
+  > 2
+
+  Name for your doctor instance folder?
+  This will be created in /mnt/c/GitHub/. Press Enter for default.
+
+  [claude-code-doctor] >
+
+  /mnt/c/GitHub/claude-code-doctor already exists.
+  Open existing instance? [Y/n] y
+
+  Ready to launch.
+
+ ▐▛███▜▌   Claude Code v2.1.107
+▝▜█████▛▘  Opus 4.6 (1M context) · Claude Max
+  ▘▘ ▝▝    /mnt/c/GitHub/claude-code-doctor
+
+❯ I just created this doctor instance. Run a full interactive audit of my system: check my shell, tmux config, SSH
+  setup, existing aliases, installed tools, and current configuration. Show me what you find, compare it against the
+  templates in DOCTOR.md, and walk me through each recommendation one at a time. Let me accept or reject each change.
+
+● Let me start by understanding what's in this workspace and looking for the DOCTOR.md file they referenced.
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+● There's no DOCTOR.md file in this workspace. There are no templates or audit checklists defined here to compare
+  against.
+
+  Rather than invent a template that doesn't exist, let me do what I can do - run a thorough audit of your actual Claude
+   Code setup and system environment, then walk you through findings and recommendations. Let me gather the data first.
+
+● Bash(echo "=== Shell ===" && echo "SHELL=$SHELL" && echo "Bash: $(bash --version | head -1)" && echo "PWD=$PWD" &&
+      echo "" && echo "=== Claude Code ===" && claude --…)
+  ⎿  Running…
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(echo "=== tmux ===" && which tmux 2>/dev/null && tmux -V 2>/dev/null || echo "tmux not installed" && echo "" &&
+      echo "=== tmux config ===" && cat ~/.tmux.conf 2…)
+  ⎿  Waiting…
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(echo "=== Installed Tools ===" && for cmd in git node npm python3 python pip pip3 go rustc cargo docker gh jq
+      curl wget code; do printf "%-12s " "$cmd:" && whic…)
+  ⎿  Waiting…
+
+● Bash(echo "=== Git Config ===" && git config --global --list 2>/dev/null | head -30)
+  ⎿  Waiting…
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Bash command
+
+   echo "=== Shell ===" && echo "SHELL=$SHELL" && echo "Bash: $(bash --version | head -1)" && echo "PWD=$PWD" && echo
+    "" && echo "=== Claude Code ===" && claude --version 2>/dev/null || echo "claude CLI not on PATH in this shell"
+   Check shell and Claude version
+
+ Do you want to proceed?
+ ❯ 1. Yes
+   2. Yes, and don't ask again for bash --version and echo "Bash: $(bash --version commands in
+      /mnt/c/GitHub/claude-code-doctor
+   3. No
+
+ Esc to cancel · Tab to amend · ctrl+e to explain
+ ▐▛███▜▌   Claude Code v2.1.107
+▝▜█████▛▘  Opus 4.6 (1M context) · Claude Max
+  ▘▘ ▝▝    /mnt/c/GitHub/claude-code-doctor
+
+❯ I just created this doctor instance. Run a full interactive audit of my system: check my shell, tmux config, SSH
+  setup, existing aliases, installed tools, and current configuration. Show me what you find, compare it against the
+  templates in DOCTOR.md, and walk me through each recommendation one at a time. Let me accept or reject each change.
+
+● Let me start by understanding what's in this workspace and looking for the DOCTOR.md file they referenced.
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+● There's no DOCTOR.md file in this workspace. There are no templates or audit checklists defined here to compare
+  against.
+
+  Rather than invent a template that doesn't exist, let me do what I can do - run a thorough audit of your actual Claude
+   Code setup and system environment, then walk you through findings and recommendations. Let me gather the data first.
+
+● Bash(echo "=== Shell ===" && echo "SHELL=$SHELL" && echo "Bash: $(bash --version | head -1)" && echo "PWD=$PWD" &&
+      echo "" && echo "=== Claude Code ===" && claude --…)
+  ⎿  === Shell ===
+     SHELL=/bin/bash
+     Bash: GNU bash, version 5.1.16(1)-release (x86_64-pc-linux-gnu)
+     … +4 lines (ctrl+o to expand)
+
+● Listing 1 directory… (ctrl+o to expand)
+  ⎿  $ echo "=== SSH Config ===" && cat ~/.ssh/config 2>/dev/null || echo "No SSH config found" && echo "" && echo "===
+     SSH Keys ===" && ls -la ~/.ssh/*.pub 2>/dev/null || echo "No public keys found"
+
+● Bash(echo "=== tmux ===" && which tmux 2>/dev/null && tmux -V 2>/dev/null || echo "tmux not installed" && echo "" &&
+      echo "=== tmux config ===" && cat ~/.tmux.conf 2…)
+  ⎿  Waiting…
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(echo "=== Installed Tools ===" && for cmd in git node npm python3 python pip pip3 go rustc cargo docker gh jq
+      curl wget code; do printf "%-12s " "$cmd:" && whic…)
+  ⎿  Waiting…
+
+● Bash(echo "=== Git Config ===" && git config --global --list 2>/dev/null | head -30)
+  ⎿  Waiting…
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Bash command
+
+   echo "=== SSH Config ===" && cat ~/.ssh/config 2>/dev/null || echo "No SSH config found" && echo "" && echo "===
+   SSH Keys ===" && ls -la ~/.ssh/*.pub 2>/dev/null || echo "No public keys found"
+   Check SSH setup
+
+ Do you want to proceed?
+ ❯ 1. Yes
+   2. Yes, allow reading from .ssh/ from this project
+   3. No
+
+ Esc to cancel · Tab to amend · ctrl+e to explain
+ ▐▛███▜▌   Claude Code v2.1.107
+▝▜█████▛▘  Opus 4.6 (1M context) · Claude Max
+  ▘▘ ▝▝    /mnt/c/GitHub/claude-code-doctor
+
+❯ I just created this doctor instance. Run a full interactive audit of my system: check my shell, tmux config, SSH
+  setup, existing aliases, installed tools, and current configuration. Show me what you find, compare it against the
+  templates in DOCTOR.md, and walk me through each recommendation one at a time. Let me accept or reject each change.
+
+● Let me start by understanding what's in this workspace and looking for the DOCTOR.md file they referenced.
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+● There's no DOCTOR.md file in this workspace. There are no templates or audit checklists defined here to compare
+  against.
+
+  Rather than invent a template that doesn't exist, let me do what I can do - run a thorough audit of your actual Claude
+   Code setup and system environment, then walk you through findings and recommendations. Let me gather the data first.
+
+● Bash(echo "=== Shell ===" && echo "SHELL=$SHELL" && echo "Bash: $(bash --version | head -1)" && echo "PWD=$PWD" &&
+      echo "" && echo "=== Claude Code ===" && claude --…)
+  ⎿  === Shell ===
+     SHELL=/bin/bash
+     Bash: GNU bash, version 5.1.16(1)-release (x86_64-pc-linux-gnu)
+     … +4 lines (ctrl+o to expand)
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(echo "=== tmux ===" && which tmux 2>/dev/null && tmux -V 2>/dev/null || echo "tmux not installed" && echo "" &&
+      echo "=== tmux config ===" && cat ~/.tmux.conf 2…)
+  ⎿  Running…
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(echo "=== Installed Tools ===" && for cmd in git node npm python3 python pip pip3 go rustc cargo docker gh jq
+      curl wget code; do printf "%-12s " "$cmd:" && whic…)
+  ⎿  Waiting…
+
+● Bash(echo "=== Git Config ===" && git config --global --list 2>/dev/null | head -30)
+  ⎿  Waiting…
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Bash command
+
+   echo "=== tmux ===" && which tmux 2>/dev/null && tmux -V 2>/dev/null || echo "tmux not installed" && echo "" &&
+   echo "=== tmux config ===" && cat ~/.tmux.conf 2>/dev/null || echo "No .tmux.conf found"
+   Check tmux setup
+
+ Do you want to proceed?
+ ❯ 1. Yes
+   2. Yes, and allow access to englamdring/ and tmux -V commands
+   3. No
+
+ Esc to cancel · Tab to amend · ctrl+e to explain
+ ▐▛███▜▌   Claude Code v2.1.107
+▝▜█████▛▘  Opus 4.6 (1M context) · Claude Max
+  ▘▘ ▝▝    /mnt/c/GitHub/claude-code-doctor
+
+❯ I just created this doctor instance. Run a full interactive audit of my system: check my shell, tmux config, SSH
+  setup, existing aliases, installed tools, and current configuration. Show me what you find, compare it against the
+  templates in DOCTOR.md, and walk me through each recommendation one at a time. Let me accept or reject each change.
+
+● Let me start by understanding what's in this workspace and looking for the DOCTOR.md file they referenced.
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+● There's no DOCTOR.md file in this workspace. There are no templates or audit checklists defined here to compare
+  against.
+
+  Rather than invent a template that doesn't exist, let me do what I can do - run a thorough audit of your actual Claude
+   Code setup and system environment, then walk you through findings and recommendations. Let me gather the data first.
+
+● Bash(echo "=== Shell ===" && echo "SHELL=$SHELL" && echo "Bash: $(bash --version | head -1)" && echo "PWD=$PWD" &&
+      echo "" && echo "=== Claude Code ===" && claude --…)
+  ⎿  === Shell ===
+     SHELL=/bin/bash
+     Bash: GNU bash, version 5.1.16(1)-release (x86_64-pc-linux-gnu)
+     … +4 lines (ctrl+o to expand)
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(echo "=== tmux ===" && which tmux 2>/dev/null && tmux -V 2>/dev/null || echo "tmux not installed" && echo "" &&
+      echo "=== tmux config ===" && cat ~/.tmux.conf 2…)
+  ⎿  === tmux ===
+     /usr/bin/tmux
+     tmux 3.2a
+     … +3 lines (ctrl+o to expand)
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Bash(echo "=== Installed Tools ===" && for cmd in git node npm python3 python pip pip3 go rustc cargo docker gh jq
+      curl wget code; do printf "%-12s " "$cmd:" && whic…)
+  ⎿  Cancelled: parallel tool call Bash(echo "=== Bash Aliases ===" && cat ~/.ba…) errored
+
+● Bash(echo "=== Git Config ===" && git config --global --list 2>/dev/null | head -30)
+  ⎿  Cancelled: parallel tool call Bash(echo "=== Bash Aliases ===" && cat ~/.ba…) errored
+
+● Let me grab the remaining data that got cancelled.
+
+● Bash(echo "=== Installed Tools ===" && for cmd in git node npm python3 python pip pip3 go rustc cargo docker gh jq
+      curl wget; do ver=$($cmd --version 2>/dev/null | h…)
+  ⎿  === Installed Tools ===
+     git:         git version 2.34.1
+     node:        v22.22.1
+     … +15 lines (ctrl+o to expand)
+
+● Bash(git config --global --list 2>/dev/null | head -30)
+  ⎿  credential.https://github.com.helper=
+     credential.https://github.com.helper=!/usr/bin/gh auth git-credential
+
+● Now let me check Claude Code configuration.
+
+  Read 4 files, listed 1 directory (ctrl+o to expand)
+
+● Bash(echo "=== Git user config ===" && git config --global user.name 2>/dev/null || echo "not set" && git config
+      --global user.email 2>/dev/null || echo "not set" &&…)
+  ⎿  === Git user config ===
+     not set
+     not set
+     … +6 lines (ctrl+o to expand)
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Got it. Here's the full audit. I'll walk you through each finding one at a time.
+
+  ---
+  Audit Results Summary
+
+  Here's what I found across your system. I'll go through each item individually for your decision.
+
+  ┌─────────────────┬─────────┬─────────────────────────────────────────────────────────┐
+  │      Area       │ Status  │                         Finding                         │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ Shell           │ Warning │ .bashrc has 6 duplicate lines at the end                │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ Git identity    │ Missing │ No user.name or user.email set globally                 │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ SSH key         │ Warning │ RSA key with placeholder email your_email@example.com   │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ tmux            │ Info    │ Installed (3.2a) but no .tmux.conf                      │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ Claude settings │ Warning │ Global settings.json is empty {}                        │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ Claude skills   │ Info    │ No skills directory exists                              │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ Aliases         │ Info    │ Only default Ubuntu aliases                             │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ Tools           │ Info    │ jq not installed, gh is very outdated (2.4.0 from 2022) │
+  ├─────────────────┼─────────┼─────────────────────────────────────────────────────────┤
+  │ ~/thedoc        │ Info    │ Custom tool on PATH - looks intentional                 │
+  └─────────────────┴─────────┴─────────────────────────────────────────────────────────┘
+
+  ---
+  Recommendation 1: Fix duplicate lines in ~/.bashrc
+
+  Your .bashrc ends with 6 duplicate copies of the same two lines:
+
+  export PATH="$HOME/thedoc:$PATH"
+  [ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
+
+  This means ~/thedoc gets prepended to your PATH 6 times every shell, and .secrets gets sourced 6 times. Should be
+  there once.
+
+  Proposed fix: Deduplicate - keep exactly one copy of each line at the end of .bashrc.
+
+  Accept or reject?
+
+✻ Churned for 38s
+
+❯ yup fix that
+
+● Let me read the full .bashrc to make a clean edit.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(~/.bashrc)
+  ⎿  Removed 9 lines
+      117  fi
+      118  export PATH="$HOME/thedoc:$PATH"
+      119  [ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
+      120 -export PATH="$HOME/thedoc:$PATH"
+      121 -[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
+      122 -export PATH="$HOME/thedoc:$PATH"
+      123 -[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
+      124 -[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
+      125 -export PATH="$HOME/thedoc:$PATH"
+      126 -[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
+      127 -export PATH="$HOME/thedoc:$PATH"
+      128 -[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"
+
+● Done - deduplicated down to one copy of each line.
+
+  ---
+  Recommendation 2: Set git global identity
+
+  You have no user.name or user.email configured globally. Git will fall back to system defaults or prompt you, and
+  commits may end up with the wrong author.
+
+  Proposed fix: Set your name and email globally. What name and email should I use? (These go in ~/.gitconfig.)
+
+❯  Name: iamfoehammer
+    Email: englamdring@gmail.com
+
+● Bash(git config --global user.name "iamfoehammer" && git config --global user.email "englamdring@gmail.com")
+  ⎿  (No output)
+
+● Done.
+
+  ---
+  Recommendation 3: Fix SSH key placeholder email
+
+  Your SSH key (~/.ssh/id_rsa.pub) has the comment your_email@example.com - the default placeholder. This doesn't affect
+   functionality but makes it harder to identify keys if you have multiple. Also, it's an RSA key - Ed25519 is the
+  modern standard (smaller, faster, more secure).
+
+  Two options here:
+
+  - Quick fix: Just update the comment on your existing RSA key to englamdring@gmail.com (no key regeneration, no impact
+   on anything using the key)
+  - Full fix: Generate a new Ed25519 key with the correct email (you'd need to update GitHub/any remotes with the new
+  public key)
+
+  Which do you prefer, or skip this one?
+
+❯ we can skip this one for now
+
+● Got it.
+
+  ---
+  Recommendation 4: Empty global Claude Code settings
+
+  Your ~/.claude/settings.json is just {}. This is where you'd define allowed permissions, environment variables, and
+  other defaults that apply across all projects. Right now every Bash command prompts you for approval each session.
+
+  Per your CLAUDE.md, you already know about the Windows Bash permission matching bugs (#26796, #18160, etc.), so broad
+  Bash allows won't reliably work anyway. But you could pre-allow non-Bash tools and specific safe commands.
+
+  Want me to skip this one too, or would you like me to set up some baseline permissions? If so, I can look at what you
+  commonly use across projects and propose a starter set.
+
+❯ set up some baseline stuff
+
+● Let me see what permissions exist across your projects and what tools you commonly use.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Here's what I see across your projects. Common patterns:
+
+  - WebSearch used in 5+ projects
+  - WebFetch for github.com, raw.githubusercontent.com
+  - gh commands across several projects
+  - node, python, npm in various projects
+
+  Given the known Windows Bash permission matching bugs, I'll focus the global settings on things that reliably work -
+  non-Bash tools and well-tested Bash patterns. Here's what I'd propose:
+
+  {
+    "permissions": {
+      "allow": [
+        "WebSearch",
+        "WebFetch(domain:github.com)",
+        "WebFetch(domain:raw.githubusercontent.com)",
+        "WebFetch(domain:docs.anthropic.com)",
+        "WebFetch(domain:npmjs.com)",
+        "WebFetch(domain:pypi.org)",
+        "Bash(git status:*)",
+        "Bash(git log:*)",
+        "Bash(git diff:*)",
+        "Bash(git branch:*)",
+        "Bash(npm list:*)",
+        "Bash(npm test:*)",
+        "Bash(node --version:*)",
+        "Bash(python3 --version:*)",
+        "Bash(gh search:*)"
+      ]
+    }
+  }
+
+  This covers:
+  - Web access for docs/search (no prompts when researching)
+  - Read-only git commands (status, log, diff, branch)
+  - Safe dev commands (npm list/test, version checks)
+  - GitHub CLI search
+
+  I intentionally left out destructive commands (push, reset, taskkill, etc.) - those should stay per-project or manual
+  approval.
+
+  Want me to apply this, tweak anything, or add/remove items?
+
+❯ looks good
+
+● Write(~/.claude/settings.json)
+  ⎿  Added 21 lines, removed 1 line
+       1 -{}
+       1 +{
+       2 +  "permissions": {
+       3 +    "allow": [
+       4 +      "WebSearch",
+       5 +      "WebFetch(domain:github.com)",
+       6 +      "WebFetch(domain:raw.githubusercontent.com)",
+       7 +      "WebFetch(domain:docs.anthropic.com)",
+       8 +      "WebFetch(domain:npmjs.com)",
+       9 +      "WebFetch(domain:pypi.org)",
+      10 +      "Bash(git status:*)",
+      11 +      "Bash(git log:*)",
+      12 +      "Bash(git diff:*)",
+      13 +      "Bash(git branch:*)",
+      14 +      "Bash(npm list:*)",
+      15 +      "Bash(npm test:*)",
+      16 +      "Bash(node --version:*)",
+      17 +      "Bash(python3 --version:*)",
+      18 +      "Bash(gh search:*)"
+      19 +    ]
+      20 +  }
+      21 +}
+
+● Done. These will take effect in new sessions.
+
+  ---
+  Recommendation 5: Install jq
+
+  You don't have jq installed. It's extremely useful for working with JSON on the command line - Claude Code settings
+  files, API responses, package.json, etc.
+
+  Proposed fix: sudo apt install jq
+
+  Accept or skip?
+
+! sudo apt install jq
+  ⎿  sudo: a terminal is required to read the password; either use the -S option to read from standard input or
+     configure an askpass helper
+     sudo: a password is required
+
+
+❯ sudo: a terminal is required to read the password; either use the -S option to read from standard input or
+       configure an askpass helper
+       sudo: a password is required
+
+● Looks like sudo needs a terminal for the password prompt. You can run it directly in your shell:
+
+  Type ! sudo apt install jq at the prompt here, or run it in a separate terminal.
+
+  Let's move on to the next one in the meantime.
+
+  ---
+  Recommendation 6: Outdated gh CLI
+
+  Your gh version is 2.4.0 from 2022 - the current version is in the 2.70+ range. You're missing years of features (gh
+  extensions, improved auth, gh search, gh project, etc.).
+
+  Proposed fix: Upgrade via:
+  sudo apt update && sudo apt install gh
+
+  Or if the Ubuntu repo stays stale, use GitHub's official repo:
+  gh upgrade
+
+  Same sudo situation - you'd need to run this in a terminal. Want me to skip this for now and come back to both jq and
+  gh together?
+
+❯ fixed both of those in another terminal
+
+● ---
+  Recommendation 7: No tmux config
+
+  You have tmux 3.2a installed but no ~/.tmux.conf. Tmux works fine with defaults, but a minimal config can help with
+  usability - mouse support, better prefix key, sane scrollback, etc.
+
+  This is purely optional/nice-to-have. Want me to set up a minimal .tmux.conf, or skip this one?
+
+❯ go ahead and set it up please don't you have a templated one you can install?
+
+● I don't have any templates stored - this is a fresh doctor workspace with no templates yet. Let me set up a sensible
+  minimal config from scratch.
+
+● Write(~/.tmux.conf)
+  ⎿  Wrote 28 lines to ../../../../home/englamdring/.tmux.conf
+      1 # Enable mouse support (scroll, click panes, resize)
+      2 set -g mouse on
+      3
+      4 # Better scrollback buffer (default is 2000)
+      5 set -g history-limit 10000
+      6
+      7 # Start window/pane numbering at 1 (easier to reach than 0)
+      8 set -g base-index 1
+      9 setw -g pane-base-index 1
+     … +18 lines (ctrl+o to expand)
+
+● Done. Highlights:
+  - Mouse enabled (scroll, click panes, resize)
+  - 10k scrollback (up from default 2000)
+  - | and - for splits (more intuitive than % and ")
+  - New panes/windows open in your current directory
+  - prefix + r to reload config
+
+  If you're in a tmux session now, hit Ctrl+b then r to reload, or run tmux source ~/.tmux.conf.
+
+  ---
+  That covers all the findings from the audit. Here's a recap:
+
+  ┌─────┬─────────────────────────────────────────┬───────────────────────────┐
+  │  #  │             Recommendation              │          Result           │
+  ├─────┼─────────────────────────────────────────┼───────────────────────────┤
+  │ 1   │ Deduplicate .bashrc                     │ Fixed                     │
+  ├─────┼─────────────────────────────────────────┼───────────────────────────┤
+  │ 2   │ Set git identity                        │ Fixed                     │
+  ├─────┼─────────────────────────────────────────┼───────────────────────────┤
+  │ 3   │ Fix SSH key email/upgrade to Ed25519    │ Skipped                   │
+  ├─────┼─────────────────────────────────────────┼───────────────────────────┤
+  │ 4   │ Baseline Claude Code global permissions │ Fixed                     │
+  ├─────┼─────────────────────────────────────────┼───────────────────────────┤
+  │ 5   │ Install jq                              │ Fixed (external terminal) │
+  ├─────┼─────────────────────────────────────────┼───────────────────────────┤
+  │ 6   │ Upgrade gh CLI                          │ Fixed (external terminal) │
+  ├─────┼─────────────────────────────────────────┼───────────────────────────┤
+  │ 7   │ Set up .tmux.conf                       │ Fixed                     │
+  └─────┴─────────────────────────────────────────┴───────────────────────────┘
+
+❯ for nuymber 7 go check thedoc is has some templates ans stuff for you
+
+  Listed 3 directories (ctrl+o to expand)
+
+● There it is. Let me check the template.
+
+  Read 1 file (ctrl+o to expand)
+
+● Much better than what I wrote - this template is specifically tuned for your WSL/Windows setup with proper clipboard
+  integration, a cheat-sheet status bar, and Windows-friendly copy/paste. Let me replace my config with this one.
+
+● Write(~/.tmux.conf)
+  ⎿  Added 49 lines, removed 19 lines
+       1 -# Enable mouse support (scroll, click panes, resize)
+       1 +# -- General --
+       2 +set -g default-terminal "xterm-256color"
+       3 +set -ga terminal-features ",xterm-256color:RGB"
+       4 +set -g history-limit 10000
+       5 +set -g escape-time 10
+       6 +
+       7 +# -- Status bar at top --
+       8 +set -g status-position top
+       9 +
+      10 +# -- Make windows/tabs obvious --
+      11 +set -g status-style "bg=green,fg=black"
+      12 +set -g status-left " #S "
+      13 +set -g status-left-length 20
+      14 +set -g window-status-format "  #I: #W  "
+      15 +set -g window-status-current-format "  #I: #W  "
+      16 +set -g window-status-current-style "bg=colour236,fg=colour252,bold"
+      17 +set -g window-status-style "bg=green,fg=black"
+      18 +set -g window-status-separator "|"
+      19 +set -g status-right " #H "
+      20 +set -g status 2
+      21 +set -g status-format[1] "#[align=left bg=yellow,fg=black] Copy:drag  Paste:right-click  New tab:Ctrl-b
+         +c  Next:Ctrl-b n  Prev:Ctrl-b p  Detach:Ctrl-b d  Rename:Ctrl-b , #[default]"
+      22 +
+      23 +# -- Mouse --
+      24  set -g mouse on
+      25
+       4 -# Better scrollback buffer (default is 2000)
+       5 -set -g history-limit 10000
+      26 +# -- Clipboard (OSC 52) --
+      27 +# "on" = set tmux buffer AND send OSC 52 to outer terminal (Windows clipboard)
+      28 +set -g set-clipboard on
+      29
+       7 -# Start window/pane numbering at 1 (easier to reach than 0)
+       8 -set -g base-index 1
+       9 -setw -g pane-base-index 1
+      30 +# -- Copy mode: emacs keys (closer to Windows feel) --
+      31 +set -g mode-keys emacs
+      32
+      11 -# Renumber windows when one is closed
+      12 -set -g renumber-windows on
+      33 +# -- Mouse drag auto-copies and exits copy mode --
+      34 +# When you click-drag to select text and release, it copies to clipboard automatically
+      35 +bind -T copy-mode MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel
+      36
+      14 -# Reduce escape delay (fixes slow Esc in vim/nano)
+      15 -set -sg escape-time 10
+      37 +# -- Right-click pastes from tmux buffer --
+      38 +bind -T root MouseDown3Pane paste-buffer
+      39
+      17 -# Better split keybinds (| for vertical, - for horizontal)
+      18 -bind | split-window -h -c "#{pane_current_path}"
+      19 -bind - split-window -v -c "#{pane_current_path}"
+      40 +# -- Middle-click pastes too (if your mouse has one) --
+      41 +bind -T root MouseDown2Pane paste-buffer
+      42
+      21 -# New windows open in current path
+      22 -bind c new-window -c "#{pane_current_path}"
+      43 +# -- Shift+Insert pastes (common Windows shortcut) --
+      44 +bind -T root S-IC paste-buffer
+      45
+      24 -# Easy config reload
+      25 -bind r source-file ~/.tmux.conf \; display "Config reloaded"
+      46 +# -- Scroll wheel works naturally in copy mode --
+      47 +bind -T copy-mode WheelUpPane send-keys -X scroll-up
+      48 +bind -T copy-mode WheelDownPane send-keys -X scroll-down
+      49
+      27 -# 256 color support
+      28 -set -g default-terminal "screen-256color"
+      50 +# -- Double-click selects a word, triple-click selects a line --
+      51 +bind -T copy-mode DoubleClick1Pane select-pane \; send-keys -X select-word \; run-shell -d 0.3 \; send-
+         +keys -X copy-pipe-and-cancel
+      52 +bind -T copy-mode TripleClick1Pane select-pane \; send-keys -X select-line \; run-shell -d 0.3 \; send-
+         +keys -X copy-pipe-and-cancel
+      53 +bind -T root DoubleClick1Pane select-pane -t = \; if -F "#{||:#{pane_in_mode},#{mouse_any_flag}}" { sen
+         +d-keys -M } { copy-mode -H; send-keys -X select-word; run-shell -d 0.3; send-keys -X copy-pipe-and-canc
+         +el }
+      54 +bind -T root TripleClick1Pane select-pane -t = \; if -F "#{||:#{pane_in_mode},#{mouse_any_flag}}" { sen
+         +d-keys -M } { copy-mode -H; send-keys -X select-line; run-shell -d 0.3; send-keys -X copy-pipe-and-canc
+         +el }
+      55 +
+      56 +# -- Tip: Hold SHIFT while clicking/dragging to bypass tmux entirely --
+      57 +# This uses your terminal's native selection and copies to Windows clipboard directly.
+      58 +# Useful as a fallback if OSC 52 isn't working.
+
+● Replaced with the thedoc template. Key differences from what I had before:
+
+  - OSC 52 clipboard - drag-to-copy goes straight to Windows clipboard
+  - Right-click paste - works like a normal Windows terminal
+  - Double/triple-click word and line selection
+  - Green status bar at top with session/host info
+  - Second status line with a keybind cheat sheet
+  - Shift+click bypass - hold Shift to use native terminal selection as fallback
+
+  Let me also check those other templates while we're here - there's generate-cc-aliases and ssh-config-examples too.
+  Want me to look at those?
