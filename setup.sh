@@ -578,7 +578,7 @@ fi
 
 # ── Doctor setup flow ──────────────────────────────────────────────
 
-prompt_choice "What is this doctor for?" "${DOCTOR_TYPES[@]}"
+prompt_choice "What is this doctor for? (which LLM harness are you looking to configure or fix?)" "${DOCTOR_TYPES[@]}"
 doctor_idx=$?
 doctor_slug="${DOCTOR_SLUGS[$doctor_idx]}"
 doctor_name="${DOCTOR_TYPES[$doctor_idx]}"
