@@ -118,7 +118,7 @@ echo ""
 
 total=${#options[@]}
 while true; do
-    read -rp "  > " choice
+    read -rp "  > " choice < /dev/tty
     if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "$total" ]; then
         break
     fi
@@ -130,11 +130,11 @@ idx=$((choice - 1))
 if [ "$idx" -eq "${#CANDIDATE_DIRS[@]}" ]; then
     # Custom path
     echo ""
-    read -rp "  Enter the full path: " custom_path
+    read -rp "  Enter the full path: " custom_path < /dev/tty
     custom_path="${custom_path/#\~/$HOME}"
     if [ ! -d "$custom_path" ]; then
         echo ""
-        read -rp "  That folder doesn't exist. Create it? [Y/n] " create_it
+        read -rp "  That folder doesn't exist. Create it? [Y/n] " create_it < /dev/tty
         if [[ "$create_it" =~ ^[Nn] ]]; then
             echo -e "  ${DIM}Aborting.${RESET}"
             exit 0
