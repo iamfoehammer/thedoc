@@ -166,6 +166,7 @@ print_greeting() {
     fi
 }
 
+CHOICE_IDX=0
 prompt_choice() {
     local prompt_text="$1"
     shift
@@ -177,7 +178,7 @@ prompt_choice() {
     local i=1
     for opt in "${options[@]}"; do
         echo -e "    ${GREEN}[${i}]${RESET} ${opt}"
-        ((i++))
+        i=$((i + 1))
     done
     echo ""
 
@@ -185,7 +186,8 @@ prompt_choice() {
     while true; do
         read -rp "  > " choice
         if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#options[@]}" ]; then
-            return $((choice - 1))
+            CHOICE_IDX=$((choice - 1))
+            return 0
         fi
         echo -e "  ${RED}Pick a number between 1 and ${#options[@]}.${RESET}"
     done
@@ -579,7 +581,7 @@ fi
 # ── Doctor setup flow ──────────────────────────────────────────────
 
 prompt_choice "What is this doctor for? (which LLM harness are you looking to configure or fix?)" "${DOCTOR_TYPES[@]}"
-doctor_idx=$?
+doctor_idx=$CHOICE_IDX
 doctor_slug="${DOCTOR_SLUGS[$doctor_idx]}"
 doctor_name="${DOCTOR_TYPES[$doctor_idx]}"
 
@@ -596,7 +598,7 @@ fi
 echo ""
 
 prompt_choice "Which LLM engine will power this doctor?" "${ENGINE_TYPES[@]}"
-engine_idx=$?
+engine_idx=$CHOICE_IDX
 engine_slug="${ENGINE_SLUGS[$engine_idx]}"
 engine_name="${ENGINE_TYPES[$engine_idx]}"
 
@@ -617,7 +619,7 @@ fi
 echo ""
 
 prompt_choice "Setup mode?" "${SETUP_MODES[@]}"
-mode_idx=$?
+mode_idx=$CHOICE_IDX
 setup_mode="${SETUP_SLUGS[$mode_idx]}"
 
 echo ""
