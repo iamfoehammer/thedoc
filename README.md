@@ -6,110 +6,17 @@ A framework for creating dedicated "doctor" instances that diagnose, configure, 
 
 > "Please state the nature of the CLI emergency."
 
-## llm-secrets - Secure Secret Storage for AI Coding Tools
+## Table of Contents
 
-AI coding assistants (Claude Code, Gemini CLI, etc.) can see everything - your env vars, your files, your command output. There's no built-in way to store a secret that your AI tool can **use** without **seeing**.
+- [Quick Start](#quick-start)
+- [The Doctor Framework](#the-doctor-framework)
+- [llm-secrets - Secure Secret Storage](#llm-secrets---secure-secret-storage)
+- [Included Templates](#included-templates)
+- [Architecture](#architecture)
+- [Why "The Doc"?](#why-the-doc)
+- [Contributing](#contributing)
 
-`llm-secrets` fills that gap. It stores secrets in a separate chmod 600 file that your AI tool has no reason to read, and loads them as standard environment variables.
-
-```
-$ llm-secrets
-What's the secret for? my github pat
-Variable name: MY_GITHUB_PAT
-Paste secret value: ****************************************
-
-Saved! Your variable is: $MY_GITHUB_PAT
-(already in your clipboard)
-```
-
-### Why This Matters
-
-Without `llm-secrets`, every approach leaks your token:
-- Put it in `.bashrc`? AI tools see file diffs.
-- Put it in `.env`? AI tools grep and read files.
-- Type it in the chat? It's in the conversation history.
-- Use the `!` prefix? Output still shows up.
-
-With `llm-secrets`:
-- Secrets live in `~/.secrets` (chmod 600, never monitored)
-- Your shell sources it on startup - standard env vars
-- AI tools can use `$MY_GITHUB_PAT` in commands without seeing the value
-- Masked input (shows `*` for each character)
-- Copies the variable reference to your clipboard on save
-
-### Install (standalone)
-
-If you only want `llm-secrets`, no doctor framework needed:
-
-**Bash (Linux/macOS/WSL/Git Bash)**
-
-```bash
-mkdir -p ~/.local/bin
-curl -o ~/.local/bin/llm-secrets https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets
-chmod +x ~/.local/bin/llm-secrets
-echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-**PowerShell 7 (Windows)**
-
-```powershell
-# Download
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets.ps1" -OutFile "$HOME\llm-secrets.ps1"
-
-# Add to your profile (run: notepad $PROFILE)
-if (Test-Path "$HOME\.secrets.ps1") { . "$HOME\.secrets.ps1" }
-function llm-secrets { & "$HOME\llm-secrets.ps1" @args }
-
-# Reload
-. $PROFILE
-```
-
-### Usage
-
-```
-llm-secrets                       # Interactive (prompts for everything)
-llm-secrets set                   # Same as above
-llm-secrets set 'my github pat'  # Auto-converts to MY_GITHUB_PAT
-llm-secrets set MY_VAR_NAME      # Exact name also works
-llm-secrets my openai key         # Shorthand - skips "set"
-llm-secrets list                  # List secret names (not values)
-llm-secrets remove VAR_NAME      # Remove a secret
-llm-secrets help                  # Show help
-```
-
----
-
-## The Doctor Framework
-
-Beyond secrets, thedoc creates dedicated AI-powered doctor instances for your tools.
-
-### What It Does
-
-You run `thedoc`, answer a few questions, and get a dedicated doctor for your specific setup. The doctor knows how to:
-
-- **Diagnose** issues with your AI tool configuration
-- **Configure** settings, permissions, shell integrations, and SSH shortcuts
-- **Maintain** health over time with an update mechanism that walks you through changes
-- **Teach** you how your setup works so you can self-diagnose simple issues
-
-### Supported Doctor Types
-
-| Type | Status |
-|------|--------|
-| Claude Code | Supported |
-| OpenClaw | Supported |
-| Gemini CLI | Coming soon |
-
-### Supported Engines (what powers the doctor)
-
-| Engine | Status |
-|--------|--------|
-| Claude Code | Supported |
-| OpenClaw | Coming soon |
-| Gemini CLI | Coming soon |
-
-### Quick Start
+## Quick Start
 
 **Linux / macOS / WSL2 (bash)**
 
@@ -145,6 +52,31 @@ echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
 source ~/.bashrc
 thedoc
 ```
+
+## The Doctor Framework
+
+You run `thedoc`, answer a few questions, and get a dedicated AI-powered doctor for your specific setup. The doctor knows how to:
+
+- **Diagnose** issues with your AI tool configuration
+- **Configure** settings, permissions, shell integrations, and SSH shortcuts
+- **Maintain** health over time with an update mechanism that walks you through changes
+- **Teach** you how your setup works so you can self-diagnose simple issues
+
+### Supported Doctor Types
+
+| Type | Status |
+|------|--------|
+| Claude Code | Supported |
+| OpenClaw | Supported |
+| Gemini CLI | Coming soon |
+
+### Supported Engines (what powers the doctor)
+
+| Engine | Status |
+|--------|--------|
+| Claude Code | Supported |
+| OpenClaw | Coming soon |
+| Gemini CLI | Coming soon |
 
 ### Usage
 
@@ -210,6 +142,78 @@ Next time you open your doctor instance, it checks for new updates and walks you
 > current config looks like vs. what the update recommends. Want me to apply it?"
 
 No merge conflicts. Your personal config (`CLAUDE.md`) is never touched by upstream.
+
+## llm-secrets - Secure Secret Storage
+
+AI coding assistants (Claude Code, Gemini CLI, etc.) can see everything - your env vars, your files, your command output. There's no built-in way to store a secret that your AI tool can **use** without **seeing**.
+
+`llm-secrets` fills that gap. It stores secrets in a separate chmod 600 file that your AI tool has no reason to read, and loads them as standard environment variables.
+
+```
+$ llm-secrets
+What's the secret for? my github pat
+Variable name: MY_GITHUB_PAT
+Paste secret value: ****************************************
+
+Saved! Your variable is: $MY_GITHUB_PAT
+(already in your clipboard)
+```
+
+### Why This Matters
+
+Without `llm-secrets`, every approach leaks your token:
+- Put it in `.bashrc`? AI tools see file diffs.
+- Put it in `.env`? AI tools grep and read files.
+- Type it in the chat? It's in the conversation history.
+- Use the `!` prefix? Output still shows up.
+
+With `llm-secrets`:
+- Secrets live in `~/.secrets` (chmod 600, never monitored)
+- Your shell sources it on startup - standard env vars
+- AI tools can use `$MY_GITHUB_PAT` in commands without seeing the value
+- Masked input (shows `*` for each character)
+- Copies the variable reference to your clipboard on save
+
+### Install (standalone)
+
+If you only want `llm-secrets`, no doctor framework needed:
+
+**Bash (Linux/macOS/WSL/Git Bash)**
+
+```bash
+mkdir -p ~/.local/bin
+curl -o ~/.local/bin/llm-secrets https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets
+chmod +x ~/.local/bin/llm-secrets
+echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**PowerShell 7 (Windows)**
+
+```powershell
+# Download
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets.ps1" -OutFile "$HOME\llm-secrets.ps1"
+
+# Add to your profile (run: notepad $PROFILE)
+if (Test-Path "$HOME\.secrets.ps1") { . "$HOME\.secrets.ps1" }
+function llm-secrets { & "$HOME\llm-secrets.ps1" @args }
+
+# Reload
+. $PROFILE
+```
+
+### llm-secrets Usage
+
+```
+llm-secrets                       # Interactive (prompts for everything)
+llm-secrets set                   # Same as above
+llm-secrets set 'my github pat'  # Auto-converts to MY_GITHUB_PAT
+llm-secrets set MY_VAR_NAME      # Exact name also works
+llm-secrets my openai key         # Shorthand - skips "set"
+llm-secrets list                  # List secret names (not values)
+llm-secrets remove VAR_NAME      # Remove a secret
+llm-secrets help                  # Show help
+```
 
 ## Included Templates
 
