@@ -161,6 +161,11 @@ print_greeting() {
 
 CHOICE_IDX=0
 
+# Flush any buffered keyboard input
+flush_input() {
+    while read -rsn1 -t 0.05 _discard 2>/dev/null; do :; done
+}
+
 # Draw a menu with arrow key navigation
 # Sets CHOICE_IDX to the selected index (0-based)
 prompt_choice() {
@@ -169,6 +174,9 @@ prompt_choice() {
     local options=("$@")
     local selected=0
     local count=${#options[@]}
+
+    # Flush any stale keypresses from previous prompts
+    flush_input
 
     echo -e "  ${BOLD}${prompt_text}${RESET}"
     echo ""
