@@ -436,9 +436,9 @@ prompt_projects_dir() {
 browse_for_folder() {
     local current="$HOME"
 
-    # On WSL, start at /mnt to see all drives
+    # On WSL, start at /mnt so they can see all drives
     if [ "$IS_WSL" = "yes" ]; then
-        current="/"
+        current="/mnt"
     fi
 
     while true; do
@@ -448,27 +448,27 @@ browse_for_folder() {
         echo -e "  ${BOLD}Browsing: ${short}/${RESET}"
         echo ""
 
-        # List subdirectories
+        # List subdirectories (only readable ones, skip hidden)
         local dirs=()
         while IFS= read -r d; do
             [ -n "$d" ] && dirs+=("$d")
-        done < <(find "$current" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort)
+        done < <(find "$current" -maxdepth 1 -mindepth 1 -type d -readable -not -name '.*' 2>/dev/null | sort | head -50)
 
         if [ ${#dirs[@]} -eq 0 ]; then
-            echo -e "  ${DIM}(empty directory)${RESET}"
+            echo -e "  ${DIM}(empty or no readable directories)${RESET}"
         else
             local i=1
             for d in "${dirs[@]}"; do
                 local name="$(basename "$d")"
                 # Count subfolders to hint at project folders
                 local subcount
-                subcount=$(find "$d" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+                subcount=$(find "$d" -maxdepth 1 -mindepth 1 -type d -readable 2>/dev/null | wc -l)
                 if [ "$subcount" -gt 0 ]; then
                     echo -e "    ${GREEN}[${i}]${RESET} ${name}/  ${DIM}(${subcount} folders)${RESET}"
                 else
                     echo -e "    ${GREEN}[${i}]${RESET} ${name}/"
                 fi
-                ((i++))
+                i=$((i + 1))
             done
         fi
 
