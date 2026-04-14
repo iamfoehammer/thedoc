@@ -18,9 +18,9 @@ fi
 
 # Build the initial prompt based on setup mode
 if [ "$SETUP_MODE" = "full" ]; then
-    PROMPT="I just created this doctor instance. Run a full interactive audit of my system: check my shell, tmux config, SSH setup, existing aliases, installed tools, and current configuration. Show me what you find, compare it against the templates in DOCTOR.md, and walk me through each recommendation one at a time. Let me accept or reject each change."
+    PROMPT="Start by reading DOCTOR.md in this directory - it has your personality, instructions, and the full audit checklist. Then read CLAUDE.md to get the framework path and system info. Follow the Full Audit Checklist in DOCTOR.md step by step. Present each recommendation and let me accept or reject it."
 else
-    PROMPT="I just created this doctor instance. Do a quick scan of my system (OS, shell, tmux, SSH) and summarize what you find. Then ask me what I'd like to configure first."
+    PROMPT="Start by reading DOCTOR.md in this directory - it has your personality, instructions, and setup checklist. Then read CLAUDE.md to get the framework path and system info. Follow the Quick Setup instructions in DOCTOR.md - scan everything and show me a summary, then ask what I want to configure first."
 fi
 
 cd "$INSTANCE_DIR"
