@@ -133,10 +133,35 @@ Read the Framework path from CLAUDE.md first. Templates live at `<framework>/com
 - Check `~/.claude/commands/` for existing commands
 - Offer to set up useful commands like `/refreshAliases` and `/newProject` from `<framework>/common/skills/`
 
-### 8. CLAUDE.md Files
-- Check if the projects directory has a root CLAUDE.md
-- Check a sample of project folders for individual CLAUDE.md files
-- Explain the inheritance model (root CLAUDE.md applies everywhere, project-specific ones add to it)
+### 8. CLAUDE.md Files (Layered)
+
+Claude Code stacks CLAUDE.md files cumulatively: home dir → projects root → project folder. Duplicated sections and competing "primary role" claims across layers muddle the model's context.
+
+Check:
+- Home `~/CLAUDE.md` (if it exists)
+- Projects root `<projects>/CLAUDE.md` (if it exists)
+- A sample of project-level `<project>/CLAUDE.md` files
+- How many layers contain a phrase like "my primary role is X" or "my primary job is X"? More than one = problem.
+- Duplicated sections across layers (Key Locations, Diagnostic Order, Known Issues tables, memory/hook descriptions)
+
+Recommended layered structure:
+
+| Layer | Purpose |
+|---|---|
+| Home `~/CLAUDE.md` | Machine-wide facts, shared infra. Optionally a scoped role that activates by task ("when the task is about X, act as..."). No "primary" claim. |
+| Projects root `<projects>/CLAUDE.md` | Default role or conventions for all projects. Still scoped, not "primary". |
+| Project `<project>/CLAUDE.md` | The active role claim for work in this folder. Takes precedence over outer layers. |
+
+Rule: **only the innermost CLAUDE.md should claim a role**. Outer files are shared context that activates by task/scope, not by calling itself "primary".
+
+When auditing:
+1. Read each CLAUDE.md layer end to end.
+2. Flag every layer that claims to be "primary" or the user's "main" assistant role.
+3. Flag duplicated sections between layers (path tables, diagnostic orders, known-issue tables that restate the same facts).
+4. Offer a refactor: keep the deepest role claim, rewrite outer role claims as "when the task is X..." scoped activations, dedupe shared sections.
+5. Always show a dry-run diff of each file before writing.
+
+Explain the inheritance model to the user if they haven't seen it before. This convention also applies to instance folders thedoc generates - the template in `setup.sh` produces a minimal CLAUDE.md that slots into this layering cleanly.
 
 ### 9. Git Identity
 - Check `git config user.name` and `git config user.email` (global and local)
@@ -153,9 +178,11 @@ Present the audit as a numbered list of findings/recommendations. Let the user a
 
 When the user chose "Quick" setup mode, do a fast scan and report a summary:
 1. Read CLAUDE.md for system info and framework path
-2. Check the 10 items above but just report status (installed/not installed/needs attention)
+2. Check the 10 items above. For install-type items (tmux, aliases, SSH, shell profile, llm-secrets, settings, commands, git, secrets) report `installed` / `not installed` / `needs attention`. For check-type items (CLAUDE.md hygiene, item 8) report `healthy` / `needs refactor` / `not present`, and briefly state what was found (e.g. "2 layers, 1 competing role claim").
 3. Present a summary table
 4. Ask what they want to configure first
+
+CLAUDE.md hygiene is cross-cutting - always run it on both Quick and Full, even if no other changes are requested, so every user is aware of the layered convention.
 
 ## Setup Capabilities Reference
 

@@ -1,6 +1,11 @@
 # Personal/private configs
 .private/
 
+# Personal/local CLAUDE.md overrides (Claude Code's native pattern for
+# per-machine instructions that shouldn't ship to users). Public CLAUDE.md
+# is tracked; local variants are not.
+CLAUDE.local.md
+
 # Instance state (tracked per-instance, not in framework)
 .applied-updates
 
