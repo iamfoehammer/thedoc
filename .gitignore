@@ -6,6 +6,11 @@
 # is tracked; local variants are not.
 CLAUDE.local.md
 
+# Per-user Claude Code settings (permissions, hooks, etc.). Project-wide
+# settings at .claude/settings.json are fine to commit; .local.json is
+# personal and should not ship.
+.claude/settings.local.json
+
 # Instance state (tracked per-instance, not in framework)
 .applied-updates
 
