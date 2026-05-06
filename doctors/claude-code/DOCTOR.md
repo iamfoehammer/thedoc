@@ -172,6 +172,30 @@ Explain the inheritance model to the user if they haven't seen it before. This c
 - If yes, help them set up a fine-grained PAT using `llm-secrets`
 - Explain the remote URL approach for per-repo auth
 
+### 11. Status Line
+
+Claude Code has a built-in status bar at the bottom of the terminal. The `statusLine` setting in `~/.claude/settings.json` lets you replace it with any shell script. The framework ships a portable script at `<framework>/common/templates/statusline.sh`.
+
+What it renders:
+- Line 1: `<folder> | <branch> | <model> | <ctx%>`
+- Line 2 (when data is present): `$<cost> spent | +<added> -<removed> lines | <duration> session`
+
+Check:
+- Is `statusLine` already set in `~/.claude/settings.json`? If yes, what command does it run?
+- Is `~/.claude/statusline.sh` present?
+
+Offer to install:
+1. Copy `<framework>/common/templates/statusline.sh` to `~/.claude/statusline.sh`
+2. `chmod +x ~/.claude/statusline.sh`
+3. Add to `~/.claude/settings.json`:
+   ```json
+   "statusLine": { "type": "command", "command": "~/.claude/statusline.sh" }
+   ```
+
+If they already have a custom `statusLine`, show the diff between theirs and the framework version and let them pick. Don't overwrite a working custom script without confirmation.
+
+Requires `jq` and `git`. Both are usually present; flag if missing.
+
 Present the audit as a numbered list of findings/recommendations. Let the user accept or reject each one. Track what was applied in the Known Issues & Fixes table in CLAUDE.md.
 
 ## Quick Setup
