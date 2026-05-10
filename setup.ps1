@@ -456,8 +456,175 @@ function Show-StructureExplainer {
     Write-Host ''
 }
 
-# ── Last remaining stub ──────────────────────────────────────────────
-function New-DoctorInstance      { throw 'TODO: port the instance creation block' }
+# ── New-DoctorInstance ───────────────────────────────────────────────
+# Mirrors the bash instance-creation block: validates instance name with the
+# same rules (no slashes, no leading dot, not whitespace, not a non-thedoc
+# folder), creates the directory, copies DOCTOR.md, generates CLAUDE.md,
+# saves state, and either exec's the engine or short-circuits on
+# THEDOC_NO_LAUNCH=1 for testing.
+function New-DoctorInstance {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$ProjectsDir,
+        [Parameter(Mandatory)][string]$DoctorSlug,
+        [Parameter(Mandatory)][string]$DoctorName,
+        [Parameter(Mandatory)][string]$EngineSlug,
+        [Parameter(Mandatory)][string]$EngineName,
+        [Parameter(Mandatory)][string]$SetupMode
+    )
+
+    $defaultInstance = "$DoctorSlug-doctor"
+    Write-Host "  Name for your doctor instance folder?"
+    Write-Host "  This will be created in $(Get-ShortPath $ProjectsDir)/. Press Enter for default." -ForegroundColor DarkGray
+
+    while ($true) {
+        Write-Host ''
+        $entered = Read-Host "  [$defaultInstance] >"
+        $instanceName = if ([string]::IsNullOrWhiteSpace($entered)) { $defaultInstance } else { $entered.Trim() }
+
+        if ([string]::IsNullOrWhiteSpace($instanceName)) {
+            Write-Host "  Name can't be empty or whitespace." -ForegroundColor Yellow
+            continue
+        }
+        if ($instanceName -match '[/\\]') {
+            Write-Host "  Name can't contain '/' or '\'. Use just the folder name." -ForegroundColor Yellow
+            continue
+        }
+        if ($instanceName.StartsWith('.')) {
+            Write-Host "  Name can't start with '.' (would create a hidden folder)." -ForegroundColor Yellow
+            continue
+        }
+        $candidate = Join-Path $ProjectsDir $instanceName
+        if ((Test-Path -LiteralPath $candidate -PathType Container) -and
+            -not (Test-Path -LiteralPath (Join-Path $candidate 'DOCTOR.md'))) {
+            Write-Host "  $(Get-ShortPath $candidate) exists but isn't a thedoc instance" -ForegroundColor Yellow
+            Write-Host "  (no DOCTOR.md inside). Pick a different name." -ForegroundColor DarkGray
+            continue
+        }
+        break
+    }
+
+    $instanceDir = Join-Path $ProjectsDir $instanceName
+
+    if (Test-Path -LiteralPath $instanceDir -PathType Container) {
+        Write-Host ''
+        Write-Host "  $(Get-ShortPath $instanceDir) already exists as a doctor instance." -ForegroundColor Yellow
+        $resp = Read-Host '  Open existing instance? [Y/n]'
+        if ($resp -match '^[Nn]') {
+            Write-Host '  Aborting. Re-run and pick a different name to create a new one.' -ForegroundColor DarkGray
+            exit 0
+        }
+    }
+    else {
+        try {
+            New-Item -Type Directory -Path $instanceDir -Force -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Host "  Failed to create $(Get-ShortPath $instanceDir)" -ForegroundColor Red
+            Write-Host '  Try creating it manually and re-running.' -ForegroundColor DarkGray
+            exit 1
+        }
+        Write-Host "  Created $(Get-ShortPath $instanceDir)" -ForegroundColor Green
+
+        Copy-Item -LiteralPath (Join-Path $ScriptDir "doctors/$DoctorSlug/DOCTOR.md") `
+                  -Destination  (Join-Path $instanceDir 'DOCTOR.md')
+        Write-Host "  Copied DOCTOR.md ($DoctorName)" -ForegroundColor Green
+
+        New-Item -Type Directory -Path (Join-Path $instanceDir 'updates') -Force | Out-Null
+
+        # Junction is the Windows-friendly equivalent of `ln -s` for dirs;
+        # works without admin/dev mode. Falls back to a text file holding
+        # the absolute path if the FS rejects it (e.g. some network shares).
+        $junctionPath   = Join-Path $instanceDir '.framework-updates'
+        $junctionTarget = Join-Path $ScriptDir "doctors/$DoctorSlug/updates"
+        try {
+            New-Item -ItemType Junction -Path $junctionPath -Target $junctionTarget -ErrorAction Stop | Out-Null
+            Write-Host '  Linked framework updates' -ForegroundColor Green
+        }
+        catch {
+            Set-Content -LiteralPath $junctionPath -Value $junctionTarget
+            Write-Host '  Linked framework updates (text fallback)' -ForegroundColor Green
+        }
+
+        $platform = if ($IsWindows -or $env:OS -eq 'Windows_NT') { 'windows' }
+                    elseif ($IsMacOS)                            { 'macos' }
+                    elseif ($IsLinux)                            { 'linux' }
+                    else                                         { 'unknown' }
+
+        $created = (Get-Date).ToString('o')
+        $claudeMd = @"
+# $DoctorName Doctor
+
+Read DOCTOR.md for your core instructions and personality.
+Everything below is this instance's personal configuration.
+
+## Setup Info
+
+- **Doctor type:** $DoctorName
+- **Engine:** $EngineName
+- **Setup mode:** $SetupMode
+- **Created:** $created
+- **Framework:** $ScriptDir
+
+## System
+
+- **Platform:** $platform
+- **Shell:** PowerShell $($PSVersionTable.PSVersion)
+- **Home:** $HOME
+- **Projects dir:** $ProjectsDir
+
+## Known Issues & Fixes
+
+| Issue | Cause | Fix |
+|---|---|---|
+
+## Where to Save New Learnings
+
+Add new issues and fixes to the Known Issues & Fixes table above.
+"@
+        Set-Content -LiteralPath (Join-Path $instanceDir 'CLAUDE.md') -Value $claudeMd
+        Write-Host '  Generated CLAUDE.md' -ForegroundColor Green
+
+        New-Item -Type File -Path (Join-Path $instanceDir '.applied-updates') -Force | Out-Null
+
+        $gitignore = @"
+# Framework link (local path, not portable)
+.framework-updates
+
+# Update tracker (per-user state)
+.applied-updates
+
+# Private configs
+.private/
+"@
+        Set-Content -LiteralPath (Join-Path $instanceDir '.gitignore') -Value $gitignore
+        Write-Host '  Created .gitignore' -ForegroundColor Green
+    }
+
+    Write-Host ''
+    Write-Host '  Ready to launch.'
+    Write-Host ''
+
+    Save-State -ProjectsDir $ProjectsDir -Platform 'windows'
+
+    if ($env:THEDOC_NO_LAUNCH) {
+        Write-Host '  THEDOC_NO_LAUNCH set - skipping engine launch (test mode).' -ForegroundColor DarkGray
+        Write-Host "  Instance ready at $(Get-ShortPath $instanceDir)" -ForegroundColor DarkGray
+        Write-Host ''
+        exit 0
+    }
+
+    $engineScript = Join-Path $ScriptDir "engines/$EngineSlug.ps1"
+    if (Test-Path -LiteralPath $engineScript) {
+        & $engineScript -InstanceDir $instanceDir -SetupMode $SetupMode -DoctorType $DoctorSlug
+    }
+    else {
+        Write-Host "  PowerShell engine launcher not found: $engineScript" -ForegroundColor Red
+        Write-Host '  Other engines (OpenClaw, Gemini) are bash-only today;' -ForegroundColor DarkGray
+        Write-Host '  use WSL2 / Git Bash for those, or contribute the .ps1 launcher.' -ForegroundColor DarkGray
+        exit 1
+    }
+}
 
 # ── Main ─────────────────────────────────────────────────────────────
 Show-Greeting
@@ -486,20 +653,57 @@ $SetupModes  = @('Quick - generate a starter config, refine later',
 $SetupSlugs  = @('quick', 'full')
 
 Write-Host ''
-$doctorIdx = Show-Menu -Prompt 'What is this doctor for?' -Options $DoctorTypes
+$doctorIdx  = Show-Menu -Prompt 'What is this doctor for?' -Options $DoctorTypes
 $doctorSlug = $DoctorSlugs[$doctorIdx]
 $doctorName = $DoctorTypes[$doctorIdx]
 
-# TODO(New-DoctorInstance): once the instance creation function is ported,
-# the rest of the flow lights up here:
-#   - engine selection + stub detection + claude-code fallback
-#   - setup mode pick
-#   - instance name validation loop
-#   - file copies, CLAUDE.md gen, .framework-updates symlink
-#   - THEDOC_NO_LAUNCH gate, then exec engine
+# Doctor type supported? (canonical check is the bash DOCTOR.md presence)
+$doctorMd = Join-Path $ScriptDir "doctors/$doctorSlug/DOCTOR.md"
+if (-not (Test-Path -LiteralPath $doctorMd)) {
+    Write-Host ''
+    Write-Host "  $doctorName doctor templates are coming soon." -ForegroundColor Yellow
+    Write-Host '  The framework is here - contributions welcome!'
+    Write-Host "  See doctors/$doctorSlug/ to help build it." -ForegroundColor DarkGray
+    Write-Host ''
+    exit 0
+}
 
 Write-Host ''
-Write-Host "  setup.ps1 reached the doctor-type pick ($doctorName)." -ForegroundColor DarkGray
-Write-Host '  The instance-creation step is still TODO. For the full flow' -ForegroundColor DarkGray
-Write-Host '  today, run setup.sh under WSL2 or Git Bash.' -ForegroundColor DarkGray
+$engineIdx  = Show-Menu -Prompt 'Which LLM engine will power this doctor?' -Options $EngineTypes
+$engineSlug = $EngineSlugs[$engineIdx]
+$engineName = $EngineTypes[$engineIdx]
+
+# Engine supported? Same gate as setup.sh: missing OR head|grep "not yet supported"
+# in the canonical .sh file. We always look at the .sh marker because that's
+# where the convention lives - PS sibling files don't always exist yet.
+$engineMarkerFile = Join-Path $ScriptDir "engines/$engineSlug.sh"
+$engineSupported  = $true
+if (-not (Test-Path -LiteralPath $engineMarkerFile)) {
+    $engineSupported = $false
+}
+elseif ((Get-Content -LiteralPath $engineMarkerFile -TotalCount 5) -match 'not yet supported') {
+    $engineSupported = $false
+}
+
+if (-not $engineSupported) {
+    Write-Host ''
+    Write-Host "  $engineName engine support is coming soon." -ForegroundColor Yellow
+    Write-Host ''
+    $fallback = Read-Host '  Run with Claude Code instead? [Y/n]'
+    if ($fallback -match '^[Nn]') {
+        Write-Host "  No worries. Check back later or help build it: engines/$engineSlug.ps1" -ForegroundColor DarkGray
+        exit 0
+    }
+    $engineSlug = 'claude-code'
+    $engineName = 'Claude Code'
+}
+
 Write-Host ''
+$modeIdx   = Show-Menu -Prompt 'Setup mode?' -Options $SetupModes
+$setupMode = $SetupSlugs[$modeIdx]
+
+Write-Host ''
+New-DoctorInstance -ProjectsDir $script:ProjectsDir `
+                   -DoctorSlug $doctorSlug -DoctorName $doctorName `
+                   -EngineSlug $engineSlug -EngineName $engineName `
+                   -SetupMode  $setupMode
