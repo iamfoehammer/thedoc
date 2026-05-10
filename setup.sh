@@ -155,6 +155,15 @@ pick_random() {
     echo "${arr[$((RANDOM % ${#arr[@]}))]}"
 }
 
+# Returns 0 (true) if the file is missing OR carries the "not yet supported"
+# marker in its first 5 lines. Used by the doctor-type and engine gates so
+# stub placeholder files (committed to reserve the slot) don't slip past.
+is_stub() {
+    local file="$1"
+    [ ! -f "$file" ] && return 0
+    head -5 "$file" 2>/dev/null | grep -qF "not yet supported"
+}
+
 # Typing effect - prints text character by character.
 # Width-aware: pre-wraps at word boundaries (awk; portable across BSD/GNU)
 # so the terminal never breaks a word mid-character during the animation.
@@ -808,20 +817,11 @@ doctor_idx=$CHOICE_IDX
 doctor_slug="${DOCTOR_SLUGS[$doctor_idx]}"
 doctor_name="${DOCTOR_TYPES[$doctor_idx]}"
 
-# Check if doctor type is supported. Either DOCTOR.md is missing entirely
-# (very early scaffolding) OR it carries the "not yet supported" marker
-# (stub DOCTOR.md committed to reserve the slot, e.g. doctors/gemini/).
-# Without the marker check, the user would be dropped into Claude with a
-# stub DOCTOR.md that just says "this isn't supported yet".
-doctor_md="$SCRIPT_DIR/doctors/${doctor_slug}/DOCTOR.md"
-doctor_supported="yes"
-if [ ! -f "$doctor_md" ]; then
-    doctor_supported="no"
-elif head -5 "$doctor_md" 2>/dev/null | grep -qF "not yet supported"; then
-    doctor_supported="no"
-fi
-
-if [ "$doctor_supported" = "no" ]; then
+# Check if doctor type is supported. Stub DOCTOR.md files (committed to
+# reserve the slot, e.g. doctors/gemini/DOCTOR.md) carry the marker that
+# is_stub() looks for - otherwise the user would be dropped into Claude
+# with a useless "this doctor isn't supported yet" brain.
+if is_stub "$SCRIPT_DIR/doctors/${doctor_slug}/DOCTOR.md"; then
     echo ""
     echo -e "  ${YELLOW}${doctor_name} doctor templates are coming soon.${RESET}"
     echo -e "  The framework is here - contributions welcome!"
@@ -837,19 +837,12 @@ engine_idx=$CHOICE_IDX
 engine_slug="${ENGINE_SLUGS[$engine_idx]}"
 engine_name="${ENGINE_TYPES[$engine_idx]}"
 
-# Check if the engine is actually implemented. Either the launcher file is
-# missing, or it's a stub marked "not yet supported". Catching this here
-# (before the instance directory and CLAUDE.md/DOCTOR.md get created) avoids
-# orphaned half-instances if the user later picks "no" on the fallback.
-engine_file="$SCRIPT_DIR/engines/${engine_slug}.sh"
-engine_supported="yes"
-if [ ! -f "$engine_file" ]; then
-    engine_supported="no"
-elif head -5 "$engine_file" 2>/dev/null | grep -qF "not yet supported"; then
-    engine_supported="no"
-fi
-
-if [ "$engine_supported" = "no" ]; then
+# Check if the engine is actually implemented. Catches missing launchers
+# AND stub launchers marked "not yet supported" via the shared is_stub()
+# helper. Catching this here (before the instance directory and CLAUDE.md
+# get created) avoids orphan half-instances if the user picks "no" on the
+# fallback.
+if is_stub "$SCRIPT_DIR/engines/${engine_slug}.sh"; then
     echo ""
     echo -e "  ${YELLOW}${engine_name} engine support is coming soon.${RESET}"
     echo ""

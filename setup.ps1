@@ -330,6 +330,20 @@ function Read-Line {
     return [Console]::ReadLine()
 }
 
+# ── Stub detection ───────────────────────────────────────────────────
+# Returns $true if the file is missing OR carries the "not yet supported"
+# marker in its first 5 lines. Used by both the doctor and engine gates so
+# stub placeholder files (committed to reserve the slot) don't slip past.
+# Mirrors bash is_stub() exactly.
+function Test-IsStub {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $true }
+    if ((Get-Content -LiteralPath $Path -TotalCount 5) -match 'not yet supported') {
+        return $true
+    }
+    return $false
+}
+
 # ── Path helpers ─────────────────────────────────────────────────────
 # Cross-platform short path display ($HOME -> ~). Mirrors bash short_path.
 function Get-ShortPath {
@@ -671,21 +685,9 @@ $doctorIdx  = Show-Menu -Prompt 'What is this doctor for?' -Options $DoctorTypes
 $doctorSlug = $DoctorSlugs[$doctorIdx]
 $doctorName = $DoctorTypes[$doctorIdx]
 
-# Doctor type supported? Same gate as setup.sh: missing OR carries the
-# "not yet supported" marker in DOCTOR.md (e.g. doctors/gemini/DOCTOR.md
-# is a stub with that text). Without the marker check, picking an
-# unsupported doctor type would drop the user into Claude reading a
-# stub DOCTOR.md that just says "not supported yet".
-$doctorMd = Join-Path $ScriptDir "doctors/$doctorSlug/DOCTOR.md"
-$doctorSupported = $true
-if (-not (Test-Path -LiteralPath $doctorMd)) {
-    $doctorSupported = $false
-}
-elseif ((Get-Content -LiteralPath $doctorMd -TotalCount 5) -match 'not yet supported') {
-    $doctorSupported = $false
-}
-
-if (-not $doctorSupported) {
+# Doctor type supported? Stub DOCTOR.md files trigger the same coming-soon
+# exit as missing files (see Test-IsStub above).
+if (Test-IsStub (Join-Path $ScriptDir "doctors/$doctorSlug/DOCTOR.md")) {
     Write-Host ''
     Write-Host "  $doctorName doctor templates are coming soon." -ForegroundColor Yellow
     Write-Host '  The framework is here - contributions welcome!'
@@ -699,19 +701,10 @@ $engineIdx  = Show-Menu -Prompt 'Which LLM engine will power this doctor?' -Opti
 $engineSlug = $EngineSlugs[$engineIdx]
 $engineName = $EngineTypes[$engineIdx]
 
-# Engine supported? Same gate as setup.sh: missing OR head|grep "not yet supported"
-# in the canonical .sh file. We always look at the .sh marker because that's
-# where the convention lives - PS sibling files don't always exist yet.
-$engineMarkerFile = Join-Path $ScriptDir "engines/$engineSlug.sh"
-$engineSupported  = $true
-if (-not (Test-Path -LiteralPath $engineMarkerFile)) {
-    $engineSupported = $false
-}
-elseif ((Get-Content -LiteralPath $engineMarkerFile -TotalCount 5) -match 'not yet supported') {
-    $engineSupported = $false
-}
-
-if (-not $engineSupported) {
+# Engine supported? Reads the canonical .sh marker (the convention lives
+# there; PS siblings don't always exist yet). Test-IsStub handles both
+# missing-file and stub-with-marker cases.
+if (Test-IsStub (Join-Path $ScriptDir "engines/$engineSlug.sh")) {
     Write-Host ''
     Write-Host "  $engineName engine support is coming soon." -ForegroundColor Yellow
     Write-Host ''
