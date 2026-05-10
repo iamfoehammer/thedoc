@@ -316,23 +316,190 @@ function Show-Menu {
     }
 }
 
-# ── Stubs for the remaining flow (TODO) ──────────────────────────────
-function Get-ProjectsDir         { throw 'TODO: port detect_projects_dirs / prompt_projects_dir' }
-function Show-StructureExplainer { throw 'TODO: port print_structure_explainer' }
+# ── Path helpers ─────────────────────────────────────────────────────
+# Cross-platform short path display ($HOME -> ~). Mirrors bash short_path.
+function Get-ShortPath {
+    param([string]$Path)
+    if ($Path -and $Path.StartsWith($HOME)) {
+        return '~' + $Path.Substring($HOME.Length)
+    }
+    return $Path
+}
+
+# ── Project-folder discovery ─────────────────────────────────────────
+# Mirrors bash detect_projects_dirs. Native Windows-only candidates;
+# WSL-mounted /mnt/ paths intentionally skipped (those users run setup.sh).
+function Get-CandidateProjectDirs {
+    $candidates = @(
+        (Join-Path $HOME 'GitHub'),
+        (Join-Path $HOME 'projects'),
+        (Join-Path $HOME 'repos'),
+        (Join-Path $HOME 'Claude Projects'),
+        (Join-Path $HOME 'code'),
+        (Join-Path $HOME 'workspace'),
+        (Join-Path $HOME 'dev'),
+        (Join-Path $HOME 'Documents/GitHub'),
+        (Join-Path $HOME 'Documents/projects'),
+        (Join-Path $HOME 'source/repos')   # Visual Studio's default
+    )
+    $results = New-Object 'System.Collections.Generic.List[object]'
+    foreach ($dir in $candidates) {
+        if (Test-Path -LiteralPath $dir -PathType Container) {
+            $count = 0
+            try {
+                $count = @(Get-ChildItem -LiteralPath $dir -Directory -ErrorAction SilentlyContinue).Count
+            } catch {}
+            if ($count -gt 0) {
+                $results.Add([PSCustomObject]@{
+                    Path  = $dir
+                    Count = $count
+                }) | Out-Null
+            }
+        }
+    }
+    return $results.ToArray()
+}
+
+# ── Get-ProjectsDir ──────────────────────────────────────────────────
+# Mirrors prompt_projects_dir. Returns the chosen absolute path.
+# Note: the WSL drive scan and full folder browser from setup.sh are not
+# ported - PS7 native users almost always have one of the candidate dirs,
+# and the "Type a path" fallback covers anything missed.
+function Get-ProjectsDir {
+    Write-Host ''
+    Write-Typed 'Now I need to find where you keep your projects.'
+    Write-Host ''
+    Write-Typed 'Most people have a folder where each subfolder is a separate project or agent workspace.'
+    Write-Typed 'Some call it "GitHub", others call it "Claude Projects" or just "projects".'
+    Write-Host ''
+    Write-Typed 'Let me scan your drives...'
+    Write-Host ''
+
+    $candidates = Get-CandidateProjectDirs
+    foreach ($c in $candidates) {
+        $short = Get-ShortPath $c.Path
+        Write-Host "  [scan] Found $short/  ($($c.Count) folders)"
+        Start-Sleep -Milliseconds 150
+    }
+    if ($candidates.Count -eq 0) {
+        Write-Host '  [scan] No project folders found.' -ForegroundColor Yellow
+    }
+
+    Write-Host ''
+    Start-Sleep -Milliseconds 300
+    Write-Typed 'Scan complete.'
+    Write-Host ''
+
+    # Build menu options
+    $options = New-Object 'System.Collections.Generic.List[string]'
+    foreach ($c in $candidates) {
+        $short = Get-ShortPath $c.Path
+        $word  = if ($c.Count -eq 1) { 'folder' } else { 'folders' }
+        $options.Add("$short/  ($($c.Count) $word)") | Out-Null
+    }
+    $options.Add('Type a path') | Out-Null
+
+    $idx = Show-Menu -Prompt 'Which one is your projects folder?' -Options $options.ToArray()
+
+    if ($idx -eq $candidates.Count) {
+        # Type a path - re-prompt on empty / mkdir failure (matches setup.sh)
+        while ($true) {
+            Write-Host ''
+            $custom = Read-Host '  Enter the full path'
+            $custom = $custom.Trim()
+            $custom = $custom -replace '^~', $HOME
+
+            if ([string]::IsNullOrEmpty($custom)) {
+                Write-Host "  Path can't be empty." -ForegroundColor Yellow
+                continue
+            }
+
+            if (-not (Test-Path -LiteralPath $custom -PathType Container)) {
+                Write-Host ''
+                $create = Read-Host "  That folder doesn't exist. Create it? [Y/n]"
+                if ($create -match '^[Nn]') {
+                    continue
+                }
+                try {
+                    New-Item -Type Directory -Path $custom -Force | Out-Null
+                    Write-Host "  Created $custom" -ForegroundColor Green
+                } catch {
+                    Write-Host "  Failed to create $custom." -ForegroundColor Red
+                    Write-Host '  Check permissions or try a different path.' -ForegroundColor DarkGray
+                    continue
+                }
+            }
+            return $custom
+        }
+    }
+
+    return $candidates[$idx].Path
+}
+
+# ── Show-StructureExplainer ──────────────────────────────────────────
+function Show-StructureExplainer {
+    param([Parameter(Mandatory)][string]$ProjectsDir)
+    $short = Get-ShortPath $ProjectsDir
+    Write-Host ''
+    Write-Typed "Got it. Your doctors will live in $short/"
+    Write-Host ''
+    Write-Typed "Here's how thedoc works:"
+    Write-Typed "- This framework (thedoc) stays where you cloned it"
+    Write-Typed "- Each doctor gets its own folder, like $short/claude-doctor/"
+    Write-Typed "- The doctor folder has a CLAUDE.md (your personal config)"
+    Write-Typed "  and a DOCTOR.md (shared diagnostic instructions)"
+    Write-Typed "- You update thedoc with 'git pull' - your configs are never overwritten"
+    Write-Host ''
+    Write-Host '  Press any key to continue (space to skip animations)...' -ForegroundColor DarkGray
+    $key = [Console]::ReadKey($true)
+    if ($key.KeyChar -eq ' ') { $Script:SkipTyping = $true }
+    Write-Host ''
+}
+
+# ── Last remaining stub ──────────────────────────────────────────────
 function New-DoctorInstance      { throw 'TODO: port the instance creation block' }
 
 # ── Main ─────────────────────────────────────────────────────────────
 Show-Greeting
 
-# TODO: rest of the flow
-# Invoke-TricorderScan
-# $ProjectsDir = Get-ProjectsDir
-# $DoctorType  = Show-Menu 'What is this doctor for?' @('Claude Code','OpenClaw','Gemini CLI')
-# $Engine      = Show-Menu 'Which LLM engine?' @('Claude Code')
-# $SetupMode   = Show-Menu 'Setup mode?' @('Quick','Full')
-# New-DoctorInstance ...
+if (Test-FirstRun) {
+    Invoke-TricorderScan
+    $script:ProjectsDir = Get-ProjectsDir
+    Show-StructureExplainer -ProjectsDir $script:ProjectsDir
+}
+else {
+    $state = Get-State
+    if ($state -and $state.projects_dir -and (Test-Path -LiteralPath $state.projects_dir)) {
+        $script:ProjectsDir = $state.projects_dir
+    } else {
+        $script:ProjectsDir = Split-Path -Parent $ScriptDir
+    }
+}
+
+# Doctor type / engine / setup mode selection (number-key shortcuts work)
+$DoctorTypes = @('Claude Code', 'OpenClaw', 'Gemini CLI (not yet supported)')
+$DoctorSlugs = @('claude-code', 'openclaw',  'gemini')
+$EngineTypes = @('Claude Code', 'OpenClaw (not yet supported)', 'Gemini CLI (not yet supported)')
+$EngineSlugs = @('claude-code', 'openclaw',                      'gemini')
+$SetupModes  = @('Quick - generate a starter config, refine later',
+                 'Full - interactive audit of your current setup')
+$SetupSlugs  = @('quick', 'full')
 
 Write-Host ''
-Write-Host '  setup.ps1 is currently a scaffold; the full flow lives in setup.sh.'
-Write-Host '  For now, run the bash setup.sh under WSL2 or Git Bash on Windows.'
+$doctorIdx = Show-Menu -Prompt 'What is this doctor for?' -Options $DoctorTypes
+$doctorSlug = $DoctorSlugs[$doctorIdx]
+$doctorName = $DoctorTypes[$doctorIdx]
+
+# TODO(New-DoctorInstance): once the instance creation function is ported,
+# the rest of the flow lights up here:
+#   - engine selection + stub detection + claude-code fallback
+#   - setup mode pick
+#   - instance name validation loop
+#   - file copies, CLAUDE.md gen, .framework-updates symlink
+#   - THEDOC_NO_LAUNCH gate, then exec engine
+
+Write-Host ''
+Write-Host "  setup.ps1 reached the doctor-type pick ($doctorName)." -ForegroundColor DarkGray
+Write-Host '  The instance-creation step is still TODO. For the full flow' -ForegroundColor DarkGray
+Write-Host '  today, run setup.sh under WSL2 or Git Bash.' -ForegroundColor DarkGray
 Write-Host ''
