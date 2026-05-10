@@ -30,10 +30,12 @@ import time
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SETUP_SH  = os.path.join(REPO_ROOT, 'setup.sh')
 
-# Fixed path the typed-path scenario uses. Pre-created by pre_typed_path
-# and cleaned up by main(). Living outside the fake_home fixture so the
-# "Type a path" branch sees an absolute path the user might plausibly enter.
-TYPED_PATH_FIXTURE = '/tmp/thedoc-smoke-typed-projects'
+# Fixed paths the typed-path scenarios use. Living outside any per-run
+# fake_home fixture so the "Type a path" branch sees an absolute path the
+# user might plausibly enter. Pre-/un-created by their pre_setup hooks
+# and cleaned up by main().
+TYPED_PATH_FIXTURE = '/tmp/thedoc-smoke-typed-projects'           # exists branch
+TYPED_PATH_CREATE  = '/tmp/thedoc-smoke-typed-projects-to-create' # create branch
 
 ANSI_RE = re.compile(rb'\x1b\[[0-9;]*[A-Za-z]')
 
@@ -114,6 +116,13 @@ def pre_typed_path(project_dir, state_dir):
     os.makedirs(os.path.join(TYPED_PATH_FIXTURE, 'sub-project'))
 
 
+def pre_typed_path_create(project_dir, state_dir):
+    """Ensure TYPED_PATH_CREATE does NOT exist so setup.sh hits the
+    'doesn't exist. Create it? [Y/n]' branch and exercises mkdir."""
+    import shutil
+    shutil.rmtree(TYPED_PATH_CREATE, ignore_errors=True)
+
+
 def pre_write_state(project_dir, state_dir, slug='claude-code'):
     """Pre-write a thedoc state file under $XDG_STATE_HOME/thedoc/state to
     simulate a returning user. is_first_run() in setup.sh returns false,
@@ -155,6 +164,23 @@ TYPED_PATH_STEPS = [
     (re.compile(r'Setup mode\?'),                          b'1',                                'Mode: 1 (Quick)'),
     (re.compile(r'Name for your doctor instance folder'),  b'\n',                               'Default name'),
     (re.compile(r'already exists.*\[Y/n\]'),               b'\n',                               'Open existing if any'),
+]
+
+
+# Like TYPED_PATH_STEPS, but the typed path doesn't exist beforehand so
+# setup hits the "doesn't exist. Create it?" branch and exercises mkdir.
+TYPED_PATH_CREATE_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                              'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ',                              'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'3',                              'Projects: option 3 (Type a path)'),
+    (re.compile(r'Enter the full path:'),                   (TYPED_PATH_CREATE + '\n').encode(), 'Type non-existent path'),
+    (re.compile(r"That folder doesn't exist. Create it\?"), b'\n',                             'Default Y - create'),
+    (re.compile(r'Press any key to continue \(space'),      b' ',                              'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'1',                              'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                       b'1',                              'Engine: 1'),
+    (re.compile(r'Setup mode\?'),                           b'1',                              'Mode: 1'),
+    (re.compile(r'Name for your doctor instance folder'),   b'\n',                             'Default name'),
+    (re.compile(r'already exists.*\[Y/n\]'),                b'\n',                             'Open existing if any'),
 ]
 
 
@@ -405,9 +431,12 @@ def main():
                     assertions=coming_soon_assertions)
     failures += run(steps=TYPED_PATH_STEPS,        label='typed-path',
                     pre_setup=pre_typed_path)
+    failures += run(steps=TYPED_PATH_CREATE_STEPS, label='typed-path-create',
+                    pre_setup=pre_typed_path_create)
     failures += run(steps=_full_mode_steps(),      label='full-mode')
-    # Clean up the typed-path fixture (lives outside any per-run fake_home)
+    # Clean up the typed-path fixtures (live outside any per-run fake_home)
     shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
+    shutil.rmtree(TYPED_PATH_CREATE,  ignore_errors=True)
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
     sys.exit(1 if failures else 0)
