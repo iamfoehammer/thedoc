@@ -649,6 +649,19 @@ prompt_projects_dir() {
                 echo -e "  ${YELLOW}Path can't be empty.${RESET}"
                 continue
             fi
+            # Require an absolute path. A relative path like '.' or
+            # '../projects' would resolve against whatever cwd setup.sh
+            # happened to launch from, then get saved literally to state -
+            # so 'thedoc list' from a different cwd would point at the
+            # wrong place. Force the user to be explicit.
+            case "$custom_path" in
+                /*) ;;
+                *)
+                    echo -e "  ${YELLOW}Path must be absolute (start with /).${RESET}"
+                    echo -e "  ${DIM}Example: /home/you/GitHub${RESET}"
+                    continue
+                    ;;
+            esac
             if [ ! -d "$custom_path" ]; then
                 echo ""
                 read -rp "  That folder doesn't exist. Create it? [Y/n] " create_it

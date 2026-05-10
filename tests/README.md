@@ -5,7 +5,7 @@ Two test suites for the framework. Both run in CI on Ubuntu and macOS.
 | File | What it covers | Runtime |
 |---|---|---|
 | `test_wrapper.sh` | Wrapper subcommand surface (`thedoc help/list/open/...`) — non-PTY, exit codes + output strings | ~50ms |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 12 scenarios | ~25s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 13 scenarios | ~28s |
 
 `thedoc test` runs both in order, mirroring CI.
 
@@ -63,6 +63,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `coming-soon` | Stub doctor type (Gemini) → "templates are coming soon" early exit | `5a93d35` |
 | `typed-path` | Custom projects-folder path, target already exists | baseline |
 | `typed-path-create` | Custom projects-folder path, target doesn't exist → mkdir branch | baseline |
+| `typed-path-relative` | Relative path (`.`) rejected with "Path must be absolute"; absolute path then accepted | iter 59 |
 | `full-mode` | Setup mode 2 (Full audit) reaches `Ready to launch.` | baseline |
 
 Each scenario has a custom step list and (where the assertion logic

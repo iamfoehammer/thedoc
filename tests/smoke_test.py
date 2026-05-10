@@ -215,6 +215,26 @@ TYPED_PATH_DECLINE_STEPS = [
 ]
 
 
+# User types a relative path ('.') which the wizard must reject because
+# PROJECTS_DIR ends up saved to state literally - a relative path would
+# resolve against whatever cwd 'thedoc list' / setup ran from later,
+# silently pointing at the wrong place. The wizard should print
+# "Path must be absolute" and re-prompt; absolute path then accepted.
+TYPED_PATH_RELATIVE_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                                 'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ',                                 'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'3',                                 'Projects: option 3 (Type a path)'),
+    (re.compile(r'Enter the full path:'),                   b'.\n',                               'Type relative path'),
+    (re.compile(r'Path must be absolute'),                  (TYPED_PATH_FIXTURE + '\n').encode(), 'Type absolute on re-prompt'),
+    (re.compile(r'Press any key to continue \(space'),      b' ',                                 'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'1',                                 'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                       b'1',                                 'Engine: 1'),
+    (re.compile(r'Setup mode\?'),                           b'1',                                 'Mode: 1'),
+    (re.compile(r'Name for your doctor instance folder'),   b'\n',                                'Default name'),
+    (re.compile(r'already exists.*\[Y/n\]'),                b'\n',                                'Open existing if any'),
+]
+
+
 # Like TYPED_PATH_STEPS, but the typed path doesn't exist beforehand so
 # setup hits the "doesn't exist. Create it?" branch and exercises mkdir.
 TYPED_PATH_CREATE_STEPS = [
@@ -502,6 +522,8 @@ def main():
                                      pre_setup=pre_typed_path_create)),
         ('typed-path-decline',  dict(steps=TYPED_PATH_DECLINE_STEPS,
                                      pre_setup=pre_typed_path_decline)),
+        ('typed-path-relative', dict(steps=TYPED_PATH_RELATIVE_STEPS,
+                                     pre_setup=pre_typed_path)),
         ('full-mode',         dict(steps=_full_mode_steps())),
     ]
 

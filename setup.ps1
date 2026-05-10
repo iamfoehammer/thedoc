@@ -458,6 +458,15 @@ function Get-ProjectsDir {
                 continue
             }
 
+            # Require an absolute path (mirrors setup.sh). A relative path
+            # like '.' would get saved literally to state and silently
+            # point at the wrong place next session.
+            if (-not [System.IO.Path]::IsPathRooted($custom)) {
+                Write-Host "  Path must be absolute." -ForegroundColor Yellow
+                Write-Host "  Example: C:\Users\you\GitHub" -ForegroundColor DarkGray
+                continue
+            }
+
             if (-not (Test-Path -LiteralPath $custom -PathType Container)) {
                 Write-Host ''
                 $create = Read-Line "  That folder doesn't exist. Create it? [Y/n] "
