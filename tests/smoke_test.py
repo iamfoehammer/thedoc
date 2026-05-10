@@ -207,10 +207,32 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
 
     out = bytearray()
     log = open(log_path, 'wb')
-    deadline  = time.time() + timeout
-    step_idx  = 0
-    last_send = 0.0
-    sent      = []
+    deadline = time.time() + timeout
+    step_idx = 0
+    sent     = []
+
+    def drain_until_quiet(quiet_ms=200, max_wait_ms=1500):
+        """Read bytes until no new output arrives for `quiet_ms`. Used to
+        wait for a prompt to finish painting before sending input - the
+        typing animation can otherwise be mid-character when the regex
+        matches the prompt text, racing with our keystroke."""
+        last_chunk = time.time()
+        end = last_chunk + (max_wait_ms / 1000.0)
+        while time.time() < end and time.time() < deadline:
+            if (time.time() - last_chunk) * 1000 >= quiet_ms:
+                return
+            ready, _, _ = select.select([fd], [], [], 0.05)
+            if ready:
+                try:
+                    chunk = os.read(fd, 4096)
+                    if not chunk:
+                        return
+                    out.extend(chunk)
+                    log.write(chunk)
+                    log.flush()
+                    last_chunk = time.time()
+                except OSError:
+                    return
 
     while time.time() < deadline:
         ready, _, _ = select.select([fd], [], [], 0.2)
@@ -229,13 +251,14 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
             pattern, data, step_label = steps[step_idx]
             cleaned = ANSI_RE.sub(b'', bytes(out)).decode('utf-8', 'replace')
             if pattern.search(cleaned):
-                if time.time() - last_send > 0.4:
-                    time.sleep(0.4)
-                    os.write(fd, data)
-                    sent.append(step_label)
-                    step_idx += 1
-                    last_send = time.time()
-                    time.sleep(0.3)
+                # Wait for the prompt to finish typing before sending.
+                drain_until_quiet()
+                os.write(fd, data)
+                sent.append(step_label)
+                step_idx += 1
+                # Small post-send delay so the script can register the
+                # keystroke and start producing the next prompt.
+                time.sleep(0.15)
 
     try:
         os.kill(pid, signal.SIGTERM)
