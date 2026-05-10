@@ -3,6 +3,48 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# ── Preflight: sanity checks before doing anything user-facing ─────
+# Fail fast with a friendly message if the runtime can't support us.
+
+# Bash 3.2+ required (macOS ships 3.2; any modern Linux is 4+ or 5+).
+if [ "${BASH_VERSINFO[0]:-0}" -lt 3 ] || \
+   { [ "${BASH_VERSINFO[0]}" -eq 3 ] && [ "${BASH_VERSINFO[1]:-0}" -lt 2 ]; }; then
+    echo "" >&2
+    echo "  thedoc needs bash 3.2 or newer. You're on ${BASH_VERSION:-unknown}." >&2
+    echo "  On macOS, install a modern bash with: brew install bash" >&2
+    echo "" >&2
+    exit 1
+fi
+
+_require() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "" >&2
+        echo "  thedoc needs '$1' but it isn't on your PATH." >&2
+        if [ -n "${2:-}" ]; then
+            echo "  ${2}" >&2
+        else
+            echo "  Install it via your package manager and try again." >&2
+        fi
+        echo "" >&2
+        exit 1
+    fi
+}
+_require git "On macOS: brew install git. On Linux: apt install git (or your distro's equivalent)."
+_require awk
+_require sed
+_require find
+
+# Clean exit on Ctrl+C / SIGTERM. Without this, a mid-flow interrupt leaves
+# the user staring at a half-typed line with no idea what happened.
+_on_interrupt() {
+    echo ""
+    echo ""
+    echo "  Aborted. No instance was created." >&2
+    echo "" >&2
+    exit 130
+}
+trap _on_interrupt INT TERM
+
 # ── Colors ──────────────────────────────────────────────────────────
 BOLD='\033[1m'
 DIM='\033[2m'
