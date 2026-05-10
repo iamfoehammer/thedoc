@@ -881,18 +881,29 @@ while true; do
         echo -e "  ${YELLOW}Name can't start with '.' (would create a hidden folder).${RESET}"
         continue
     fi
+    # If the target path already exists but isn't a thedoc instance (no
+    # DOCTOR.md inside), refuse to use it - we'd otherwise mix doctor files
+    # into someone's unrelated project. Re-prompt for a different name.
+    target="$PROJECTS_DIR/$instance_name"
+    if [ -d "$target" ] && [ ! -f "$target/DOCTOR.md" ]; then
+        echo -e "  ${YELLOW}$(short_path "$target") exists but isn't a thedoc instance${RESET}"
+        echo -e "  ${DIM}(no DOCTOR.md inside). Pick a different name.${RESET}"
+        continue
+    fi
     break
 done
 
 INSTANCE_DIR="$PROJECTS_DIR/$instance_name"
 
-# Check if instance already exists
+# Check if instance already exists. By the time we reach here we know that
+# if INSTANCE_DIR exists, it's a real thedoc instance (the name loop above
+# rejected non-instance directories).
 if [ -d "$INSTANCE_DIR" ]; then
     echo ""
-    echo -e "  ${YELLOW}$(short_path "$INSTANCE_DIR") already exists.${RESET}"
+    echo -e "  ${YELLOW}$(short_path "$INSTANCE_DIR") already exists as a doctor instance.${RESET}"
     read -rp "  Open existing instance? [Y/n] " open_existing
     if [[ "$open_existing" =~ ^[Nn] ]]; then
-        echo -e "  ${DIM}Aborting.${RESET}"
+        echo -e "  ${DIM}Aborting. Re-run and pick a different name to create a new one.${RESET}"
         exit 0
     fi
 else
