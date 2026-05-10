@@ -1,21 +1,29 @@
 # thedoc tests
 
-End-to-end smoke tests for `setup.sh`. Catches regressions across the
-major branches of the wizard before they ship.
+Two test suites for the framework. Both run in CI on Ubuntu and macOS.
+
+| File | What it covers | Runtime |
+|---|---|---|
+| `test_wrapper.sh` | Wrapper subcommand surface (`thedoc help/list/open/...`) — non-PTY, exit codes + output strings | ~50ms |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 12 scenarios | ~25s |
+
+`thedoc test` runs both in order, mirroring CI.
 
 ## Running
 
 ```bash
-python3 tests/smoke_test.py                      # all scenarios
-python3 tests/smoke_test.py happy-path           # one scenario
+bash tests/test_wrapper.sh                       # wrapper only
+python3 tests/smoke_test.py                      # smoke: all scenarios
+python3 tests/smoke_test.py happy-path           # smoke: one scenario
 python3 tests/smoke_test.py typed-path typed-path-create
-python3 tests/smoke_test.py --list               # list all labels
-thedoc test                                      # all, via wrapper
+python3 tests/smoke_test.py --list               # list smoke labels
+thedoc test                                      # wrapper + smoke
 ```
 
-Requires Python 3 and a real PTY (Linux/macOS — won't run under cmd.exe).
-Each scenario takes 1–3 seconds; the full suite finishes in 25–35s. Exit
-codes: 0 = all PASS, 1 = at least one FAIL, 2 = unknown scenario name.
+The smoke suite requires Python 3 and a real PTY (Linux/macOS — won't run
+under cmd.exe). Each scenario takes 1–3s; the full suite finishes in
+~25s. Exit codes: 0 = all PASS, 1 = at least one FAIL, 2 = unknown
+smoke scenario name.
 
 ## What it does
 

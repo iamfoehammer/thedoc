@@ -29,22 +29,26 @@ case "${1:-setup}" in
         exec "$SCRIPT_DIR/setup.sh"
         ;;
     test)
-        # Run the framework's E2E smoke test against the installed setup.sh.
-        # Useful for verifying a clean state after `thedoc update` or for
-        # contributors checking their own changes.
-        if ! command -v python3 >/dev/null 2>&1; then
+        # Run the framework's full test suite: wrapper tests (fast, non-PTY)
+        # then the E2E smoke test (PTY-based, ~25s). Mirrors what CI runs
+        # so `thedoc test` after `thedoc update` is a faithful local check.
+        if [ ! -f "$SCRIPT_DIR/tests/test_wrapper.sh" ] || \
+           [ ! -f "$SCRIPT_DIR/tests/smoke_test.py" ]; then
             echo ""
-            echo "  thedoc test requires python3. Install it via your package manager."
-            echo ""
-            exit 1
-        fi
-        if [ ! -f "$SCRIPT_DIR/tests/smoke_test.py" ]; then
-            echo ""
-            echo "  Smoke test not found at $SCRIPT_DIR/tests/smoke_test.py"
+            echo "  Tests not found under $SCRIPT_DIR/tests/"
             echo "  Try 'thedoc update' to refresh the framework."
             echo ""
             exit 1
         fi
+        if ! command -v python3 >/dev/null 2>&1; then
+            echo ""
+            echo "  thedoc test requires python3 for the smoke suite."
+            echo "  Install it via your package manager and try again."
+            echo ""
+            exit 1
+        fi
+        bash "$SCRIPT_DIR/tests/test_wrapper.sh" || exit $?
+        echo ""
         exec python3 "$SCRIPT_DIR/tests/smoke_test.py"
         ;;
     update)
