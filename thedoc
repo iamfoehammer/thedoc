@@ -34,19 +34,20 @@ case "${1:-setup}" in
         echo ""
         found=0
         for dir in "$GITHUB_DIR"/*/; do
-            if [ -f "$dir/DOCTOR.md" ]; then
-                name="$(basename "$dir")"
-                doctor_type="unknown"
-                if grep -q "Claude Code" "$dir/DOCTOR.md" 2>/dev/null; then
-                    doctor_type="Claude Code"
-                elif grep -q "OpenClaw" "$dir/DOCTOR.md" 2>/dev/null; then
-                    doctor_type="OpenClaw"
-                elif grep -q "Gemini" "$dir/DOCTOR.md" 2>/dev/null; then
-                    doctor_type="Gemini CLI"
-                fi
-                echo "    $name  ($doctor_type)"
-                found=1
+            # An instance is identified by a DOCTOR.md at its root.
+            [ -f "$dir/DOCTOR.md" ] || continue
+            name="$(basename "$dir")"
+            # Read the explicit "Doctor type:" line from CLAUDE.md (written
+            # by setup.sh's CLAUDE.md generator). DOCTOR.md grepping was
+            # fragile - any cross-reference to another doctor type would
+            # win the elif chain.
+            doctor_type="unknown"
+            if [ -f "$dir/CLAUDE.md" ]; then
+                read_type=$(sed -n 's/^- \*\*Doctor type:\*\* //p' "$dir/CLAUDE.md" 2>/dev/null | head -1)
+                [ -n "$read_type" ] && doctor_type="$read_type"
             fi
+            echo "    $name  ($doctor_type)"
+            found=1
         done
         if [ "$found" -eq 0 ]; then
             echo "    (none found - run 'thedoc setup' to create one)"
