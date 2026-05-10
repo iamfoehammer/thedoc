@@ -213,6 +213,22 @@ NON_THEDOC_FOLDER_STEPS = [
 ]
 
 
+# Tests whitespace-only instance name. The trim step in the validation
+# loop must zero-out "   " into "" and trip the empty-string guard,
+# re-prompting the user. Different arm of the loop than slash/dot tests.
+EMPTY_NAME_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                 'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ',                 'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'1',                 'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),      b' ',                 'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'1',                 'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                       b'1',                 'Engine: 1 (Claude Code)'),
+    (re.compile(r'Setup mode\?'),                           b'1',                 'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),   b'   \n',             'Whitespace-only name'),
+    (re.compile(r"Name can't be empty or whitespace"),      b'fresh-instance\n',  'Good name after rejection'),
+]
+
+
 # Drives the wizard through a deliberately bad instance name first, then
 # a valid one. Confirms the validation loop in setup.sh actually re-prompts.
 NEGATIVE_NAME_STEPS = [
@@ -420,6 +436,7 @@ def main():
     print('=' * 60)
     failures += run(steps=HAPPY_PATH_STEPS,      label='happy-path')
     failures += run(steps=NEGATIVE_NAME_STEPS,   label='negative-name')
+    failures += run(steps=EMPTY_NAME_STEPS,      label='empty-name')
     failures += run(steps=ENGINE_FALLBACK_STEPS, label='engine-fallback')
     failures += run(steps=OPEN_EXISTING_STEPS,    label='open-existing',
                     pre_setup=pre_create_instance)
