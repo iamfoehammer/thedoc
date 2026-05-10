@@ -77,16 +77,22 @@ case "${1:-setup}" in
             # An instance is identified by a DOCTOR.md at its root.
             [ -f "$dir/DOCTOR.md" ] || continue
             name="$(basename "$dir")"
-            # Read the explicit "Doctor type:" line from CLAUDE.md (written
-            # by setup.sh's CLAUDE.md generator). DOCTOR.md grepping was
-            # fragile - any cross-reference to another doctor type would
-            # win the elif chain.
+            # Read the explicit "Doctor type:" and "Created:" lines from
+            # CLAUDE.md (written by setup.sh's CLAUDE.md generator).
             doctor_type="unknown"
+            created=""
             if [ -f "$dir/CLAUDE.md" ]; then
                 read_type=$(sed -n 's/^- \*\*Doctor type:\*\* //p' "$dir/CLAUDE.md" 2>/dev/null | head -1)
                 [ -n "$read_type" ] && doctor_type="$read_type"
+                # Pull the date portion only (strip the "T...Z" time part)
+                read_created=$(sed -n 's/^- \*\*Created:\*\* //p' "$dir/CLAUDE.md" 2>/dev/null | head -1)
+                [ -n "$read_created" ] && created="${read_created%%T*}"
             fi
-            echo "    $name  ($doctor_type)"
+            if [ -n "$created" ]; then
+                echo "    $name  ($doctor_type, $created)"
+            else
+                echo "    $name  ($doctor_type)"
+            fi
             found=1
         done
         if [ "$found" -eq 0 ]; then
