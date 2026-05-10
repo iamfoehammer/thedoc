@@ -47,6 +47,22 @@ HAPPY_PATH_STEPS = [
     (re.compile(r'already exists.*\[Y/n\]'),                b'\n', 'Open existing if any'),
 ]
 
+# Picks an unsupported engine (OpenClaw stub) and confirms the fallback
+# prompt fires. Verifies the gate from commit 5fb0980 catches stub
+# engines BEFORE the instance directory + DOCTOR.md get created.
+ENGINE_FALLBACK_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                    b'n',  'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),         b' ',  'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),     b'1',  'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),       b' ',  'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),               b'1',  'Doctor type: 1 (Claude Code)'),
+    (re.compile(r'Which LLM engine'),                        b'2',  'Engine: 2 (OpenClaw stub)'),
+    (re.compile(r'Run with Claude Code instead\? \[Y/n\]'),  b'\n', 'Accept Claude Code fallback'),
+    (re.compile(r'Setup mode\?'),                            b'1',  'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),    b'\n', 'Default instance name'),
+    (re.compile(r'already exists.*\[Y/n\]'),                 b'\n', 'Open existing if any'),
+]
+
 # Drives the wizard through a deliberately bad instance name first, then
 # a valid one. Confirms the validation loop in setup.sh actually re-prompts.
 NEGATIVE_NAME_STEPS = [
@@ -192,8 +208,9 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path'):
 def main():
     failures = 0
     print('=' * 60)
-    failures += run(steps=HAPPY_PATH_STEPS,    label='happy-path')
-    failures += run(steps=NEGATIVE_NAME_STEPS, label='negative-name')
+    failures += run(steps=HAPPY_PATH_STEPS,      label='happy-path')
+    failures += run(steps=NEGATIVE_NAME_STEPS,   label='negative-name')
+    failures += run(steps=ENGINE_FALLBACK_STEPS, label='engine-fallback')
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
     sys.exit(1 if failures else 0)
