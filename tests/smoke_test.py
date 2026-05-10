@@ -432,25 +432,47 @@ def _full_mode_steps():
 
 
 def main():
+    # Each entry is (label, kwargs-for-run). Order is the run order.
+    SCENARIOS = [
+        ('happy-path',        dict(steps=HAPPY_PATH_STEPS)),
+        ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS)),
+        ('empty-name',        dict(steps=EMPTY_NAME_STEPS)),
+        ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS)),
+        ('open-existing',     dict(steps=OPEN_EXISTING_STEPS,
+                                   pre_setup=pre_create_instance)),
+        ('non-thedoc-folder', dict(steps=NON_THEDOC_FOLDER_STEPS,
+                                   pre_setup=pre_create_non_thedoc_folder)),
+        ('returning-user',    dict(steps=RETURNING_USER_STEPS,
+                                   pre_setup=pre_write_state)),
+        ('coming-soon',       dict(steps=COMING_SOON_STEPS,
+                                   assertions=coming_soon_assertions)),
+        ('typed-path',        dict(steps=TYPED_PATH_STEPS,
+                                   pre_setup=pre_typed_path)),
+        ('typed-path-create', dict(steps=TYPED_PATH_CREATE_STEPS,
+                                   pre_setup=pre_typed_path_create)),
+        ('full-mode',         dict(steps=_full_mode_steps())),
+    ]
+
+    # Optional argv filter: `python3 smoke_test.py happy-path negative-name`
+    # runs only the named scenarios. No args = run all.
+    requested = sys.argv[1:]
+    if requested == ['--list']:
+        for label, _ in SCENARIOS:
+            print(label)
+        return
+    if requested:
+        known = {label for label, _ in SCENARIOS}
+        unknown = [s for s in requested if s not in known]
+        if unknown:
+            print(red(f'Unknown scenario(s): {", ".join(unknown)}'))
+            print('Available: ' + ', '.join(label for label, _ in SCENARIOS))
+            sys.exit(2)
+        SCENARIOS = [(l, k) for l, k in SCENARIOS if l in requested]
+
     failures = 0
     print('=' * 60)
-    failures += run(steps=HAPPY_PATH_STEPS,      label='happy-path')
-    failures += run(steps=NEGATIVE_NAME_STEPS,   label='negative-name')
-    failures += run(steps=EMPTY_NAME_STEPS,      label='empty-name')
-    failures += run(steps=ENGINE_FALLBACK_STEPS, label='engine-fallback')
-    failures += run(steps=OPEN_EXISTING_STEPS,    label='open-existing',
-                    pre_setup=pre_create_instance)
-    failures += run(steps=NON_THEDOC_FOLDER_STEPS, label='non-thedoc-folder',
-                    pre_setup=pre_create_non_thedoc_folder)
-    failures += run(steps=RETURNING_USER_STEPS,    label='returning-user',
-                    pre_setup=pre_write_state)
-    failures += run(steps=COMING_SOON_STEPS,       label='coming-soon',
-                    assertions=coming_soon_assertions)
-    failures += run(steps=TYPED_PATH_STEPS,        label='typed-path',
-                    pre_setup=pre_typed_path)
-    failures += run(steps=TYPED_PATH_CREATE_STEPS, label='typed-path-create',
-                    pre_setup=pre_typed_path_create)
-    failures += run(steps=_full_mode_steps(),      label='full-mode')
+    for label, kwargs in SCENARIOS:
+        failures += run(label=label, **kwargs)
     # Clean up the typed-path fixtures (live outside any per-run fake_home)
     shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
     shutil.rmtree(TYPED_PATH_CREATE,  ignore_errors=True)

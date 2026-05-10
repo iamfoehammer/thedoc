@@ -6,12 +6,16 @@ major branches of the wizard before they ship.
 ## Running
 
 ```bash
-python3 tests/smoke_test.py     # or, equivalently:
-thedoc test                     # via the framework wrapper
+python3 tests/smoke_test.py                      # all scenarios
+python3 tests/smoke_test.py happy-path           # one scenario
+python3 tests/smoke_test.py typed-path typed-path-create
+python3 tests/smoke_test.py --list               # list all labels
+thedoc test                                      # all, via wrapper
 ```
 
 Requires Python 3 and a real PTY (Linux/macOS — won't run under cmd.exe).
-Each scenario takes 1–3 seconds; the full suite finishes in 25–35s.
+Each scenario takes 1–3 seconds; the full suite finishes in 25–35s. Exit
+codes: 0 = all PASS, 1 = at least one FAIL, 2 = unknown scenario name.
 
 ## What it does
 
