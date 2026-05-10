@@ -808,8 +808,20 @@ doctor_idx=$CHOICE_IDX
 doctor_slug="${DOCTOR_SLUGS[$doctor_idx]}"
 doctor_name="${DOCTOR_TYPES[$doctor_idx]}"
 
-# Check if doctor type is supported
-if [ ! -f "$SCRIPT_DIR/doctors/${doctor_slug}/DOCTOR.md" ]; then
+# Check if doctor type is supported. Either DOCTOR.md is missing entirely
+# (very early scaffolding) OR it carries the "not yet supported" marker
+# (stub DOCTOR.md committed to reserve the slot, e.g. doctors/gemini/).
+# Without the marker check, the user would be dropped into Claude with a
+# stub DOCTOR.md that just says "this isn't supported yet".
+doctor_md="$SCRIPT_DIR/doctors/${doctor_slug}/DOCTOR.md"
+doctor_supported="yes"
+if [ ! -f "$doctor_md" ]; then
+    doctor_supported="no"
+elif head -5 "$doctor_md" 2>/dev/null | grep -qF "not yet supported"; then
+    doctor_supported="no"
+fi
+
+if [ "$doctor_supported" = "no" ]; then
     echo ""
     echo -e "  ${YELLOW}${doctor_name} doctor templates are coming soon.${RESET}"
     echo -e "  The framework is here - contributions welcome!"

@@ -671,9 +671,21 @@ $doctorIdx  = Show-Menu -Prompt 'What is this doctor for?' -Options $DoctorTypes
 $doctorSlug = $DoctorSlugs[$doctorIdx]
 $doctorName = $DoctorTypes[$doctorIdx]
 
-# Doctor type supported? (canonical check is the bash DOCTOR.md presence)
+# Doctor type supported? Same gate as setup.sh: missing OR carries the
+# "not yet supported" marker in DOCTOR.md (e.g. doctors/gemini/DOCTOR.md
+# is a stub with that text). Without the marker check, picking an
+# unsupported doctor type would drop the user into Claude reading a
+# stub DOCTOR.md that just says "not supported yet".
 $doctorMd = Join-Path $ScriptDir "doctors/$doctorSlug/DOCTOR.md"
+$doctorSupported = $true
 if (-not (Test-Path -LiteralPath $doctorMd)) {
+    $doctorSupported = $false
+}
+elseif ((Get-Content -LiteralPath $doctorMd -TotalCount 5) -match 'not yet supported') {
+    $doctorSupported = $false
+}
+
+if (-not $doctorSupported) {
     Write-Host ''
     Write-Host "  $doctorName doctor templates are coming soon." -ForegroundColor Yellow
     Write-Host '  The framework is here - contributions welcome!'

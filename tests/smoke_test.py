@@ -127,6 +127,19 @@ RETURNING_USER_STEPS = [
 ]
 
 
+# Picks an unsupported doctor type (Gemini today). Setup must print the
+# "templates are coming soon" message and exit without creating any
+# instance. Different assertions than the default (Ready to launch
+# should NOT appear).
+COMING_SOON_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n', 'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ', 'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'1', 'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),      b' ', 'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'3', 'Doctor type: 3 (Gemini stub)'),
+]
+
+
 # Pre-populates a non-thedoc directory at the default-name path. Confirms
 # setup refuses it ("isn't a thedoc instance") and re-prompts for a
 # different name, instead of running claude in a random project folder.
@@ -164,8 +177,28 @@ def red(s):    return f'\x1b[31m{s}\x1b[0m'
 def yellow(s): return f'\x1b[33m{s}\x1b[0m'
 
 
+def default_assertions(cleaned):
+    """Standard pass criteria: setup.sh reached the launch gate cleanly."""
+    failures = []
+    if 'Ready to launch' not in cleaned:
+        failures.append("Did not reach 'Ready to launch.'")
+    if 'THEDOC_NO_LAUNCH' not in cleaned:
+        failures.append("Did not reach the THEDOC_NO_LAUNCH gate")
+    return failures
+
+
+def coming_soon_assertions(cleaned):
+    """For scenarios that pick an unsupported doctor type and bail early."""
+    failures = []
+    if 'doctor templates are coming soon' not in cleaned:
+        failures.append("Did not reach 'doctor templates are coming soon'")
+    if 'Ready to launch' in cleaned:
+        failures.append("Reached 'Ready to launch' - should have exited earlier")
+    return failures
+
+
 def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
-        pre_setup=None):
+        pre_setup=None, assertions=None):
     state_dir = tempfile.mkdtemp(prefix='thedoc-state-')
     log_path  = tempfile.mktemp(prefix='thedoc-smoke-', suffix='.log')
 
@@ -276,13 +309,11 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
     cleaned = ANSI_RE.sub(b'', bytes(out)).decode('utf-8', 'replace')
 
     # ── Assertions ────────────────────────────────────────────────────
-    failures = []
-
-    if 'Ready to launch' not in cleaned:
-        failures.append("Did not reach 'Ready to launch.'")
-
-    if 'THEDOC_NO_LAUNCH' not in cleaned:
-        failures.append("Did not reach the THEDOC_NO_LAUNCH gate")
+    # Default to "reached Ready to launch" criteria; scenarios can override
+    # for paths that intentionally exit early (e.g. unsupported doctor type).
+    if assertions is None:
+        assertions = default_assertions
+    failures = list(assertions(cleaned))
 
     error_patterns = [
         ('unbound variable',        'set -u tripped'),
@@ -339,6 +370,8 @@ def main():
                     pre_setup=pre_create_non_thedoc_folder)
     failures += run(steps=RETURNING_USER_STEPS,    label='returning-user',
                     pre_setup=pre_write_state)
+    failures += run(steps=COMING_SOON_STEPS,       label='coming-soon',
+                    assertions=coming_soon_assertions)
     failures += run(steps=_full_mode_steps(),      label='full-mode')
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
