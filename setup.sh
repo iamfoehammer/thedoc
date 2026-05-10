@@ -79,9 +79,11 @@ pick_random() {
 }
 
 # Typing effect - prints text character by character.
-# Width-aware: pre-wraps at word boundaries with `fold -s` so the terminal
-# never breaks a word mid-character during the animation.
-# Press space at the "press any key" prompts to skip all future typing.
+# Width-aware: pre-wraps at word boundaries (awk; portable across BSD/GNU)
+# so the terminal never breaks a word mid-character during the animation.
+# Press space at the "press any key" prompts to flip SKIP_TYPING=1; in skip
+# mode each typeit call dumps wrapped lines in a single print (no per-char
+# loop, instant on bash 3.2).
 SKIP_TYPING=0
 typeit() {
     local text="$1"
@@ -91,13 +93,8 @@ typeit() {
     local wrap_at=$((cols - ${#prefix}))
     [ "$wrap_at" -lt 20 ] && wrap_at=20
 
-    # Pre-wrap at word boundaries; iterate each line char-by-char.
-    # Skip mode just zeroes the delay so the same wrapping path applies.
-    [ "$SKIP_TYPING" -eq 1 ] && delay=0
-
-    # awk-based word-wrap. fold -s on BSD (macOS) can break mid-word when
-    # a single word ends near the column boundary; awk gives us greedy
-    # whitespace-only wrapping that is identical across BSD/GNU.
+    # awk-based word-wrap (BSD/GNU portable). fold -s mis-handles tight
+    # column boundaries on macOS, hence rolling our own greedy wrap.
     local wrapped
     wrapped=$(printf '%s\n' "$text" | awk -v w="$wrap_at" '
     {
@@ -117,6 +114,18 @@ typeit() {
         }
         if (length(line) > 0) print line
     }')
+
+    # Skip mode: dump every wrapped line in one print. The per-char loop
+    # is slow on bash 3.2 even with delay=0 (one printf per character),
+    # so we bypass it entirely once the user presses space.
+    if [ "$SKIP_TYPING" -eq 1 ]; then
+        while IFS= read -r line || [ -n "$line" ]; do
+            printf '%s%s\n' "$prefix" "$line"
+        done <<< "$wrapped"
+        return
+    fi
+
+    # Animated path
     local first=1
     while IFS= read -r line || [ -n "$line" ]; do
         [ "$first" -eq 1 ] || echo ""
@@ -125,7 +134,7 @@ typeit() {
         local i
         for ((i=0; i<${#line}; i++)); do
             printf '%s' "${line:$i:1}"
-            [ "$delay" != "0" ] && sleep "$delay"
+            sleep "$delay"
         done
     done <<< "$wrapped"
     echo ""
