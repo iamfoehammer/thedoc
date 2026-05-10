@@ -37,14 +37,32 @@ TMP_DIR="$(mktemp -d)/thedoc"
 
 # Check requirements
 if ! command -v git &>/dev/null; then
-    echo "git is required but not installed."
+    echo ""
+    echo "  git is required but not installed."
+    echo "  Install it via your package manager and re-run."
+    echo ""
     exit 1
 fi
 
-# Clone to temp
+# Clone to temp. Wrap with a friendly framing - without this the user
+# would see raw 'fatal: Could not resolve host' / 'fatal: unable to
+# access' from git stderr with no context on what bootstrap was doing.
 echo ""
 echo "  Downloading thedoc..."
-git clone --quiet "$REPO" "$TMP_DIR"
+if ! git clone --quiet "$REPO" "$TMP_DIR" 2>/tmp/thedoc-bootstrap-clone.err; then
+    echo ""
+    echo "  Clone failed. git said:"
+    sed 's/^/      /' /tmp/thedoc-bootstrap-clone.err
+    rm -f /tmp/thedoc-bootstrap-clone.err
+    echo ""
+    echo "  Common causes:"
+    echo "    - no network connectivity"
+    echo "    - corporate proxy or firewall blocking github.com"
+    echo "    - $REPO has moved or is unreachable"
+    echo ""
+    exit 1
+fi
+rm -f /tmp/thedoc-bootstrap-clone.err
 echo "  Done."
 echo ""
 

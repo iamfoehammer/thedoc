@@ -32,11 +32,19 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 # ── Clone to temp ────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "  Downloading thedoc..."
-git clone --quiet $Repo $TmpDir
+# Capture stderr so we can show it under our framing. Without this the user
+# sees raw 'fatal: Could not resolve host' from git mixed into the install
+# output with no context on what bootstrap was doing.
+$cloneErr = & git clone --quiet $Repo $TmpDir 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
-    Write-Host "  Failed to clone $Repo."
-    Write-Host "  Check your network, or git-clone the repo manually."
+    Write-Host "  Clone failed. git said:"
+    $cloneErr | ForEach-Object { Write-Host "      $_" }
+    Write-Host ""
+    Write-Host "  Common causes:"
+    Write-Host "    - no network connectivity"
+    Write-Host "    - corporate proxy or firewall blocking github.com"
+    Write-Host "    - $Repo has moved or is unreachable"
     Write-Host ""
     exit 1
 }
