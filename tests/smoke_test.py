@@ -451,9 +451,9 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
         print(f'  result:       {red("FAIL")}')
         for f in failures:
             print(f'    - {red(f)}')
-        return 1
+        return 1, log_path
     print(f'  result:       {green("PASS")}')
-    return 0
+    return 0, log_path
 
 
 def _full_mode_steps():
@@ -508,12 +508,24 @@ def main():
         SCENARIOS = [(l, k) for l, k in SCENARIOS if l in requested]
 
     failures = 0
+    log_files = []
     print('=' * 60)
     for label, kwargs in SCENARIOS:
-        failures += run(label=label, **kwargs)
+        f, log_path = run(label=label, **kwargs)
+        failures += f
+        log_files.append(log_path)
     # Clean up the typed-path fixtures (live outside any per-run fake_home)
     shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
     shutil.rmtree(TYPED_PATH_CREATE,  ignore_errors=True)
+    # On full PASS, remove the per-scenario PTY logs - they're only useful
+    # for postmortem on failure, and /tmp can otherwise accumulate hundreds
+    # of stale logs across many runs. On any FAIL, all logs are kept.
+    if failures == 0:
+        for lp in log_files:
+            try:
+                os.remove(lp)
+            except OSError:
+                pass
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
     sys.exit(1 if failures else 0)
