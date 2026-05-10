@@ -39,18 +39,11 @@ TYPED_PATH_CREATE  = '/tmp/thedoc-smoke-typed-projects-to-create' # create branc
 
 ANSI_RE = re.compile(rb'\x1b\[[0-9;]*[A-Za-z]')
 
-# Sent at the very start of every first-run scenario. The box prints
-# almost immediately, before any typeit call; queueing a space then
-# means typeit's async-poll on the first character of the greeting
-# sees the space and flips SKIP_TYPING=1 instantly. Cuts the first-run
-# greeting + "..." + post-Voyager typing time from ~5s to milliseconds.
-EARLY_SKIP = (re.compile(r'Hologram activated'), b' ', 'Pre-skip via async-typeit')
 
 # (regex, bytes_to_send, label) — driver waits for the regex to appear in
 # the cumulative cleaned output, then sends. None regex sends after a
 # short delay regardless.
 HAPPY_PATH_STEPS = [
-    EARLY_SKIP,
     (re.compile(r'Star Trek: Voyager\?'),                   b'n', 'Voyager: n (skip image)'),
     (re.compile(r'Press any key to begin the scan'),        b' ', 'Skip animations'),
     (re.compile(r'Which one is your projects folder\?'),    b'1', 'Projects: option 1'),
