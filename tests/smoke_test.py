@@ -123,6 +123,17 @@ def pre_typed_path_create(project_dir, state_dir):
     shutil.rmtree(TYPED_PATH_CREATE, ignore_errors=True)
 
 
+def pre_typed_path_decline(project_dir, state_dir):
+    """Decline scenario types a non-existent path first (must NOT exist),
+    then a real path on re-prompt (must exist). Reset both fixtures - the
+    create scenario typically runs before this one and leaves
+    TYPED_PATH_CREATE created behind."""
+    import shutil
+    shutil.rmtree(TYPED_PATH_CREATE, ignore_errors=True)
+    shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
+    os.makedirs(os.path.join(TYPED_PATH_FIXTURE, 'sub-project'))
+
+
 def pre_write_state(project_dir, state_dir, slug='claude-code'):
     """Pre-write a thedoc state file under $XDG_STATE_HOME/thedoc/state to
     simulate a returning user. is_first_run() in setup.sh returns false,
@@ -164,6 +175,26 @@ TYPED_PATH_STEPS = [
     (re.compile(r'Setup mode\?'),                          b'1',                                'Mode: 1 (Quick)'),
     (re.compile(r'Name for your doctor instance folder'),  b'\n',                               'Default name'),
     (re.compile(r'already exists.*\[Y/n\]'),               b'\n',                               'Open existing if any'),
+]
+
+
+# User types a non-existent path, declines "Create it?", expects setup
+# to re-prompt for a path rather than aborting. Tests the re-prompt loop
+# in iter-2 commit 44ab195. Requires the driver's last_pos cursor (added
+# in this commit) to disambiguate the second "Enter the full path:".
+TYPED_PATH_DECLINE_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                                'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ',                                'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'3',                                'Projects: option 3 (Type a path)'),
+    (re.compile(r'Enter the full path:'),                   (TYPED_PATH_CREATE + '\n').encode(),  'Type non-existent path'),
+    (re.compile(r"That folder doesn't exist. Create it\?"), b'n\n',                              'Decline create'),
+    (re.compile(r'Enter the full path:'),                   (TYPED_PATH_FIXTURE + '\n').encode(), 'Type real path on re-prompt'),
+    (re.compile(r'Press any key to continue \(space'),      b' ',                                'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'1',                                'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                       b'1',                                'Engine: 1'),
+    (re.compile(r'Setup mode\?'),                           b'1',                                'Mode: 1'),
+    (re.compile(r'Name for your doctor instance folder'),   b'\n',                               'Default name'),
+    (re.compile(r'already exists.*\[Y/n\]'),                b'\n',                               'Open existing if any'),
 ]
 
 
@@ -316,6 +347,12 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
     deadline = time.time() + timeout
     step_idx = 0
     sent     = []
+    # Position cursor in the cleaned-output string. Each step's regex only
+    # searches output produced after the previous successful match, so a
+    # second occurrence of the same prompt (e.g. "Enter the full path:"
+    # after the user declines to create the typed path) doesn't get
+    # matched by stale cumulative output.
+    last_pos = 0
 
     def drain_until_quiet(quiet_ms=200, max_wait_ms=1500):
         """Read bytes until no new output arrives for `quiet_ms`. Used to
@@ -356,12 +393,14 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
         if step_idx < len(steps):
             pattern, data, step_label = steps[step_idx]
             cleaned = ANSI_RE.sub(b'', bytes(out)).decode('utf-8', 'replace')
-            if pattern.search(cleaned):
+            m = pattern.search(cleaned, last_pos)
+            if m:
                 # Wait for the prompt to finish typing before sending.
                 drain_until_quiet()
                 os.write(fd, data)
                 sent.append(step_label)
                 step_idx += 1
+                last_pos = m.end()
                 # Small post-send delay so the script can register the
                 # keystroke and start producing the next prompt.
                 time.sleep(0.15)
@@ -446,10 +485,12 @@ def main():
                                    pre_setup=pre_write_state)),
         ('coming-soon',       dict(steps=COMING_SOON_STEPS,
                                    assertions=coming_soon_assertions)),
-        ('typed-path',        dict(steps=TYPED_PATH_STEPS,
-                                   pre_setup=pre_typed_path)),
-        ('typed-path-create', dict(steps=TYPED_PATH_CREATE_STEPS,
-                                   pre_setup=pre_typed_path_create)),
+        ('typed-path',          dict(steps=TYPED_PATH_STEPS,
+                                     pre_setup=pre_typed_path)),
+        ('typed-path-create',   dict(steps=TYPED_PATH_CREATE_STEPS,
+                                     pre_setup=pre_typed_path_create)),
+        ('typed-path-decline',  dict(steps=TYPED_PATH_DECLINE_STEPS,
+                                     pre_setup=pre_typed_path_decline)),
         ('full-mode',         dict(steps=_full_mode_steps())),
     ]
 
