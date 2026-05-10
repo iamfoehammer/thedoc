@@ -107,4 +107,6 @@ done
     echo "_cc_project_reminder"
 } >> "$ALIAS_FILE"
 
-echo "# Generated $(date -Iseconds)" >> "$ALIAS_FILE"
+# date -Iseconds is a GNU extension; the portable POSIX form is below
+# so generate-cc-aliases works on macOS too.
+echo "# Generated $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> "$ALIAS_FILE"
