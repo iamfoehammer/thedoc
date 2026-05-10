@@ -1,9 +1,12 @@
 # thedoc setup wizard (PowerShell)
-# Native Windows PowerShell 7+ counterpart to setup.sh.
+# Native Windows PowerShell 7+ counterpart to setup.sh. Behavioral parity
+# with setup.sh end to end, with one deferred feature: the WSL drive scan
+# and full folder browser don't apply on PS7 native, so the projects-folder
+# picker offers a "Type a path" fallback instead of the bash browse_for_folder.
 #
-# STATUS: scaffolding. Most flow steps are stubs marked TODO. The bash
-# setup.sh is the source of truth for behavior; mirror it module by module.
-# See README.md and setup.sh for the canonical UX.
+# When in doubt about behavior, setup.sh is still the source of truth - the
+# bash version has live E2E tests; this one is verified structurally only
+# until run on a real Windows host.
 
 $ErrorActionPreference = 'Stop'
 
@@ -316,6 +319,17 @@ function Show-Menu {
     }
 }
 
+# ── Read helpers ─────────────────────────────────────────────────────
+# Read-Host always appends ": " to the prompt, which mangles UX for
+# bracketed prompts like "[Y/n]" (you'd see "[Y/n]: " instead of "[Y/n] ").
+# This wrapper writes the literal prompt and reads a line, no decoration -
+# matching bash `read -rp "prompt"` behavior.
+function Read-Line {
+    param([string]$Prompt = '')
+    if ($Prompt) { [Console]::Write($Prompt) }
+    return [Console]::ReadLine()
+}
+
 # ── Path helpers ─────────────────────────────────────────────────────
 # Cross-platform short path display ($HOME -> ~). Mirrors bash short_path.
 function Get-ShortPath {
@@ -405,7 +419,7 @@ function Get-ProjectsDir {
         # Type a path - re-prompt on empty / mkdir failure (matches setup.sh)
         while ($true) {
             Write-Host ''
-            $custom = Read-Host '  Enter the full path'
+            $custom = Read-Line '  Enter the full path: '
             $custom = $custom.Trim()
             $custom = $custom -replace '^~', $HOME
 
@@ -416,7 +430,7 @@ function Get-ProjectsDir {
 
             if (-not (Test-Path -LiteralPath $custom -PathType Container)) {
                 Write-Host ''
-                $create = Read-Host "  That folder doesn't exist. Create it? [Y/n]"
+                $create = Read-Line "  That folder doesn't exist. Create it? [Y/n] "
                 if ($create -match '^[Nn]') {
                     continue
                 }
@@ -479,7 +493,7 @@ function New-DoctorInstance {
 
     while ($true) {
         Write-Host ''
-        $entered = Read-Host "  [$defaultInstance] >"
+        $entered = Read-Line "  [$defaultInstance] > "
         $instanceName = if ([string]::IsNullOrWhiteSpace($entered)) { $defaultInstance } else { $entered.Trim() }
 
         if ([string]::IsNullOrWhiteSpace($instanceName)) {
@@ -509,7 +523,7 @@ function New-DoctorInstance {
     if (Test-Path -LiteralPath $instanceDir -PathType Container) {
         Write-Host ''
         Write-Host "  $(Get-ShortPath $instanceDir) already exists as a doctor instance." -ForegroundColor Yellow
-        $resp = Read-Host '  Open existing instance? [Y/n]'
+        $resp = Read-Line '  Open existing instance? [Y/n] '
         if ($resp -match '^[Nn]') {
             Write-Host '  Aborting. Re-run and pick a different name to create a new one.' -ForegroundColor DarkGray
             exit 0
@@ -689,7 +703,7 @@ if (-not $engineSupported) {
     Write-Host ''
     Write-Host "  $engineName engine support is coming soon." -ForegroundColor Yellow
     Write-Host ''
-    $fallback = Read-Host '  Run with Claude Code instead? [Y/n]'
+    $fallback = Read-Line '  Run with Claude Code instead? [Y/n] '
     if ($fallback -match '^[Nn]') {
         Write-Host "  No worries. Check back later or help build it: engines/$engineSlug.ps1" -ForegroundColor DarkGray
         exit 0
