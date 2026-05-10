@@ -11,6 +11,10 @@ CLAUDE.local.md
 # personal and should not ship.
 .claude/settings.local.json
 
+# Claude Code session-scoped scheduler state - never persists user-meaningful
+# data, just lock files for in-flight CronCreate jobs in this session.
+.claude/scheduled_tasks*
+
 # Instance state (tracked per-instance, not in framework)
 .applied-updates
 
