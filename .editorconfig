@@ -17,10 +17,6 @@ insert_final_newline = true
 [*.md]
 trim_trailing_whitespace = false
 
-# tmux config uses tab indents (its convention).
-[tmux.conf]
-indent_style = tab
-
 # YAML wants 2-space indent (GitHub Actions, etc.).
 [*.{yml,yaml}]
 indent_size = 2
