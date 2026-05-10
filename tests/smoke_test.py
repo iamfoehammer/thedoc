@@ -41,9 +41,12 @@ ANSI_RE = re.compile(rb'\x1b\[[0-9;]*[A-Za-z]')
 
 
 # (regex, bytes_to_send, label) — driver waits for the regex to appear in
-# the cumulative cleaned output, then sends. None regex sends after a
-# short delay regardless.
-HAPPY_PATH_STEPS = [
+# the cumulative cleaned output (starting from the previous match's end),
+# then sends. Most scenarios share the same first 7 steps - greeting flow,
+# scan, projects-folder pick (option 1), explainer, doctor-type pick,
+# engine pick, mode pick - so they live in COMMON_FIRSTRUN_STEPS for
+# scenarios to extend with their distinctive trailing steps.
+COMMON_FIRSTRUN_STEPS = [
     (re.compile(r'Star Trek: Voyager\?'),                   b'n', 'Voyager: n (skip image)'),
     (re.compile(r'Press any key to begin the scan'),        b' ', 'Skip animations'),
     (re.compile(r'Which one is your projects folder\?'),    b'1', 'Projects: option 1'),
@@ -51,6 +54,9 @@ HAPPY_PATH_STEPS = [
     (re.compile(r'What is this doctor for\?'),              b'1', 'Doctor type: 1'),
     (re.compile(r'Which LLM engine'),                       b'1', 'Engine: 1 (Claude Code)'),
     (re.compile(r'Setup mode\?'),                           b'1', 'Mode: 1 (Quick)'),
+]
+
+HAPPY_PATH_STEPS = COMMON_FIRSTRUN_STEPS + [
     (re.compile(r'Name for your doctor instance folder'),   b'\n', 'Default instance name'),
     (re.compile(r'already exists.*\[Y/n\]'),                b'\n', 'Open existing if any'),
 ]
@@ -58,6 +64,9 @@ HAPPY_PATH_STEPS = [
 # Picks an unsupported engine (OpenClaw stub) and confirms the fallback
 # prompt fires. Verifies the gate from commit 5fb0980 catches stub
 # engines BEFORE the instance directory + DOCTOR.md get created.
+# Engine-fallback diverges at step 6 (engine pick) - sends '2' for the
+# OpenClaw stub instead of '1', then handles the fallback prompt - so it
+# can't extend COMMON_FIRSTRUN_STEPS unchanged. Built explicitly.
 ENGINE_FALLBACK_STEPS = [
     (re.compile(r'Star Trek: Voyager\?'),                    b'n',  'Voyager: n'),
     (re.compile(r'Press any key to begin the scan'),         b' ',  'Skip animations'),
@@ -74,14 +83,7 @@ ENGINE_FALLBACK_STEPS = [
 # Picks the default instance name when an instance already exists at that
 # path. Confirms the "Open existing instance? [Y/n]" prompt fires and the
 # yes-path reaches Ready to launch (no instance recreation, just relaunch).
-OPEN_EXISTING_STEPS = [
-    (re.compile(r'Star Trek: Voyager\?'),                  b'n',  'Voyager: n'),
-    (re.compile(r'Press any key to begin the scan'),       b' ',  'Skip animations'),
-    (re.compile(r'Which one is your projects folder\?'),   b'1',  'Projects: option 1'),
-    (re.compile(r'Press any key to continue \(space'),     b' ',  'Continue from explainer'),
-    (re.compile(r'What is this doctor for\?'),             b'1',  'Doctor type: 1'),
-    (re.compile(r'Which LLM engine'),                      b'1',  'Engine: 1 (Claude Code)'),
-    (re.compile(r'Setup mode\?'),                          b'1',  'Mode: 1 (Quick)'),
+OPEN_EXISTING_STEPS = COMMON_FIRSTRUN_STEPS + [
     (re.compile(r'Name for your doctor instance folder'),  b'\n', 'Default name (matches existing)'),
     (re.compile(r'Open existing instance\? \[Y/n\]'),      b'\n', 'Yes - open existing'),
 ]
@@ -232,14 +234,7 @@ COMING_SOON_STEPS = [
 # Pre-populates a non-thedoc directory at the default-name path. Confirms
 # setup refuses it ("isn't a thedoc instance") and re-prompts for a
 # different name, instead of running claude in a random project folder.
-NON_THEDOC_FOLDER_STEPS = [
-    (re.compile(r'Star Trek: Voyager\?'),                  b'n',                'Voyager: n'),
-    (re.compile(r'Press any key to begin the scan'),       b' ',                'Skip animations'),
-    (re.compile(r'Which one is your projects folder\?'),   b'1',                'Projects: option 1'),
-    (re.compile(r'Press any key to continue \(space'),     b' ',                'Continue from explainer'),
-    (re.compile(r'What is this doctor for\?'),             b'1',                'Doctor type: 1'),
-    (re.compile(r'Which LLM engine'),                      b'1',                'Engine: 1 (Claude Code)'),
-    (re.compile(r'Setup mode\?'),                          b'1',                'Mode: 1 (Quick)'),
+NON_THEDOC_FOLDER_STEPS = COMMON_FIRSTRUN_STEPS + [
     (re.compile(r'Name for your doctor instance folder'),  b'\n',               'Accept default (will collide)'),
     (re.compile(r"isn't a thedoc instance"),               b'fresh-instance\n', 'Pick fresh name after rejection'),
 ]
@@ -248,14 +243,7 @@ NON_THEDOC_FOLDER_STEPS = [
 # Tests whitespace-only instance name. The trim step in the validation
 # loop must zero-out "   " into "" and trip the empty-string guard,
 # re-prompting the user. Different arm of the loop than slash/dot tests.
-EMPTY_NAME_STEPS = [
-    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                 'Voyager: n'),
-    (re.compile(r'Press any key to begin the scan'),        b' ',                 'Skip animations'),
-    (re.compile(r'Which one is your projects folder\?'),    b'1',                 'Projects: option 1'),
-    (re.compile(r'Press any key to continue \(space'),      b' ',                 'Continue from explainer'),
-    (re.compile(r'What is this doctor for\?'),              b'1',                 'Doctor type: 1'),
-    (re.compile(r'Which LLM engine'),                       b'1',                 'Engine: 1 (Claude Code)'),
-    (re.compile(r'Setup mode\?'),                           b'1',                 'Mode: 1 (Quick)'),
+EMPTY_NAME_STEPS = COMMON_FIRSTRUN_STEPS + [
     (re.compile(r'Name for your doctor instance folder'),   b'   \n',             'Whitespace-only name'),
     (re.compile(r"Name can't be empty or whitespace"),      b'fresh-instance\n',  'Good name after rejection'),
 ]
@@ -263,14 +251,7 @@ EMPTY_NAME_STEPS = [
 
 # Drives the wizard through a deliberately bad instance name first, then
 # a valid one. Confirms the validation loop in setup.sh actually re-prompts.
-NEGATIVE_NAME_STEPS = [
-    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                   'Voyager: n'),
-    (re.compile(r'Press any key to begin the scan'),        b' ',                   'Skip animations'),
-    (re.compile(r'Which one is your projects folder\?'),    b'1',                   'Projects: option 1'),
-    (re.compile(r'Press any key to continue \(space'),      b' ',                   'Continue from explainer'),
-    (re.compile(r'What is this doctor for\?'),              b'1',                   'Doctor type: 1'),
-    (re.compile(r'Which LLM engine'),                       b'1',                   'Engine: 1 (Claude Code)'),
-    (re.compile(r'Setup mode\?'),                           b'1',                   'Mode: 1 (Quick)'),
+NEGATIVE_NAME_STEPS = COMMON_FIRSTRUN_STEPS + [
     (re.compile(r'Name for your doctor instance folder'),   b'foo/bar\n',           'Bad name: foo/bar (slash)'),
     (re.compile(r"Name can't contain '/'"),                 b'.hidden\n',           'Bad name: .hidden (leading dot)'),
     (re.compile(r"Name can't start with '\.'"),             b'good-instance\n',    'Good name'),
