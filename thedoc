@@ -28,6 +28,46 @@ case "${1:-setup}" in
     setup)
         exec "$SCRIPT_DIR/setup.sh"
         ;;
+    test)
+        # Run the framework's E2E smoke test against the installed setup.sh.
+        # Useful for verifying a clean state after `thedoc update` or for
+        # contributors checking their own changes.
+        if ! command -v python3 >/dev/null 2>&1; then
+            echo ""
+            echo "  thedoc test requires python3. Install it via your package manager."
+            echo ""
+            exit 1
+        fi
+        if [ ! -f "$SCRIPT_DIR/tests/smoke_test.py" ]; then
+            echo ""
+            echo "  Smoke test not found at $SCRIPT_DIR/tests/smoke_test.py"
+            echo "  Try 'thedoc update' to refresh the framework."
+            echo ""
+            exit 1
+        fi
+        exec python3 "$SCRIPT_DIR/tests/smoke_test.py"
+        ;;
+    update)
+        # Pull the latest framework. Runs in the framework dir so it works
+        # regardless of caller's cwd.
+        if ! command -v git >/dev/null 2>&1; then
+            echo ""
+            echo "  thedoc update requires git."
+            echo ""
+            exit 1
+        fi
+        if [ ! -d "$SCRIPT_DIR/.git" ]; then
+            echo ""
+            echo "  $SCRIPT_DIR is not a git checkout - can't pull."
+            echo "  If you installed via the bootstrap one-liner, this is a bug."
+            echo ""
+            exit 1
+        fi
+        echo ""
+        echo "  Updating thedoc..."
+        git -C "$SCRIPT_DIR" pull --ff-only
+        echo ""
+        ;;
     list)
         echo ""
         echo "  Doctor instances in $GITHUB_DIR/:"
@@ -78,6 +118,8 @@ case "${1:-setup}" in
         echo "    thedoc setup    Create or open a doctor instance (default)"
         echo "    thedoc list     List existing doctor instances"
         echo "    thedoc open     Open an existing instance: thedoc open <name>"
+        echo "    thedoc test     Run the E2E smoke test against setup.sh"
+        echo "    thedoc update   git pull the framework to latest"
         echo "    thedoc help     Show this help"
         echo ""
         ;;
