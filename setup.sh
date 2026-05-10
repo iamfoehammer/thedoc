@@ -157,6 +157,18 @@ pick_random() {
     echo "${arr[$((RANDOM % ${#arr[@]}))]}"
 }
 
+# Sleep for dramatic effect during the tricorder scan / candidate folder
+# discovery. Skipped entirely when SKIP_TYPING=1 - the user has signalled
+# they want the animations gone, that includes pauses-between-events.
+# Explicit `return 0` so the function never propagates the [ ... ] test
+# failure under `set -e` (which would abort the entire script).
+_dramatic_sleep() {
+    if [ "$SKIP_TYPING" -eq 0 ]; then
+        sleep "$1"
+    fi
+    return 0
+}
+
 # Returns 0 (true) if the file is missing OR carries the "not yet supported"
 # marker in its first 5 lines. Used by the doctor-type and engine gates so
 # stub placeholder files (committed to reserve the slot) don't slip past.
@@ -271,7 +283,7 @@ print_greeting() {
     if is_first_run; then
         typeit "$greeting" 0.02
         echo ""
-        sleep 0.5
+        _dramatic_sleep 0.5
         typeit "..." 0.3
         echo ""
 
@@ -448,15 +460,15 @@ tricorder_scan() {
     local scan_prefix="  ${CYAN}[scan]${RESET} "
 
     echo -ne "${scan_prefix}Detecting platform..."
-    sleep 0.3
+    _dramatic_sleep 0.3
     echo -e " ${BOLD}${platform_display}${RESET}"
 
     echo -ne "${scan_prefix}Shell..."
-    sleep 0.2
+    _dramatic_sleep 0.2
     echo -e " ${BOLD}${SHELL_NAME}${RESET}"
 
     echo -ne "${scan_prefix}tmux..."
-    sleep 0.2
+    _dramatic_sleep 0.2
     if [ "$HAS_TMUX" = "yes" ]; then
         echo -e " ${GREEN}installed${RESET} (${TMUX_VER})"
     else
@@ -464,7 +476,7 @@ tricorder_scan() {
     fi
 
     echo -ne "${scan_prefix}git..."
-    sleep 0.2
+    _dramatic_sleep 0.2
     if [ "$HAS_GIT" = "yes" ]; then
         echo -e " ${GREEN}installed${RESET}"
     else
@@ -472,7 +484,7 @@ tricorder_scan() {
     fi
 
     echo -ne "${scan_prefix}claude..."
-    sleep 0.2
+    _dramatic_sleep 0.2
     if [ "$HAS_CLAUDE" = "yes" ]; then
         echo -e " ${GREEN}installed${RESET}"
     else
@@ -480,7 +492,7 @@ tricorder_scan() {
     fi
 
     echo ""
-    sleep 0.3
+    _dramatic_sleep 0.3
     typeit "Good. Vitals look stable."
     echo ""
 }
@@ -554,7 +566,7 @@ detect_projects_dirs() {
             local short
             short=$(short_path "$dir")
             echo -e "${scan_prefix}Found ${BOLD}${short}/${RESET} (${count} folders)"
-            sleep 0.15
+            _dramatic_sleep 0.15
         fi
     done
 }
@@ -578,7 +590,7 @@ prompt_projects_dir() {
     fi
 
     echo ""
-    sleep 0.3
+    _dramatic_sleep 0.3
     typeit "Scan complete."
     echo ""
 
