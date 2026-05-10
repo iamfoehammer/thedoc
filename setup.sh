@@ -3,6 +3,41 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# ── --help short-circuit ────────────────────────────────────────────
+case "${1:-}" in
+    --help|-h|help)
+        cat <<'EOF'
+thedoc setup wizard
+
+Usage:
+  setup.sh           Run the interactive setup wizard.
+  setup.sh --help    Show this help.
+
+The wizard walks through:
+  1. System scan (platform, shell, tmux, git, claude)
+  2. Picking your projects directory
+  3. Choosing a doctor type (Claude Code or OpenClaw today)
+  4. Choosing an LLM engine
+  5. Naming the instance folder
+
+State is saved at $XDG_STATE_HOME/thedoc/state (defaults to
+~/.local/state/thedoc/state) so the first-run greeting only shows
+once per machine.
+
+Skip the typing animation any time by pressing space at the
+"Press any key" prompts, or by pressing space mid-paragraph
+(both flip skip mode for the rest of the run).
+
+For most users the friendlier entry point is the 'thedoc' wrapper:
+  thedoc            same as 'thedoc setup'
+  thedoc list       list existing doctor instances
+  thedoc open NAME  open an existing instance directly
+  thedoc help       show wrapper help
+EOF
+        exit 0
+        ;;
+esac
+
 # ── Preflight: sanity checks before doing anything user-facing ─────
 # Fail fast with a friendly message if the runtime can't support us.
 
