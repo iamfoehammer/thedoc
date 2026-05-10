@@ -94,6 +94,21 @@ ENGINE_FALLBACK_STEPS = [
     (re.compile(r'already exists.*\[Y/n\]'),                 b'\n', 'Open existing if any'),
 ]
 
+
+# Same setup as ENGINE_FALLBACK_STEPS, but the user DECLINES "Run with
+# Claude Code instead?". Setup should print "Check back later..." and exit
+# without creating an instance. Catches regressions in the exit-0 branch
+# (e.g. if someone accidentally swaps the conditional).
+ENGINE_FALLBACK_DECLINE_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                    b'n',  'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),         b' ',  'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),     b'1',  'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),       b' ',  'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),               b'1',  'Doctor type: 1 (Claude Code)'),
+    (re.compile(r'Which LLM engine'),                        b'2',  'Engine: 2 (OpenClaw stub)'),
+    (re.compile(r'Run with Claude Code instead\? \[Y/n\]'),  b'n\n', 'Decline fallback'),
+]
+
 # Picks the default instance name when an instance already exists at that
 # path. Confirms the "Open existing instance? [Y/n]" prompt fires and the
 # yes-path reaches Ready to launch (no instance recreation, just relaunch).
@@ -317,6 +332,18 @@ def coming_soon_assertions(cleaned):
     return failures
 
 
+def engine_decline_assertions(cleaned):
+    """User declined the 'Run with Claude Code instead?' fallback - setup
+    should print the 'Check back later' line and exit without creating any
+    instance (no Ready to launch)."""
+    failures = []
+    if 'Check back later' not in cleaned:
+        failures.append("Did not see 'Check back later' on decline")
+    if 'Ready to launch' in cleaned:
+        failures.append("Reached 'Ready to launch' - should have exited at decline")
+    return failures
+
+
 def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
         pre_setup=None, assertions=None):
     state_dir = tempfile.mkdtemp(prefix='thedoc-state-')
@@ -508,6 +535,8 @@ def main():
         ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS)),
         ('empty-name',        dict(steps=EMPTY_NAME_STEPS)),
         ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS)),
+        ('engine-fallback-decline', dict(steps=ENGINE_FALLBACK_DECLINE_STEPS,
+                                         assertions=engine_decline_assertions)),
         ('open-existing',     dict(steps=OPEN_EXISTING_STEPS,
                                    pre_setup=pre_create_instance)),
         ('non-thedoc-folder', dict(steps=NON_THEDOC_FOLDER_STEPS,
