@@ -344,7 +344,8 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
 
     out = bytearray()
     log = open(log_path, 'wb')
-    deadline = time.time() + timeout
+    started = time.time()
+    deadline = started + timeout
     step_idx = 0
     sent     = []
     # Position cursor in the cleaned-output string. Each step's regex only
@@ -445,10 +446,12 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
     if not failures:
         shutil.rmtree(project_dir, ignore_errors=True)
 
+    elapsed = time.time() - started
     print()
     print(f'  [{label}]')
     print(f'  steps sent:   {len(sent)}/{len(steps)}')
     print(f'  output bytes: {len(out)}')
+    print(f'  elapsed:      {elapsed:.2f}s')
     print(f'  log:          {log_path}')
     if failures:
         print(f'  result:       {red("FAIL")}')
