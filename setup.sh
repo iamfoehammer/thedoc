@@ -95,8 +95,28 @@ typeit() {
     # Skip mode just zeroes the delay so the same wrapping path applies.
     [ "$SKIP_TYPING" -eq 1 ] && delay=0
 
+    # awk-based word-wrap. fold -s on BSD (macOS) can break mid-word when
+    # a single word ends near the column boundary; awk gives us greedy
+    # whitespace-only wrapping that is identical across BSD/GNU.
     local wrapped
-    wrapped=$(printf '%s' "$text" | fold -s -w "$wrap_at")
+    wrapped=$(printf '%s\n' "$text" | awk -v w="$wrap_at" '
+    {
+        n = split($0, words, " ")
+        line = ""
+        for (i = 1; i <= n; i++) {
+            word = words[i]
+            if (word == "") continue
+            if (length(line) == 0) {
+                line = word
+            } else if (length(line) + 1 + length(word) <= w) {
+                line = line " " word
+            } else {
+                print line
+                line = word
+            }
+        }
+        if (length(line) > 0) print line
+    }')
     local first=1
     while IFS= read -r line || [ -n "$line" ]; do
         [ "$first" -eq 1 ] || echo ""
