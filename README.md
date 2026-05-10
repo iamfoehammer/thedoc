@@ -26,7 +26,14 @@ One command. It asks where your projects live, clones thedoc there, sets up your
 bash <(curl -fsSL https://raw.githubusercontent.com/iamfoehammer/thedoc/main/bootstrap.sh)
 ```
 
-**Windows (PowerShell 7)** - coming soon. For now, use Git Bash or WSL.
+**Windows (PowerShell 7)**
+
+```powershell
+irm https://raw.githubusercontent.com/iamfoehammer/thedoc/main/bootstrap.ps1 | iex
+```
+
+> The PowerShell port is new. If something goes sideways, fall back to
+> Git Bash or WSL (the bash one-liner above) and please open an issue.
 
 **Manual install** (if you prefer not to pipe to bash):
 
