@@ -1000,5 +1000,16 @@ echo ""
 # Save state
 save_state
 
+# Test hook: when THEDOC_NO_LAUNCH is set, exit before exec'ing the engine.
+# Lets automated E2E tests verify the full setup flow without spawning a real
+# Claude Code (or other engine) session. The instance directory is left behind
+# so the test can inspect what was created.
+if [ -n "${THEDOC_NO_LAUNCH:-}" ]; then
+    echo -e "  ${DIM}THEDOC_NO_LAUNCH set - skipping engine launch (test mode).${RESET}"
+    echo -e "  ${DIM}Instance ready at $(short_path "$INSTANCE_DIR")${RESET}"
+    echo ""
+    exit 0
+fi
+
 # Launch the engine
 exec "$SCRIPT_DIR/engines/${engine_slug}.sh" "$INSTANCE_DIR" "$setup_mode" "$doctor_slug"
