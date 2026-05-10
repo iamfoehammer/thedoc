@@ -35,7 +35,7 @@ ANSI_RE = re.compile(rb'\x1b\[[0-9;]*[A-Za-z]')
 # (regex, bytes_to_send, label) — driver waits for the regex to appear in
 # the cumulative cleaned output, then sends. None regex sends after a
 # short delay regardless.
-DEFAULT_STEPS = [
+HAPPY_PATH_STEPS = [
     (re.compile(r'Star Trek: Voyager\?'),                   b'n', 'Voyager: n (skip image)'),
     (re.compile(r'Press any key to begin the scan'),        b' ', 'Skip animations'),
     (re.compile(r'Which one is your projects folder\?'),    b'1', 'Projects: option 1'),
@@ -47,13 +47,28 @@ DEFAULT_STEPS = [
     (re.compile(r'already exists.*\[Y/n\]'),                b'\n', 'Open existing if any'),
 ]
 
+# Drives the wizard through a deliberately bad instance name first, then
+# a valid one. Confirms the validation loop in setup.sh actually re-prompts.
+NEGATIVE_NAME_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                   'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ',                   'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'1',                   'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),      b' ',                   'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'1',                   'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                       b'1',                   'Engine: 1 (Claude Code)'),
+    (re.compile(r'Setup mode\?'),                           b'1',                   'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),   b'foo/bar\n',           'Bad name: foo/bar (slash)'),
+    (re.compile(r"Name can't contain '/'"),                 b'.hidden\n',           'Bad name: .hidden (leading dot)'),
+    (re.compile(r"Name can't start with '\.'"),             b'good-instance\n',    'Good name'),
+]
+
 
 def green(s):  return f'\x1b[32m{s}\x1b[0m'
 def red(s):    return f'\x1b[31m{s}\x1b[0m'
 def yellow(s): return f'\x1b[33m{s}\x1b[0m'
 
 
-def run(steps=DEFAULT_STEPS, timeout=20.0, columns=80):
+def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path'):
     state_dir = tempfile.mkdtemp(prefix='thedoc-state-')
     log_path  = tempfile.mktemp(prefix='thedoc-smoke-', suffix='.log')
 
@@ -107,13 +122,13 @@ def run(steps=DEFAULT_STEPS, timeout=20.0, columns=80):
                 break
 
         if step_idx < len(steps):
-            pattern, data, label = steps[step_idx]
+            pattern, data, step_label = steps[step_idx]
             cleaned = ANSI_RE.sub(b'', bytes(out)).decode('utf-8', 'replace')
             if pattern.search(cleaned):
                 if time.time() - last_send > 0.4:
                     time.sleep(0.4)
                     os.write(fd, data)
-                    sent.append(label)
+                    sent.append(step_label)
                     step_idx += 1
                     last_send = time.time()
                     time.sleep(0.3)
@@ -161,7 +176,7 @@ def run(steps=DEFAULT_STEPS, timeout=20.0, columns=80):
         shutil.rmtree(project_dir, ignore_errors=True)
 
     print()
-    print('=' * 60)
+    print(f'  [{label}]')
     print(f'  steps sent:   {len(sent)}/{len(steps)}')
     print(f'  output bytes: {len(out)}')
     print(f'  log:          {log_path}')
@@ -169,12 +184,20 @@ def run(steps=DEFAULT_STEPS, timeout=20.0, columns=80):
         print(f'  result:       {red("FAIL")}')
         for f in failures:
             print(f'    - {red(f)}')
-        if not failures:
-            print(f'  preserved:    {project_dir}')
         return 1
     print(f'  result:       {green("PASS")}')
     return 0
 
 
+def main():
+    failures = 0
+    print('=' * 60)
+    failures += run(steps=HAPPY_PATH_STEPS,    label='happy-path')
+    failures += run(steps=NEGATIVE_NAME_STEPS, label='negative-name')
+    print('=' * 60)
+    print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
+    sys.exit(1 if failures else 0)
+
+
 if __name__ == '__main__':
-    sys.exit(run())
+    main()
