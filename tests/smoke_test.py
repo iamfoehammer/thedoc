@@ -237,6 +237,17 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
     return 0
 
 
+def _full_mode_steps():
+    """Quick-mode steps with the Setup-mode answer flipped to '2' (Full)."""
+    full = []
+    for pat, data, lbl in HAPPY_PATH_STEPS:
+        if lbl == 'Mode: 1 (Quick)':
+            full.append((pat, b'2', 'Mode: 2 (Full)'))
+        else:
+            full.append((pat, data, lbl))
+    return full
+
+
 def main():
     failures = 0
     print('=' * 60)
@@ -245,6 +256,7 @@ def main():
     failures += run(steps=ENGINE_FALLBACK_STEPS, label='engine-fallback')
     failures += run(steps=OPEN_EXISTING_STEPS,   label='open-existing',
                     pre_setup=pre_create_instance)
+    failures += run(steps=_full_mode_steps(),    label='full-mode')
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
     sys.exit(1 if failures else 0)

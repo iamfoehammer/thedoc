@@ -1,0 +1,58 @@
+name: smoke-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: setup.sh end-to-end (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show bash version
+        run: bash --version
+
+      - name: Verify setup.sh syntax
+        run: bash -n setup.sh
+
+      - name: Verify bootstrap.sh syntax
+        run: bash -n bootstrap.sh
+
+      - name: Verify --help short-circuit (no preflight)
+        run: |
+          ./setup.sh --help    | grep -q "thedoc setup wizard"
+          ./bootstrap.sh -h    | grep -q "thedoc bootstrap"
+
+      - name: Run smoke tests
+        run: python3 tests/smoke_test.py
+
+  smoke-macos:
+    name: setup.sh end-to-end (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show bash version (system)
+        run: /bin/bash --version
+
+      - name: Verify setup.sh syntax
+        run: bash -n setup.sh
+
+      - name: Verify bootstrap.sh syntax
+        run: bash -n bootstrap.sh
+
+      - name: Verify --help short-circuit
+        run: |
+          ./setup.sh --help    | grep -q "thedoc setup wizard"
+          ./bootstrap.sh -h    | grep -q "thedoc bootstrap"
+
+      # macOS ships bash 3.2; this is the canonical test rig for the
+      # BSD/coreutils portability work (no grep -P, no find -readable,
+      # bash 3.2 array safety, BSD wc whitespace stripping, etc.).
+      - name: Run smoke tests
+        run: python3 tests/smoke_test.py
