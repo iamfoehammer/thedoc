@@ -63,6 +63,32 @@ ENGINE_FALLBACK_STEPS = [
     (re.compile(r'already exists.*\[Y/n\]'),                 b'\n', 'Open existing if any'),
 ]
 
+# Picks the default instance name when an instance already exists at that
+# path. Confirms the "Open existing instance? [Y/n]" prompt fires and the
+# yes-path reaches Ready to launch (no instance recreation, just relaunch).
+OPEN_EXISTING_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                  b'n',  'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),       b' ',  'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),   b'1',  'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),     b' ',  'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),             b'1',  'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                      b'1',  'Engine: 1 (Claude Code)'),
+    (re.compile(r'Setup mode\?'),                          b'1',  'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),  b'\n', 'Default name (matches existing)'),
+    (re.compile(r'Open existing instance\? \[Y/n\]'),      b'\n', 'Yes - open existing'),
+]
+
+
+def pre_create_instance(project_dir, slug='claude-code'):
+    """Pre-populate a fake doctor instance so the open-existing path fires."""
+    instance = os.path.join(project_dir, f'{slug}-doctor')
+    os.makedirs(instance, exist_ok=True)
+    with open(os.path.join(instance, 'DOCTOR.md'), 'w') as f:
+        f.write('# Pretend Doctor for testing\n')
+    with open(os.path.join(instance, 'CLAUDE.md'), 'w') as f:
+        f.write('# Pretend CLAUDE.md for testing\n')
+
+
 # Drives the wizard through a deliberately bad instance name first, then
 # a valid one. Confirms the validation loop in setup.sh actually re-prompts.
 NEGATIVE_NAME_STEPS = [
@@ -84,7 +110,8 @@ def red(s):    return f'\x1b[31m{s}\x1b[0m'
 def yellow(s): return f'\x1b[33m{s}\x1b[0m'
 
 
-def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path'):
+def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
+        pre_setup=None):
     state_dir = tempfile.mkdtemp(prefix='thedoc-state-')
     log_path  = tempfile.mktemp(prefix='thedoc-smoke-', suffix='.log')
 
@@ -97,6 +124,11 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path'):
     os.makedirs(fake_github)
     os.makedirs(os.path.join(fake_github, 'placeholder-project'))
     project_dir  = fake_github
+
+    # Optional fixture hook for scenario-specific pre-state (e.g. an
+    # already-existing doctor instance to trigger the open-existing path).
+    if pre_setup:
+        pre_setup(project_dir)
 
     env = os.environ.copy()
     env.update({
@@ -211,6 +243,8 @@ def main():
     failures += run(steps=HAPPY_PATH_STEPS,      label='happy-path')
     failures += run(steps=NEGATIVE_NAME_STEPS,   label='negative-name')
     failures += run(steps=ENGINE_FALLBACK_STEPS, label='engine-fallback')
+    failures += run(steps=OPEN_EXISTING_STEPS,   label='open-existing',
+                    pre_setup=pre_create_instance)
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
     sys.exit(1 if failures else 0)
