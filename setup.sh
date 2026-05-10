@@ -87,7 +87,7 @@ pick_random() {
 SKIP_TYPING=0
 typeit() {
     local text="$1"
-    local delay="${2:-0.02}"
+    local delay="${2:-0.008}"
     local prefix="${3:-  }"
     local cols="${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}"
     local wrap_at=$((cols - ${#prefix}))
@@ -165,7 +165,7 @@ print_greeting() {
     echo ""
 
     if is_first_run; then
-        typeit "$greeting" 0.04
+        typeit "$greeting" 0.02
         echo ""
         sleep 0.5
         typeit "..." 0.3
@@ -197,13 +197,13 @@ print_greeting() {
         typeit "Contrary to my name, I handle everything from routine"
         typeit "configuration to catastrophic meltdowns."
         echo ""
-        typeit "I'm going to need to scan your system first." 0.02
-        typeit "Think of it as a routine physical." 0.02
+        typeit "I'm going to need to scan your system first."
+        typeit "Think of it as a routine physical."
         echo ""
     else
         local quip
         quip=$(pick_random "${QUIPS[@]}")
-        typeit "$quip" 0.02
+        typeit "$quip"
         echo ""
     fi
 }
@@ -377,7 +377,7 @@ tricorder_scan() {
 
     echo ""
     sleep 0.3
-    typeit "Good. Vitals look stable." 0.02
+    typeit "Good. Vitals look stable."
     echo ""
 }
 
@@ -456,14 +456,14 @@ detect_projects_dirs() {
 
 prompt_projects_dir() {
     echo ""
-    typeit "Now I need to find where you keep your projects." 0.02
+    typeit "Now I need to find where you keep your projects."
     echo ""
-    typeit "Most people have a folder where each subfolder is a" 0.02
-    typeit "separate project or agent workspace." 0.02
-    typeit "Some call it \"GitHub\", others call it" 0.02
-    typeit "\"Claude Projects\" or just \"projects\"." 0.02
+    typeit "Most people have a folder where each subfolder is a"
+    typeit "separate project or agent workspace."
+    typeit "Some call it \"GitHub\", others call it"
+    typeit "\"Claude Projects\" or just \"projects\"."
     echo ""
-    typeit "Let me scan your drives..." 0.02
+    typeit "Let me scan your drives..."
     echo ""
 
     detect_projects_dirs
@@ -474,7 +474,7 @@ prompt_projects_dir() {
 
     echo ""
     sleep 0.3
-    typeit "Scan complete." 0.02
+    typeit "Scan complete."
     echo ""
 
     # Build the menu
@@ -593,14 +593,14 @@ print_structure_explainer() {
     local short
     short=$(short_path "$PROJECTS_DIR")
     echo ""
-    typeit "Got it. Your doctors will live in ${short}/" 0.02
+    typeit "Got it. Your doctors will live in ${short}/"
     echo ""
-    typeit "Here's how thedoc works:" 0.02
-    typeit "- This framework (thedoc) stays where you cloned it" 0.015
-    typeit "- Each doctor gets its own folder, like ${short}/claude-doctor/" 0.015
-    typeit "- The doctor folder has a CLAUDE.md (your personal config)" 0.015
-    typeit "  and a DOCTOR.md (shared diagnostic instructions)" 0.015
-    typeit "- You update thedoc with 'git pull' - your configs are never overwritten" 0.015
+    typeit "Here's how thedoc works:"
+    typeit "- This framework (thedoc) stays where you cloned it"
+    typeit "- Each doctor gets its own folder, like ${short}/claude-doctor/"
+    typeit "- The doctor folder has a CLAUDE.md (your personal config)"
+    typeit "  and a DOCTOR.md (shared diagnostic instructions)"
+    typeit "- You update thedoc with 'git pull' - your configs are never overwritten"
     echo ""
     echo -e "  ${DIM}Press any key to continue (space to skip animations)...${RESET}"
     read -rsn1 key
@@ -645,7 +645,7 @@ if is_first_run; then
     if [ -n "${THEDOC_BOOTSTRAP_DIR:-}" ] && [ -d "${THEDOC_BOOTSTRAP_DIR:-}" ]; then
         THEDOC_FINAL="$PROJECTS_DIR/thedoc"
         echo ""
-        typeit "Moving thedoc to your projects folder..." 0.02
+        typeit "Moving thedoc to your projects folder..."
         if [ -d "$THEDOC_FINAL" ]; then
             echo -e "  ${YELLOW}$(short_path "$THEDOC_FINAL") already exists - updating...${RESET}"
             cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
