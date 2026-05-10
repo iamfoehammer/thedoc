@@ -56,3 +56,41 @@ jobs:
       # bash 3.2 array safety, BSD wc whitespace stripping, etc.).
       - name: Run smoke tests
         run: python3 tests/smoke_test.py
+
+  parse-powershell:
+    # PowerShell-only parse check. The smoke test driver uses pty.fork()
+    # which is Linux/macOS-only, so a real E2E run here would need a
+    # separate PS-native driver - not yet built. For now this job at
+    # least catches syntax errors in setup.ps1 / bootstrap.ps1 / engine
+    # launchers that the bash-only jobs above can't see.
+    name: setup.ps1 parse check (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show PowerShell version
+        shell: pwsh
+        run: $PSVersionTable | Format-Table -AutoSize
+
+      - name: Parse-check all .ps1 files
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Recurse -File -Filter '*.ps1'
+          $errors = @()
+          foreach ($f in $files) {
+              $tokens = $null
+              $perr   = $null
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                  $f.FullName, [ref]$tokens, [ref]$perr) | Out-Null
+              if ($perr.Count -gt 0) {
+                  Write-Host "FAIL: $($f.FullName)"
+                  $perr | ForEach-Object { Write-Host "  $_" }
+                  $errors += $f.FullName
+              } else {
+                  Write-Host "OK:   $($f.FullName)"
+              }
+          }
+          if ($errors.Count -gt 0) {
+              Write-Error "Parse errors in $($errors.Count) file(s)"
+              exit 1
+          }
