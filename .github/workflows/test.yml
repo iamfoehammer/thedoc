@@ -94,3 +94,32 @@ jobs:
               Write-Error "Parse errors in $($errors.Count) file(s)"
               exit 1
           }
+
+      - name: Verify setup.ps1 defines the expected functions
+        shell: pwsh
+        run: |
+          # Catches typos in function definitions (e.g. Get-Wrappped) that
+          # parse-clean as just a different identifier. If a future commit
+          # accidentally renames or removes one of these, the CI fails loud.
+          $expected = @(
+              'Test-FirstRun', 'Save-State', 'Get-State',
+              'Get-Wrapped', 'Write-Typed',
+              'Show-Greeting', 'Invoke-TricorderScan',
+              'Show-Menu', 'Test-IsStub',
+              'Read-Line', 'Get-ShortPath', 'Get-CandidateProjectDirs',
+              'Get-ProjectsDir', 'Show-StructureExplainer',
+              'New-DoctorInstance'
+          )
+          $tokens = $null; $perr = $null
+          $ast = [System.Management.Automation.Language.Parser]::ParseFile(
+              'setup.ps1', [ref]$tokens, [ref]$perr)
+          $defined = $ast.FindAll(
+              { param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] },
+              $true) | ForEach-Object { $_.Name }
+          $missing = $expected | Where-Object { $defined -notcontains $_ }
+          if ($missing) {
+              Write-Error "Missing or renamed functions in setup.ps1: $($missing -join ', ')"
+              Write-Host "Defined: $($defined -join ', ')"
+              exit 1
+          }
+          Write-Host "All $($expected.Count) expected functions present in setup.ps1"
