@@ -117,8 +117,12 @@ case "${1:-setup}" in
             echo "Run 'thedoc list' to see available instances."
             exit 1
         fi
+        # Pass a re-entry prompt so the doctor picks up its role from
+        # DOCTOR.md immediately rather than waiting for the user to ask.
+        # Mirrors what engines/claude-code.sh does on first launch, just
+        # adapted for "I've worked with you before" continuity.
         cd "$instance_dir"
-        exec claude
+        exec claude "Re-entering this doctor instance. Start by reading DOCTOR.md for your role and CLAUDE.md for the personal config of this instance. Then ask what I'd like to work on this session."
         ;;
     help|--help|-h)
         echo ""
