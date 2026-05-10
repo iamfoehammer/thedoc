@@ -1,27 +1,73 @@
 # thedoc tests
 
-Small set of smoke tests. Not a full test suite — just enough to catch
-regressions in the core setup.sh flow before they ship.
+End-to-end smoke tests for `setup.sh`. Catches regressions across the
+major branches of the wizard before they ship.
 
 ## Running
 
 ```bash
-python3 tests/smoke_test.py
+python3 tests/smoke_test.py     # or, equivalently:
+thedoc test                     # via the framework wrapper
 ```
 
-Requires Python 3 and a Linux/macOS PTY (won't run under cmd.exe). The
-test:
+Requires Python 3 and a real PTY (Linux/macOS — won't run under cmd.exe).
+Each scenario takes 1–3 seconds; the full suite finishes in 25–35s.
 
-1. Spawns `setup.sh` under a real PTY
-2. Walks the wizard end-to-end with scripted input (Voyager: no, skip
-   animations, pick first projects folder, accept defaults through to
-   instance name)
-3. Sets `THEDOC_NO_LAUNCH=1` so the script exits before spawning Claude
-4. Asserts no `unbound variable`, no `command not found`, no mid-word
-   wrap regressions, and that the flow reaches `Ready to launch.`
+## What it does
 
-A `HOME` override + `GitHub` symlink to a temp directory ensures the
-projects-folder scan succeeds without depending on the developer's
-real `~/GitHub/`.
+For each scenario, the driver:
 
-Exit 0 = PASS, exit 1 = FAIL with the captured log preserved.
+1. Spawns `setup.sh` under a real PTY (so tty-only behaviors —
+   `read -rsn1`, the async space-to-skip in `typeit`, `prompt_choice`'s
+   `flush_input` — fire the same code path a real user hits).
+2. Builds an isolated `$HOME` with a real `~/GitHub/placeholder-project/`
+   so the projects-folder scan succeeds without depending on the
+   developer's actual `~/GitHub/`.
+3. Sets `XDG_STATE_HOME` to a temp dir so first-run state never leaks
+   in or out.
+4. Sets `THEDOC_NO_LAUNCH=1` so the wizard exits before spawning a real
+   `claude` session.
+5. Walks each prompt by regex: waits for the prompt text, then waits
+   for output to go quiet for 200ms (so the keystroke doesn't race
+   with mid-typing animation), then sends the scripted input.
+6. Asserts no `unbound variable`, no GNU-only flag rejections, no
+   mid-word wrap regressions, and that the scenario's expected end
+   state was reached.
+
+Exit 0 = all scenarios PASS. Exit 1 = at least one FAIL, with the
+captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
+
+## Scenarios
+
+| Scenario | What it covers | Reference commit |
+|---|---|---|
+| `happy-path` | Default fresh install, all defaults, reaches `Ready to launch.` | baseline |
+| `negative-name` | Slash and leading-dot rejection in the instance-name validation loop | `44ab195` |
+| `empty-name` | Whitespace-only input → trim → empty rejection | `7cc8e5e` |
+| `engine-fallback` | Stub engine → "Run with Claude Code instead?" prompt → fallback path | `5fb0980` |
+| `open-existing` | Pre-populated valid instance triggers "Open existing? [Y/n]" | `176d16f` |
+| `non-thedoc-folder` | Pre-populated random project folder rejected ("isn't a thedoc instance") | `176d16f` |
+| `returning-user` | State file present → wizard skips greeting/scan/projects, jumps to doctor pick | baseline |
+| `coming-soon` | Stub doctor type (Gemini) → "templates are coming soon" early exit | `5a93d35` |
+| `typed-path` | Custom projects-folder path, target already exists | baseline |
+| `typed-path-create` | Custom projects-folder path, target doesn't exist → mkdir branch | baseline |
+| `full-mode` | Setup mode 2 (Full audit) reaches `Ready to launch.` | baseline |
+
+Each scenario has a custom step list and (where the assertion logic
+differs from the default) custom `assertions` function. See
+`smoke_test.py` for the wiring.
+
+## Adding a scenario
+
+1. Define a step list: `[(regex, bytes_to_send, label), ...]`. Each
+   step waits for the regex to appear in cleaned output, then sends
+   the bytes.
+2. If the scenario needs pre-state (e.g. an existing folder), write a
+   `pre_setup(project_dir, state_dir)` callback.
+3. If the scenario doesn't reach `Ready to launch.`, write a custom
+   `assertions(cleaned)` function (see `coming_soon_assertions`).
+4. Add a `failures += run(steps=..., label=..., pre_setup=..., assertions=...)`
+   call in `main()`.
+
+The driver and helpers live in `smoke_test.py`. CI runs the suite on
+both Ubuntu and macOS via `.github/workflows/test.yml`.
