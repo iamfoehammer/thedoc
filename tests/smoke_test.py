@@ -79,7 +79,7 @@ OPEN_EXISTING_STEPS = [
 ]
 
 
-def pre_create_instance(project_dir, slug='claude-code'):
+def pre_create_instance(project_dir, state_dir, slug='claude-code'):
     """Pre-populate a fake doctor instance so the open-existing path fires."""
     instance = os.path.join(project_dir, f'{slug}-doctor')
     os.makedirs(instance, exist_ok=True)
@@ -89,7 +89,7 @@ def pre_create_instance(project_dir, slug='claude-code'):
         f.write('# Pretend CLAUDE.md for testing\n')
 
 
-def pre_create_non_thedoc_folder(project_dir, slug='claude-code'):
+def pre_create_non_thedoc_folder(project_dir, state_dir, slug='claude-code'):
     """Pre-populate a directory at the default name but WITHOUT a DOCTOR.md.
     Mirrors the case where someone has an unrelated project sharing the
     name thedoc would pick - setup must refuse to use it."""
@@ -99,6 +99,32 @@ def pre_create_non_thedoc_folder(project_dir, slug='claude-code'):
         f.write("# Some other project, not a thedoc instance\n")
     with open(os.path.join(other, 'main.py'), 'w') as f:
         f.write("print('not thedoc')\n")
+
+
+def pre_write_state(project_dir, state_dir, slug='claude-code'):
+    """Pre-write a thedoc state file under $XDG_STATE_HOME/thedoc/state to
+    simulate a returning user. is_first_run() in setup.sh returns false,
+    so the greeting types a quip and the script jumps straight to the
+    doctor-type pick - no Voyager prompt, no tricorder scan, no project
+    folder picker."""
+    thedoc_dir = os.path.join(state_dir, 'thedoc')
+    os.makedirs(thedoc_dir, exist_ok=True)
+    with open(os.path.join(thedoc_dir, 'state'), 'w') as f:
+        f.write('first_run=2026-05-09T12:00:00+00:00\n')
+        f.write(f'projects_dir={project_dir}\n')
+        f.write('platform=linux\n')
+
+
+# Returning user: state file exists, setup skips greeting/scan/projects
+# and jumps straight to doctor-type pick. Most-common real-world flow -
+# the user already ran setup once.
+RETURNING_USER_STEPS = [
+    (re.compile(r'What is this doctor for\?'),             b'1',  'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                      b'1',  'Engine: 1 (Claude Code)'),
+    (re.compile(r'Setup mode\?'),                          b'1',  'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),  b'\n', 'Default instance name'),
+    (re.compile(r'already exists.*\[Y/n\]'),               b'\n', 'Open existing if any'),
+]
 
 
 # Pre-populates a non-thedoc directory at the default-name path. Confirms
@@ -154,9 +180,11 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
     project_dir  = fake_github
 
     # Optional fixture hook for scenario-specific pre-state (e.g. an
-    # already-existing doctor instance to trigger the open-existing path).
+    # already-existing doctor instance, or a saved state file simulating
+    # a returning-user run). Receives both directories so callbacks can
+    # populate either side without needing access to internals.
     if pre_setup:
-        pre_setup(project_dir)
+        pre_setup(project_dir, state_dir)
 
     env = os.environ.copy()
     env.update({
@@ -286,7 +314,9 @@ def main():
                     pre_setup=pre_create_instance)
     failures += run(steps=NON_THEDOC_FOLDER_STEPS, label='non-thedoc-folder',
                     pre_setup=pre_create_non_thedoc_folder)
-    failures += run(steps=_full_mode_steps(),     label='full-mode')
+    failures += run(steps=RETURNING_USER_STEPS,    label='returning-user',
+                    pre_setup=pre_write_state)
+    failures += run(steps=_full_mode_steps(),      label='full-mode')
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
     sys.exit(1 if failures else 0)
