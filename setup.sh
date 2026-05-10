@@ -134,7 +134,7 @@ is_first_run() {
 save_state() {
     mkdir -p "$STATE_DIR"
     cat > "$STATE_FILE" << EOF
-first_run=${FIRST_RUN_DATE:-$(date -Iseconds)}
+first_run=${FIRST_RUN_DATE:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 projects_dir=${PROJECTS_DIR}
 platform=${PLATFORM}
 EOF
@@ -740,7 +740,7 @@ print_greeting
 
 # First-run onboarding
 if is_first_run; then
-    FIRST_RUN_DATE="$(date -Iseconds)"
+    FIRST_RUN_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
     # Step 1: Tricorder scan
     tricorder_scan
@@ -951,7 +951,7 @@ Everything below is this instance's personal configuration.
 - **Doctor type:** ${doctor_name}
 - **Engine:** ${engine_name}
 - **Setup mode:** ${setup_mode}
-- **Created:** $(date -Iseconds)
+- **Created:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 - **Framework:** ${SCRIPT_DIR}
 
 ## System
