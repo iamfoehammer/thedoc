@@ -126,30 +126,35 @@ print_greeting() {
         sleep 0.5
         typeit "..." 0.3
         echo ""
+
+        # Voyager check - if the user knows the reference, the doctor reveals himself.
+        # If not, skip the bit and proceed straight to the install.
+        echo -e "  ${BOLD}Have you ever seen Star Trek: Voyager?${RESET} ${DIM}[y/n]${RESET}"
+        echo ""
+        read -rsn1 voyager_answer
+        echo ""
+
+        if [[ "$voyager_answer" == "y" || "$voyager_answer" == "Y" ]]; then
+            if [ -f "$SCRIPT_DIR/thedoc.txt" ]; then
+                echo ""
+                echo -e "  ${CYAN}"
+                cat "$SCRIPT_DIR/thedoc.txt"
+                echo -e "  ${RESET}"
+                echo ""
+                echo -e "  ${BOLD}The Emergency Medical Hologram, reporting for duty.${RESET}"
+                echo ""
+                echo -e "  ${DIM}Press any key to continue...${RESET}"
+                read -rsn1
+                echo ""
+            fi
+        fi
+
         typeit "No emergency? Just a checkup? That's fine too."
         typeit "Contrary to my name, I handle everything from routine"
         typeit "configuration to catastrophic meltdowns."
         echo ""
         typeit "I'm going to need to scan your system first." 0.02
         typeit "Think of it as a routine physical." 0.02
-        echo ""
-        echo -e "  ${DIM}Press Enter to continue, or ${BOLD}i${RESET}${DIM} to see an image of${RESET}"
-        echo -e "  ${DIM}my holographic form here in your terminal.${RESET}"
-        echo ""
-        read -rsn1 show_image
-        if [[ "$show_image" == "i" || "$show_image" == "I" ]]; then
-            echo ""
-            if [ -f "$SCRIPT_DIR/thedoc.txt" ]; then
-                echo -e "  ${CYAN}"
-                cat "$SCRIPT_DIR/thedoc.txt"
-                echo -e "  ${RESET}"
-                echo ""
-                echo -e "  ${DIM}The Emergency Medical Hologram, reporting for duty.${RESET}"
-                echo ""
-                echo -e "  ${DIM}Press any key to continue...${RESET}"
-                read -rsn1
-            fi
-        fi
         echo ""
     else
         local quip
