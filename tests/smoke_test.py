@@ -30,6 +30,11 @@ import time
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SETUP_SH  = os.path.join(REPO_ROOT, 'setup.sh')
 
+# Fixed path the typed-path scenario uses. Pre-created by pre_typed_path
+# and cleaned up by main(). Living outside the fake_home fixture so the
+# "Type a path" branch sees an absolute path the user might plausibly enter.
+TYPED_PATH_FIXTURE = '/tmp/thedoc-smoke-typed-projects'
+
 ANSI_RE = re.compile(rb'\x1b\[[0-9;]*[A-Za-z]')
 
 # (regex, bytes_to_send, label) — driver waits for the regex to appear in
@@ -101,6 +106,14 @@ def pre_create_non_thedoc_folder(project_dir, state_dir, slug='claude-code'):
         f.write("print('not thedoc')\n")
 
 
+def pre_typed_path(project_dir, state_dir):
+    """Pre-create TYPED_PATH_FIXTURE with one subdir so the 'Type a path'
+    branch finds a valid existing directory and skips the create prompt."""
+    import shutil
+    shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
+    os.makedirs(os.path.join(TYPED_PATH_FIXTURE, 'sub-project'))
+
+
 def pre_write_state(project_dir, state_dir, slug='claude-code'):
     """Pre-write a thedoc state file under $XDG_STATE_HOME/thedoc/state to
     simulate a returning user. is_first_run() in setup.sh returns false,
@@ -124,6 +137,24 @@ RETURNING_USER_STEPS = [
     (re.compile(r'Setup mode\?'),                          b'1',  'Mode: 1 (Quick)'),
     (re.compile(r'Name for your doctor instance folder'),  b'\n', 'Default instance name'),
     (re.compile(r'already exists.*\[Y/n\]'),               b'\n', 'Open existing if any'),
+]
+
+
+# Picks "Type a path" instead of an auto-detected candidate. Confirms the
+# custom-path branch end-to-end: prompt appears, typed path is accepted as
+# an existing directory, structure explainer fires, instance gets created
+# under the typed path. Catches regressions in iter-2 commit 44ab195.
+TYPED_PATH_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                  b'n',                                'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),       b' ',                                'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),   b'3',                                'Projects: option 3 (Type a path)'),
+    (re.compile(r'Enter the full path:'),                  (TYPED_PATH_FIXTURE + '\n').encode(), 'Type fixture path'),
+    (re.compile(r'Press any key to continue \(space'),     b' ',                                'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),             b'1',                                'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                      b'1',                                'Engine: 1 (Claude Code)'),
+    (re.compile(r'Setup mode\?'),                          b'1',                                'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),  b'\n',                               'Default name'),
+    (re.compile(r'already exists.*\[Y/n\]'),               b'\n',                               'Open existing if any'),
 ]
 
 
@@ -372,7 +403,11 @@ def main():
                     pre_setup=pre_write_state)
     failures += run(steps=COMING_SOON_STEPS,       label='coming-soon',
                     assertions=coming_soon_assertions)
+    failures += run(steps=TYPED_PATH_STEPS,        label='typed-path',
+                    pre_setup=pre_typed_path)
     failures += run(steps=_full_mode_steps(),      label='full-mode')
+    # Clean up the typed-path fixture (lives outside any per-run fake_home)
+    shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
     sys.exit(1 if failures else 0)
