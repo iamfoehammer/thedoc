@@ -1,0 +1,26 @@
+# thedoc - editor settings, EditorConfig.org
+# Most modern editors honor this without a plugin. Keeps bash/PS/Python
+# indentation consistent across contributors and prevents accidental
+# CRLF line endings on Windows clones (the bash scripts wouldn't run).
+
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Markdown sometimes uses trailing whitespace for line breaks; preserve it.
+[*.md]
+trim_trailing_whitespace = false
+
+# tmux config uses tab indents (its convention).
+[tmux.conf]
+indent_style = tab
+
+# YAML wants 2-space indent (GitHub Actions, etc.).
+[*.{yml,yaml}]
+indent_size = 2
