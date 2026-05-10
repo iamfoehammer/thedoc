@@ -564,23 +564,36 @@ prompt_projects_dir() {
         return
     fi
 
-    # Type a path
+    # Type a path - re-prompts on empty / mkdir failure instead of aborting,
+    # so a typo or permission slip doesn't kick the user back to square one.
     if [ "$idx" -eq "$custom_idx" ]; then
-        echo ""
-        read -rp "  Enter the full path: " custom_path
-        custom_path="${custom_path/#\~/$HOME}"
-        if [ ! -d "$custom_path" ]; then
+        while true; do
             echo ""
-            read -rp "  That folder doesn't exist. Create it? [Y/n] " create_it
-            if [[ "$create_it" =~ ^[Nn] ]]; then
-                echo -e "  ${DIM}Aborting.${RESET}"
-                exit 0
+            read -rp "  Enter the full path: " custom_path
+            custom_path="${custom_path/#\~/$HOME}"
+            # Trim leading/trailing whitespace
+            custom_path="$(echo "$custom_path" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+            if [ -z "$custom_path" ]; then
+                echo -e "  ${YELLOW}Path can't be empty.${RESET}"
+                continue
             fi
-            mkdir -p "$custom_path"
-            echo -e "  ${GREEN}Created${RESET} $custom_path"
-        fi
-        PROJECTS_DIR="$custom_path"
-        return
+            if [ ! -d "$custom_path" ]; then
+                echo ""
+                read -rp "  That folder doesn't exist. Create it? [Y/n] " create_it
+                if [[ "$create_it" =~ ^[Nn] ]]; then
+                    # User said no - re-ask for path rather than aborting outright.
+                    continue
+                fi
+                if ! mkdir -p "$custom_path" 2>/dev/null; then
+                    echo -e "  ${RED}Failed to create $(short_path "$custom_path").${RESET}"
+                    echo -e "  ${DIM}Check permissions or try a different path.${RESET}"
+                    continue
+                fi
+                echo -e "  ${GREEN}Created${RESET} $custom_path"
+            fi
+            PROJECTS_DIR="$custom_path"
+            return
+        done
     fi
 
     PROJECTS_DIR="${CANDIDATE_DIRS[$idx]}"
@@ -799,13 +812,31 @@ setup_mode="${SETUP_SLUGS[$mode_idx]}"
 
 echo ""
 
-# Instance name
+# Instance name. Validate to prevent path traversal (slashes), hidden dirs
+# (leading dot), and whitespace-only nonsense that would make a valid-but-weird
+# folder. Re-prompt on bad input rather than aborting.
 default_instance="${doctor_slug}-doctor"
 echo -e "  ${BOLD}Name for your doctor instance folder?${RESET}"
 echo -e "  ${DIM}This will be created in $(short_path "$PROJECTS_DIR")/. Press Enter for default.${RESET}"
-echo ""
-read -rp "  [$default_instance] > " instance_name
-instance_name="${instance_name:-$default_instance}"
+while true; do
+    echo ""
+    read -rp "  [$default_instance] > " instance_name
+    instance_name="${instance_name:-$default_instance}"
+    instance_name="$(echo "$instance_name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    if [ -z "$instance_name" ]; then
+        echo -e "  ${YELLOW}Name can't be empty or whitespace.${RESET}"
+        continue
+    fi
+    if [[ "$instance_name" == */* ]]; then
+        echo -e "  ${YELLOW}Name can't contain '/'. Use just the folder name.${RESET}"
+        continue
+    fi
+    if [[ "$instance_name" == .* ]]; then
+        echo -e "  ${YELLOW}Name can't start with '.' (would create a hidden folder).${RESET}"
+        continue
+    fi
+    break
+done
 
 INSTANCE_DIR="$PROJECTS_DIR/$instance_name"
 
