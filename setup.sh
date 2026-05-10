@@ -499,7 +499,8 @@ detect_projects_dirs() {
     for dir in "${search_paths[@]}"; do
         if [ -d "$dir" ]; then
             local count
-            count=$(find "$dir" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+            # tr strips BSD wc's leading whitespace so the display stays clean on macOS
+            count=$(find "$dir" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
             # Skip empty folders
             [ "$count" -eq 0 ] && continue
             CANDIDATE_DIRS+=("$dir")
