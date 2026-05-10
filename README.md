@@ -254,8 +254,12 @@ Never seen it? [This clip explains everything.](https://youtu.be/Rn1QP9oL5V0?si=
 Want to add support for a new doctor type or engine? The framework is designed to be extended:
 
 - **New doctor type:** Add a `DOCTOR.md` to `doctors/<your-type>/`
-- **New engine:** Add a launcher script to `engines/<your-engine>.sh`
+- **New engine:** Add a launcher script to `engines/<your-engine>.{sh,ps1}`
 - **New templates:** Add to `common/templates/`
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on portability rules
+(this code runs on macOS too — no GNU-only flags), the stub-marker
+convention, and how to add a smoke test scenario.
 
 PRs welcome.
 
