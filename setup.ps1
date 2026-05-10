@@ -687,6 +687,54 @@ Show-Greeting
 if (Test-FirstRun) {
     Invoke-TricorderScan
     $script:ProjectsDir = Get-ProjectsDir
+
+    # If launched from bootstrap.ps1, the repo currently lives in
+    # $env:TEMP\thedoc-<guid>. Move it into the chosen projects dir and
+    # add to User PATH so 'thedoc' is on PATH in future sessions. Mirrors
+    # the THEDOC_BOOTSTRAP_DIR branch in setup.sh.
+    if ($env:THEDOC_BOOTSTRAP_DIR -and (Test-Path -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -PathType Container)) {
+        $thedocFinal = Join-Path $script:ProjectsDir 'thedoc'
+        Write-Host ''
+        Write-Typed 'Moving thedoc to your projects folder...'
+
+        if (Test-Path -LiteralPath $thedocFinal -PathType Container) {
+            Write-Host "  $(Get-ShortPath $thedocFinal) already exists - updating..." -ForegroundColor Yellow
+            # -Path takes a wildcard; -LiteralPath does not. Copy contents
+            # (not the dir itself) by globbing the bootstrap dir.
+            Copy-Item -Path (Join-Path $env:THEDOC_BOOTSTRAP_DIR '*') `
+                      -Destination $thedocFinal -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        else {
+            # Move-Item fails across volumes (TEMP on C:, projects on D:).
+            # Try the cheap move first, fall back to Copy + cleanup.
+            try {
+                Move-Item -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -Destination $thedocFinal -ErrorAction Stop
+            }
+            catch {
+                New-Item -ItemType Directory -Path $thedocFinal -Force | Out-Null
+                Copy-Item -Path (Join-Path $env:THEDOC_BOOTSTRAP_DIR '*') `
+                          -Destination $thedocFinal -Recurse -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        }
+        Write-Host "  Installed thedoc to $(Get-ShortPath $thedocFinal)" -ForegroundColor Green
+        $script:ScriptDir = $thedocFinal
+
+        # User PATH (HKCU). Only append if not already present - avoids
+        # ballooning the var on repeat installs. Read via .NET API rather
+        # than $env:PATH (which is the merged session view).
+        $userPath = [Environment]::GetEnvironmentVariable('PATH', 'User')
+        if (-not $userPath) { $userPath = '' }
+        $pathEntries = $userPath -split ';' | Where-Object { $_ -ne '' }
+        if ($pathEntries -notcontains $thedocFinal) {
+            $newPath = if ($userPath) { "$thedocFinal;$userPath" } else { $thedocFinal }
+            [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')
+            $env:PATH = "$thedocFinal;$env:PATH"
+            Write-Host "  Added thedoc to User PATH" -ForegroundColor Green
+        }
+        Write-Host ''
+    }
+
     Show-StructureExplainer -ProjectsDir $script:ProjectsDir
 }
 else {
