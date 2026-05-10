@@ -125,15 +125,31 @@ typeit() {
         return
     fi
 
-    # Animated path
+    # Animated path with async space-to-skip. Per-char non-blocking poll;
+    # space anywhere flips SKIP_TYPING=1, dumps the rest of the current
+    # line in one print, and remaining lines fall through to the skip path.
+    # Caveat: any non-space char pressed during animation also gets eaten.
     local first=1
+    local key=""
     while IFS= read -r line || [ -n "$line" ]; do
         [ "$first" -eq 1 ] || echo ""
         first=0
+
+        # Skip already engaged - dump line whole, no newline (next loop adds it)
+        if [ "$SKIP_TYPING" -eq 1 ]; then
+            printf '%s%s' "$prefix" "$line"
+            continue
+        fi
+
         printf '%s' "$prefix"
         local i
         for ((i=0; i<${#line}; i++)); do
             printf '%s' "${line:$i:1}"
+            if read -t 0 -rsn1 key 2>/dev/null && [ "$key" = " " ]; then
+                SKIP_TYPING=1
+                printf '%s' "${line:$((i+1))}"
+                break
+            fi
             sleep "$delay"
         done
     done <<< "$wrapped"
