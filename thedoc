@@ -9,7 +9,20 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-GITHUB_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Locate the user's projects directory (where doctor instances live).
+# Prefer the state file written by setup.sh - that's what the user actually
+# chose. Fall back to the parent of the framework dir, which works when the
+# user followed the bootstrap default of putting thedoc inside ~/GitHub/.
+_state_file="${XDG_STATE_HOME:-$HOME/.local/state}/thedoc/state"
+GITHUB_DIR=""
+if [ -f "$_state_file" ]; then
+    GITHUB_DIR=$(sed -n 's/^projects_dir=//p' "$_state_file" 2>/dev/null || true)
+fi
+if [ -z "$GITHUB_DIR" ] || [ ! -d "$GITHUB_DIR" ]; then
+    GITHUB_DIR="$(dirname "$SCRIPT_DIR")"
+fi
+unset _state_file
 
 case "${1:-setup}" in
     setup)
