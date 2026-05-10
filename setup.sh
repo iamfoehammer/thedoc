@@ -825,8 +825,19 @@ engine_idx=$CHOICE_IDX
 engine_slug="${ENGINE_SLUGS[$engine_idx]}"
 engine_name="${ENGINE_TYPES[$engine_idx]}"
 
-# Check if engine is supported
-if [ ! -f "$SCRIPT_DIR/engines/${engine_slug}.sh" ]; then
+# Check if the engine is actually implemented. Either the launcher file is
+# missing, or it's a stub marked "not yet supported". Catching this here
+# (before the instance directory and CLAUDE.md/DOCTOR.md get created) avoids
+# orphaned half-instances if the user later picks "no" on the fallback.
+engine_file="$SCRIPT_DIR/engines/${engine_slug}.sh"
+engine_supported="yes"
+if [ ! -f "$engine_file" ]; then
+    engine_supported="no"
+elif head -5 "$engine_file" 2>/dev/null | grep -qF "not yet supported"; then
+    engine_supported="no"
+fi
+
+if [ "$engine_supported" = "no" ]; then
     echo ""
     echo -e "  ${YELLOW}${engine_name} engine support is coming soon.${RESET}"
     echo ""
