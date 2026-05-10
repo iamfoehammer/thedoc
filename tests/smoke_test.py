@@ -17,6 +17,7 @@ the path to the captured log for postmortem.
 """
 from __future__ import annotations
 
+import atexit
 import os
 import pty
 import re
@@ -30,12 +31,25 @@ import time
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SETUP_SH  = os.path.join(REPO_ROOT, 'setup.sh')
 
-# Fixed paths the typed-path scenarios use. Living outside any per-run
-# fake_home fixture so the "Type a path" branch sees an absolute path the
-# user might plausibly enter. Pre-/un-created by their pre_setup hooks
-# and cleaned up by main().
-TYPED_PATH_FIXTURE = '/tmp/thedoc-smoke-typed-projects'           # exists branch
-TYPED_PATH_CREATE  = '/tmp/thedoc-smoke-typed-projects-to-create' # create branch
+
+def _cleanup_typed_path_fixtures():
+    """Remove the typed-path fixtures regardless of how the suite ends:
+    normal completion, Ctrl+C, or unhandled exception. Without this, an
+    interrupted run leaks /tmp/thedoc-smoke-typed-projects-<pid>/ dirs."""
+    shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
+    shutil.rmtree(TYPED_PATH_CREATE,  ignore_errors=True)
+
+
+atexit.register(_cleanup_typed_path_fixtures)
+
+
+# Paths the typed-path scenarios feed to setup.sh. Living outside any
+# per-run fake_home fixture so the "Type a path" branch sees an absolute
+# path a user might plausibly enter. PID-suffixed so concurrent test runs
+# (e.g. local + CI) don't race over the same paths. Cleanup hooks below
+# remove them on suite completion AND on Ctrl+C / unhandled exception.
+TYPED_PATH_FIXTURE = f'/tmp/thedoc-smoke-typed-projects-{os.getpid()}'
+TYPED_PATH_CREATE  = f'/tmp/thedoc-smoke-typed-projects-to-create-{os.getpid()}'
 
 ANSI_RE = re.compile(rb'\x1b\[[0-9;]*[A-Za-z]')
 
@@ -514,9 +528,10 @@ def main():
         f, log_path = run(label=label, **kwargs)
         failures += f
         log_files.append(log_path)
-    # Clean up the typed-path fixtures (live outside any per-run fake_home)
-    shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
-    shutil.rmtree(TYPED_PATH_CREATE,  ignore_errors=True)
+    # Clean up the typed-path fixtures (live outside any per-run fake_home).
+    # Also covered by the atexit hook above, but doing it eagerly keeps
+    # the disk tidy if the user inspects /tmp between runs.
+    _cleanup_typed_path_fixtures()
     # On full PASS, remove the per-scenario PTY logs - they're only useful
     # for postmortem on failure, and /tmp can otherwise accumulate hundreds
     # of stale logs across many runs. On any FAIL, all logs are kept.
