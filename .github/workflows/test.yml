@@ -23,6 +23,19 @@ jobs:
       - name: Verify bootstrap.sh syntax
         run: bash -n bootstrap.sh
 
+      - name: Verify thedoc wrapper syntax
+        run: bash -n thedoc
+
+      - name: Verify llm-secrets syntax
+        run: bash -n llm-secrets
+
+      - name: Verify all engine launcher syntax
+        run: |
+          for f in engines/*.sh; do
+              echo "checking $f"
+              bash -n "$f"
+          done
+
       - name: Verify --help short-circuit (no preflight)
         run: |
           ./setup.sh --help    | grep -q "thedoc setup wizard"
@@ -45,6 +58,19 @@ jobs:
 
       - name: Verify bootstrap.sh syntax
         run: bash -n bootstrap.sh
+
+      - name: Verify thedoc wrapper syntax
+        run: bash -n thedoc
+
+      - name: Verify llm-secrets syntax
+        run: bash -n llm-secrets
+
+      - name: Verify all engine launcher syntax
+        run: |
+          for f in engines/*.sh; do
+              echo "checking $f"
+              bash -n "$f"
+          done
 
       - name: Verify --help short-circuit
         run: |
