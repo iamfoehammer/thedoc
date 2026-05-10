@@ -5,7 +5,7 @@ Two test suites for the framework. Both run in CI on Ubuntu and macOS.
 | File | What it covers | Runtime |
 |---|---|---|
 | `test_wrapper.sh` | Wrapper subcommand surface (`thedoc help/list/open/...`) — non-PTY, exit codes + output strings | ~50ms |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 14 scenarios | ~30s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 15 scenarios | ~33s |
 
 `thedoc test` runs both in order, mirroring CI.
 
@@ -59,6 +59,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `engine-fallback` | Stub engine → "Run with Claude Code instead?" prompt → fallback path | `5fb0980` |
 | `engine-fallback-decline` | Same setup, user declines fallback → "Check back later" → exit 0 | iter 60 |
 | `open-existing` | Pre-populated valid instance triggers "Open existing? [Y/n]" | `176d16f` |
+| `open-existing-decline` | Same setup, user declines → re-prompts for fresh name in same wizard | iter 61 |
 | `non-thedoc-folder` | Pre-populated random project folder rejected ("isn't a thedoc instance") | `176d16f` |
 | `returning-user` | State file present → wizard skips greeting/scan/projects, jumps to doctor pick | baseline |
 | `coming-soon` | Stub doctor type (Gemini) → "templates are coming soon" early exit | `5a93d35` |

@@ -118,6 +118,18 @@ OPEN_EXISTING_STEPS = COMMON_FIRSTRUN_STEPS + [
 ]
 
 
+# Picks an existing instance name, DECLINES "Open existing? [Y/n]", expects
+# to be re-prompted for the name (not kicked back to a re-run of the whole
+# wizard). Then types a fresh name and reaches Ready to launch.
+# Pre-iter-61 the no-path called exit 0 with "Re-run and pick a different
+# name" - this test guards the new in-wizard re-prompt loop.
+OPEN_EXISTING_DECLINE_STEPS = COMMON_FIRSTRUN_STEPS + [
+    (re.compile(r'Name for your doctor instance folder'),  b'\n',                'Default name (collides)'),
+    (re.compile(r'Open existing instance\? \[Y/n\]'),      b'n\n',               'No - I want a new one'),
+    (re.compile(r'pick a different name'),                 b'fresh-instance\n',  'Type fresh name'),
+]
+
+
 def pre_create_instance(project_dir, state_dir, slug='claude-code'):
     """Pre-populate a fake doctor instance so the open-existing path fires."""
     instance = os.path.join(project_dir, f'{slug}-doctor')
@@ -539,6 +551,8 @@ def main():
                                          assertions=engine_decline_assertions)),
         ('open-existing',     dict(steps=OPEN_EXISTING_STEPS,
                                    pre_setup=pre_create_instance)),
+        ('open-existing-decline', dict(steps=OPEN_EXISTING_DECLINE_STEPS,
+                                       pre_setup=pre_create_instance)),
         ('non-thedoc-folder', dict(steps=NON_THEDOC_FOLDER_STEPS,
                                    pre_setup=pre_create_non_thedoc_folder)),
         ('returning-user',    dict(steps=RETURNING_USER_STEPS,

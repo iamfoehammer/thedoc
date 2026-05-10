@@ -936,23 +936,25 @@ while true; do
         echo -e "  ${DIM}(no DOCTOR.md inside). Pick a different name.${RESET}"
         continue
     fi
+    # If target IS an existing thedoc instance, give them a chance to open
+    # it OR re-pick a name without re-running the whole wizard.
+    if [ -d "$target" ]; then
+        echo ""
+        echo -e "  ${YELLOW}$(short_path "$target") already exists as a doctor instance.${RESET}"
+        read -rp "  Open existing instance? [Y/n] " open_existing
+        if [[ "$open_existing" =~ ^[Nn] ]]; then
+            echo -e "  ${DIM}OK - pick a different name.${RESET}"
+            continue
+        fi
+    fi
     break
 done
 
 INSTANCE_DIR="$PROJECTS_DIR/$instance_name"
 
-# Check if instance already exists. By the time we reach here we know that
-# if INSTANCE_DIR exists, it's a real thedoc instance (the name loop above
-# rejected non-instance directories).
-if [ -d "$INSTANCE_DIR" ]; then
-    echo ""
-    echo -e "  ${YELLOW}$(short_path "$INSTANCE_DIR") already exists as a doctor instance.${RESET}"
-    read -rp "  Open existing instance? [Y/n] " open_existing
-    if [[ "$open_existing" =~ ^[Nn] ]]; then
-        echo -e "  ${DIM}Aborting. Re-run and pick a different name to create a new one.${RESET}"
-        exit 0
-    fi
-else
+# At this point INSTANCE_DIR is either an existing thedoc instance the user
+# agreed to open, or a name we still need to create on disk.
+if [ ! -d "$INSTANCE_DIR" ]; then
     # Create instance directory
     if ! mkdir -p "$INSTANCE_DIR" 2>/dev/null; then
         # WSL may need cmd.exe to create Windows folders

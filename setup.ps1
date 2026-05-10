@@ -554,21 +554,23 @@ function New-DoctorInstance {
             Write-Host "  (no DOCTOR.md inside). Pick a different name." -ForegroundColor DarkGray
             continue
         }
+        # If candidate IS an existing thedoc instance, let the user open it
+        # or re-pick a name without restarting the whole wizard.
+        if (Test-Path -LiteralPath $candidate -PathType Container) {
+            Write-Host ''
+            Write-Host "  $(Get-ShortPath $candidate) already exists as a doctor instance." -ForegroundColor Yellow
+            $resp = Read-Line '  Open existing instance? [Y/n] '
+            if ($resp -match '^[Nn]') {
+                Write-Host '  OK - pick a different name.' -ForegroundColor DarkGray
+                continue
+            }
+        }
         break
     }
 
     $instanceDir = Join-Path $ProjectsDir $instanceName
 
-    if (Test-Path -LiteralPath $instanceDir -PathType Container) {
-        Write-Host ''
-        Write-Host "  $(Get-ShortPath $instanceDir) already exists as a doctor instance." -ForegroundColor Yellow
-        $resp = Read-Line '  Open existing instance? [Y/n] '
-        if ($resp -match '^[Nn]') {
-            Write-Host '  Aborting. Re-run and pick a different name to create a new one.' -ForegroundColor DarkGray
-            exit 0
-        }
-    }
-    else {
+    if (-not (Test-Path -LiteralPath $instanceDir -PathType Container)) {
         try {
             New-Item -Type Directory -Path $instanceDir -Force -ErrorAction Stop | Out-Null
         }
