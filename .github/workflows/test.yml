@@ -103,7 +103,7 @@ jobs:
           # accidentally renames or removes one of these, the CI fails loud.
           $expected = @(
               'Test-FirstRun', 'Save-State', 'Get-State',
-              'Get-Wrapped', 'Write-Typed',
+              'Get-Wrapped', 'Write-Typed', 'Wait-Dramatic',
               'Show-Greeting', 'Invoke-TricorderScan',
               'Show-Menu', 'Test-IsStub',
               'Read-Line', 'Get-ShortPath', 'Get-CandidateProjectDirs',

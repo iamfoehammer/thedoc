@@ -190,7 +190,7 @@ function Show-Greeting {
     if (Test-FirstRun) {
         Write-Typed $greeting -Delay 0.02
         Write-Host ''
-        Start-Sleep -Milliseconds 500
+        Wait-Dramatic -Milliseconds 500
         Write-Typed '...' -Delay 0.3
         Write-Host ''
 
@@ -243,15 +243,15 @@ function Invoke-TricorderScan {
 
     $scan = '  [scan] '
     Write-Host -NoNewline "${scan}Detecting platform..."
-    Start-Sleep -Milliseconds 300
+    Wait-Dramatic -Milliseconds 300
     Write-Host " $platform" -ForegroundColor White
 
     Write-Host -NoNewline "${scan}PowerShell..."
-    Start-Sleep -Milliseconds 200
+    Wait-Dramatic -Milliseconds 200
     Write-Host " $($PSVersionTable.PSVersion)" -ForegroundColor White
 
     Write-Host -NoNewline "${scan}git..."
-    Start-Sleep -Milliseconds 200
+    Wait-Dramatic -Milliseconds 200
     if (Get-Command git -ErrorAction SilentlyContinue) {
         Write-Host ' installed' -ForegroundColor Green
     } else {
@@ -260,7 +260,7 @@ function Invoke-TricorderScan {
     }
 
     Write-Host -NoNewline "${scan}claude..."
-    Start-Sleep -Milliseconds 200
+    Wait-Dramatic -Milliseconds 200
     if (Get-Command claude -ErrorAction SilentlyContinue) {
         Write-Host ' installed' -ForegroundColor Green
     } else {
@@ -268,7 +268,7 @@ function Invoke-TricorderScan {
     }
 
     Write-Host ''
-    Start-Sleep -Milliseconds 300
+    Wait-Dramatic -Milliseconds 300
     Write-Typed 'Good. Vitals look stable.'
     Write-Host ''
 }
@@ -328,6 +328,18 @@ function Read-Line {
     param([string]$Prompt = '')
     if ($Prompt) { [Console]::Write($Prompt) }
     return [Console]::ReadLine()
+}
+
+# ── Dramatic pauses ──────────────────────────────────────────────────
+# Sleep for dramatic effect during the tricorder scan / candidate folder
+# discovery. Skipped when $Script:SkipTyping is true so a user pressing
+# space to skip animations skips ALL animations, not just typing.
+# Mirrors bash _dramatic_sleep().
+function Wait-Dramatic {
+    param([int]$Milliseconds)
+    if (-not $Script:SkipTyping) {
+        Start-Sleep -Milliseconds $Milliseconds
+    }
 }
 
 # ── Stub detection ───────────────────────────────────────────────────
@@ -407,14 +419,14 @@ function Get-ProjectsDir {
     foreach ($c in $candidates) {
         $short = Get-ShortPath $c.Path
         Write-Host "  [scan] Found $short/  ($($c.Count) folders)"
-        Start-Sleep -Milliseconds 150
+        Wait-Dramatic -Milliseconds 150
     }
     if ($candidates.Count -eq 0) {
         Write-Host '  [scan] No project folders found.' -ForegroundColor Yellow
     }
 
     Write-Host ''
-    Start-Sleep -Milliseconds 300
+    Wait-Dramatic -Milliseconds 300
     Write-Typed 'Scan complete.'
     Write-Host ''
 
