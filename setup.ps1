@@ -97,6 +97,10 @@ function Get-State {
 
 # ── Typing effect ────────────────────────────────────────────────────
 $Script:SkipTyping = $false
+# Test/automation hook - same as bash THEDOC_TEST_SKIP_TYPING. Lets the
+# test harness skip all animations and dramatic pauses without trying
+# to queue a stdin space (which races with read -rsn1 calls).
+if ($env:THEDOC_TEST_SKIP_TYPING) { $Script:SkipTyping = $true }
 
 function Get-Wrapped {
     # Greedy whitespace word-wrap, matching the awk pass in setup.sh.

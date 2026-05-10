@@ -326,12 +326,13 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
 
     env = os.environ.copy()
     env.update({
-        'XDG_STATE_HOME':    state_dir,
-        'COLUMNS':           str(columns),
-        'LINES':             '40',
-        'TERM':              'xterm-256color',
-        'THEDOC_NO_LAUNCH':  '1',
-        'HOME':              fake_home,
+        'XDG_STATE_HOME':           state_dir,
+        'COLUMNS':                  str(columns),
+        'LINES':                    '40',
+        'TERM':                     'xterm-256color',
+        'THEDOC_NO_LAUNCH':         '1',
+        'THEDOC_TEST_SKIP_TYPING':  '1',
+        'HOME':                     fake_home,
     })
     # Suppress WSL drive scanning during the test - it'd drag /mnt/ paths
     # into the candidate list and confuse the menu shortcut. The bash

@@ -185,6 +185,15 @@ is_stub() {
 # mode each typeit call dumps wrapped lines in a single print (no per-char
 # loop, instant on bash 3.2).
 SKIP_TYPING=0
+# Test/automation hook: when THEDOC_TEST_SKIP_TYPING is non-empty in the
+# environment, start with skip mode already on. Equivalent to the user
+# pressing space at every "space to skip animations" prompt - dramatic
+# pauses and typing animations all no-op from the first byte. Out-of-band
+# (env var, not stdin) so the test harness avoids the race that would
+# otherwise come from queueing a space byte and hoping typeit's async-poll
+# consumes it before some other read does.
+[ -n "${THEDOC_TEST_SKIP_TYPING:-}" ] && SKIP_TYPING=1
+
 typeit() {
     local text="$1"
     local delay="${2:-0.008}"
