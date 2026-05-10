@@ -47,6 +47,21 @@ source ~/.bashrc
 thedoc
 ```
 
+**Manual install (PowerShell)**:
+
+```powershell
+git clone https://github.com/iamfoehammer/thedoc.git $HOME\GitHub\thedoc
+# Add to PATH for current session
+$env:PATH = "$HOME\GitHub\thedoc;$env:PATH"
+# Persist across sessions:
+[Environment]::SetEnvironmentVariable('PATH', "$HOME\GitHub\thedoc;$([Environment]::GetEnvironmentVariable('PATH', 'User'))", 'User')
+.\thedoc.ps1
+```
+
+> PowerShell does not resolve `thedoc` → `thedoc.ps1` automatically (unlike
+> bash, which finds extensionless scripts on PATH). Run `thedoc.ps1 list`
+> or set up an alias. A `thedoc.cmd` shim is on the roadmap.
+
 ## The Doctor Framework
 
 You run `thedoc`, answer a few questions, and get a dedicated AI-powered doctor for your specific setup. The doctor knows how to:
@@ -223,8 +238,10 @@ The framework ships with battle-tested templates in `common/templates/`:
 
 ```
 thedoc/                          # The framework (this repo)
-  thedoc                         # Main command
-  setup.sh                       # Interactive setup wizard
+  thedoc                         # Main command (bash)
+  thedoc.ps1                     # Main command (PowerShell)
+  setup.sh                       # Interactive setup wizard (bash)
+  setup.ps1                      # Interactive setup wizard (PowerShell)
   llm-secrets                    # Secret storage (bash)
   llm-secrets.ps1                # Secret storage (PowerShell)
   doctors/
