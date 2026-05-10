@@ -89,6 +89,34 @@ def pre_create_instance(project_dir, slug='claude-code'):
         f.write('# Pretend CLAUDE.md for testing\n')
 
 
+def pre_create_non_thedoc_folder(project_dir, slug='claude-code'):
+    """Pre-populate a directory at the default name but WITHOUT a DOCTOR.md.
+    Mirrors the case where someone has an unrelated project sharing the
+    name thedoc would pick - setup must refuse to use it."""
+    other = os.path.join(project_dir, f'{slug}-doctor')
+    os.makedirs(other, exist_ok=True)
+    with open(os.path.join(other, 'README.md'), 'w') as f:
+        f.write("# Some other project, not a thedoc instance\n")
+    with open(os.path.join(other, 'main.py'), 'w') as f:
+        f.write("print('not thedoc')\n")
+
+
+# Pre-populates a non-thedoc directory at the default-name path. Confirms
+# setup refuses it ("isn't a thedoc instance") and re-prompts for a
+# different name, instead of running claude in a random project folder.
+NON_THEDOC_FOLDER_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                  b'n',                'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),       b' ',                'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),   b'1',                'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),     b' ',                'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),             b'1',                'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                      b'1',                'Engine: 1 (Claude Code)'),
+    (re.compile(r'Setup mode\?'),                          b'1',                'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),  b'\n',               'Accept default (will collide)'),
+    (re.compile(r"isn't a thedoc instance"),               b'fresh-instance\n', 'Pick fresh name after rejection'),
+]
+
+
 # Drives the wizard through a deliberately bad instance name first, then
 # a valid one. Confirms the validation loop in setup.sh actually re-prompts.
 NEGATIVE_NAME_STEPS = [
@@ -254,9 +282,11 @@ def main():
     failures += run(steps=HAPPY_PATH_STEPS,      label='happy-path')
     failures += run(steps=NEGATIVE_NAME_STEPS,   label='negative-name')
     failures += run(steps=ENGINE_FALLBACK_STEPS, label='engine-fallback')
-    failures += run(steps=OPEN_EXISTING_STEPS,   label='open-existing',
+    failures += run(steps=OPEN_EXISTING_STEPS,    label='open-existing',
                     pre_setup=pre_create_instance)
-    failures += run(steps=_full_mode_steps(),    label='full-mode')
+    failures += run(steps=NON_THEDOC_FOLDER_STEPS, label='non-thedoc-folder',
+                    pre_setup=pre_create_non_thedoc_folder)
+    failures += run(steps=_full_mode_steps(),     label='full-mode')
     print('=' * 60)
     print(f'  overall: {green("PASS") if failures == 0 else red(f"{failures} FAILED")}')
     sys.exit(1 if failures else 0)
