@@ -1,5 +1,7 @@
 # thedoc
 
+[![smoke-test](https://github.com/iamfoehammer/thedoc/actions/workflows/test.yml/badge.svg)](https://github.com/iamfoehammer/thedoc/actions/workflows/test.yml)
+
 **Emergency Medical Hologram for your LLM/CLI harnesses.**
 
 A framework for creating dedicated "doctor" instances that diagnose, configure, and maintain your AI tool installations. Powered by Claude Code (with more engines coming).
