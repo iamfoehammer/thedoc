@@ -65,9 +65,10 @@ EOF
 
 load_state() {
     if [ -f "$STATE_FILE" ]; then
-        FIRST_RUN_DATE=$(grep -oP '(?<=^first_run=).+' "$STATE_FILE" 2>/dev/null || echo "")
-        PROJECTS_DIR=$(grep -oP '(?<=^projects_dir=).+' "$STATE_FILE" 2>/dev/null || echo "")
-        PLATFORM=$(grep -oP '(?<=^platform=).+' "$STATE_FILE" 2>/dev/null || echo "")
+        # POSIX sed - works on BSD (macOS) and GNU. grep -oP is GNU-only.
+        FIRST_RUN_DATE=$(sed -n 's/^first_run=//p' "$STATE_FILE" 2>/dev/null || echo "")
+        PROJECTS_DIR=$(sed -n 's/^projects_dir=//p' "$STATE_FILE" 2>/dev/null || echo "")
+        PLATFORM=$(sed -n 's/^platform=//p' "$STATE_FILE" 2>/dev/null || echo "")
     fi
 }
 
@@ -77,22 +78,36 @@ pick_random() {
     echo "${arr[$((RANDOM % ${#arr[@]}))]}"
 }
 
-# Typing effect - prints text character by character
-# Press space at the "press any key" prompts to skip all future typing
+# Typing effect - prints text character by character.
+# Width-aware: pre-wraps at word boundaries with `fold -s` so the terminal
+# never breaks a word mid-character during the animation.
+# Press space at the "press any key" prompts to skip all future typing.
 SKIP_TYPING=0
 typeit() {
     local text="$1"
     local delay="${2:-0.02}"
     local prefix="${3:-  }"
-    printf '%s' "$prefix"
-    if [ "$SKIP_TYPING" -eq 1 ]; then
-        printf '%s\n' "$text"
-        return
-    fi
-    for ((i=0; i<${#text}; i++)); do
-        printf '%s' "${text:$i:1}"
-        sleep "$delay"
-    done
+    local cols="${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}"
+    local wrap_at=$((cols - ${#prefix}))
+    [ "$wrap_at" -lt 20 ] && wrap_at=20
+
+    # Pre-wrap at word boundaries; iterate each line char-by-char.
+    # Skip mode just zeroes the delay so the same wrapping path applies.
+    [ "$SKIP_TYPING" -eq 1 ] && delay=0
+
+    local wrapped
+    wrapped=$(printf '%s' "$text" | fold -s -w "$wrap_at")
+    local first=1
+    while IFS= read -r line || [ -n "$line" ]; do
+        [ "$first" -eq 1 ] || echo ""
+        first=0
+        printf '%s' "$prefix"
+        local i
+        for ((i=0; i<${#line}; i++)); do
+            printf '%s' "${line:$i:1}"
+            [ "$delay" != "0" ] && sleep "$delay"
+        done
+    done <<< "$wrapped"
     echo ""
 }
 
@@ -267,7 +282,7 @@ detect_platform() {
     TMUX_VER=""
     if command -v tmux &>/dev/null; then
         HAS_TMUX="yes"
-        TMUX_VER="$(tmux -V 2>/dev/null | grep -oP '[\d.]+' || echo "unknown")"
+        TMUX_VER="$(tmux -V 2>/dev/null | awk '{print $2}' || echo "unknown")"
     fi
 
     HAS_GIT="no"
@@ -497,24 +512,28 @@ browse_for_folder() {
         local short
         short=$(short_path "$current")
 
-        # List subdirectories (only readable ones, skip hidden)
+        # List subdirectories, skip hidden. Dropped GNU-only `-readable`;
+        # find silently skips unreadable dirs on its own.
         local dirs=()
         while IFS= read -r d; do
             [ -n "$d" ] && dirs+=("$d")
-        done < <(find "$current" -maxdepth 1 -mindepth 1 -type d -readable -not -name '.*' 2>/dev/null | sort | head -50)
+        done < <(find "$current" -maxdepth 1 -mindepth 1 -type d -not -name '.*' 2>/dev/null | sort | head -50)
 
-        # Build options: directories + navigation actions
+        # Build options: directories + navigation actions.
+        # Guard the iteration: bash 3.2 (macOS) errors on empty-array expansion under `set -u`.
         local options=()
-        for d in "${dirs[@]}"; do
-            local name="$(basename "$d")"
-            local subcount
-            subcount=$(find "$d" -maxdepth 1 -mindepth 1 -type d -readable 2>/dev/null | wc -l)
-            if [ "$subcount" -gt 0 ]; then
-                options+=("${name}/  (${subcount} folders)")
-            else
-                options+=("${name}/")
-            fi
-        done
+        if [ "${#dirs[@]}" -gt 0 ]; then
+            for d in "${dirs[@]}"; do
+                local name="$(basename "$d")"
+                local subcount
+                subcount=$(find "$d" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+                if [ "$subcount" -gt 0 ]; then
+                    options+=("${name}/  (${subcount} folders)")
+                else
+                    options+=("${name}/")
+                fi
+            done
+        fi
         local dir_count=${#dirs[@]}
         options+=("--- Select THIS folder (${short}/) ---")
         options+=("--- Up one level ---")
