@@ -79,7 +79,7 @@ thedoc              # Create a new doctor instance (or open setup)
 thedoc setup        # Same as above
 thedoc list         # List existing doctor instances
 thedoc open <name>  # Open an existing instance directly
-thedoc test         # Run the E2E smoke test against setup.sh
+thedoc test         # Run wrapper + smoke test suites (mirrors CI)
 thedoc update       # git pull the framework to latest
 thedoc help         # Show help
 ```

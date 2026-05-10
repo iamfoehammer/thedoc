@@ -95,6 +95,19 @@ set -e
 _assert_exit_code   "thedoc open <missing>: exit non-zero" 1 "$rc"
 _assert_contains    "thedoc open <missing>: tells user it's missing" "Not a doctor instance" "$out"
 
+# 7. `thedoc update` from a non-git directory bails with a friendly message
+# (no `git pull` attempted). Copy the wrapper to a scratch dir so SCRIPT_DIR
+# resolves there and skips the .git probe with the framed error.
+_scratch="$(mktemp -d)"
+trap 'rm -rf "$_scratch"' EXIT
+cp "$THEDOC" "$_scratch/thedoc"
+set +e
+out=$("$_scratch/thedoc" update 2>&1)
+rc=$?
+set -e
+_assert_exit_code   "thedoc update (non-git dir): exit non-zero" 1 "$rc"
+_assert_contains    "thedoc update (non-git dir): explains why"  "not a git checkout" "$out"
+
 echo ""
 echo "============================================================"
 if [ "$failures" -eq 0 ]; then

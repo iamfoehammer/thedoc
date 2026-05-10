@@ -53,7 +53,9 @@ case "${1:-setup}" in
         ;;
     update)
         # Pull the latest framework. Runs in the framework dir so it works
-        # regardless of caller's cwd.
+        # regardless of caller's cwd. Checks preconditions first so a user
+        # who edited setup.sh locally (or has no upstream tracking) gets a
+        # friendly message instead of git's raw error.
         if ! command -v git >/dev/null 2>&1; then
             echo ""
             echo "  thedoc update requires git."
@@ -67,10 +69,38 @@ case "${1:-setup}" in
             echo ""
             exit 1
         fi
+        # Dirty working tree blocks ff-only with an opaque error otherwise.
+        if ! git -C "$SCRIPT_DIR" diff --quiet HEAD 2>/dev/null; then
+            echo ""
+            echo "  Local changes detected in $SCRIPT_DIR."
+            echo "  Commit, stash, or revert them before running 'thedoc update'."
+            echo ""
+            echo "  Files changed:"
+            git -C "$SCRIPT_DIR" status --short
+            echo ""
+            exit 1
+        fi
+        # No upstream tracking → git's error is cryptic ("no tracking
+        # information"). Catch it early.
+        if ! git -C "$SCRIPT_DIR" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+            echo ""
+            echo "  Current branch has no upstream tracking."
+            echo "  Set one up with:"
+            echo "      git -C $SCRIPT_DIR branch --set-upstream-to=origin/main"
+            echo ""
+            exit 1
+        fi
         echo ""
         echo "  Updating thedoc..."
-        git -C "$SCRIPT_DIR" pull --ff-only
-        echo ""
+        if git -C "$SCRIPT_DIR" pull --ff-only 2>&1; then
+            echo ""
+        else
+            echo ""
+            echo "  Pull failed. Your local history may have diverged from origin."
+            echo "  Inspect with 'git -C $SCRIPT_DIR log --oneline @{u}..HEAD'."
+            echo ""
+            exit 1
+        fi
         ;;
     list)
         echo ""
@@ -132,7 +162,7 @@ case "${1:-setup}" in
         echo "    thedoc setup    Create or open a doctor instance (default)"
         echo "    thedoc list     List existing doctor instances"
         echo "    thedoc open     Open an existing instance: thedoc open <name>"
-        echo "    thedoc test     Run the E2E smoke test against setup.sh"
+        echo "    thedoc test     Run the wrapper + setup.sh test suites (mirrors CI)"
         echo "    thedoc update   git pull the framework to latest"
         echo "    thedoc help     Show this help"
         echo ""
