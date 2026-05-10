@@ -28,6 +28,11 @@ Skip the typing animation any time by pressing space at the
 "Press any key" prompts, or by pressing space mid-paragraph
 (both flip skip mode for the rest of the run).
 
+To skip ALL animations from the very start (no waiting for
+prompts), set the env var THEDOC_TEST_SKIP_TYPING=1:
+  THEDOC_TEST_SKIP_TYPING=1 thedoc
+(Originally a test hook; equally useful for impatient users.)
+
 For most users the friendlier entry point is the 'thedoc' wrapper:
   thedoc            same as 'thedoc setup'
   thedoc list       list existing doctor instances

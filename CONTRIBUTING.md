@@ -27,10 +27,16 @@ python3 tests/smoke_test.py     # or: thedoc test
 ```
 
 Requires Python 3 and a real PTY (Linux/macOS — won't run under
-cmd.exe). The full suite finishes in ~25–35s. Every PR runs the
+cmd.exe). The full suite finishes in ~25s. Every PR runs the
 suite on both Ubuntu and macOS via GitHub Actions. See
 [`tests/README.md`](tests/README.md) for what each scenario covers
 and how to add a new one.
+
+The smoke harness sets `THEDOC_TEST_SKIP_TYPING=1` so every
+scenario runs with typing animations and dramatic pauses
+disabled. If you're debugging a race or stress-testing the
+animated path, run `python3 tests/smoke_test.py happy-path`
+under a debugger that doesn't propagate the env var.
 
 ## Code style and portability
 
