@@ -5,7 +5,7 @@ Two test suites for the framework. Both run in CI on Ubuntu and macOS.
 | File | What it covers | Runtime |
 |---|---|---|
 | `test_wrapper.sh` | Wrapper subcommand surface (`thedoc help/list/open/...`) — non-PTY, exit codes + output strings | ~50ms |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 15 scenarios | ~33s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 16 scenarios | ~35s |
 
 `thedoc test` runs both in order, mirroring CI.
 
@@ -54,6 +54,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | Scenario | What it covers | Reference commit |
 |---|---|---|
 | `happy-path` | Default fresh install, all defaults, reaches `Ready to launch.` | baseline |
+| `openclaw-doctor` | Picks OpenClaw doctor type (non-default slug) → exercises cp/symlink for a slug ≠ "claude-code" | iter 63 |
 | `negative-name` | Slash and leading-dot rejection in the instance-name validation loop | `44ab195` |
 | `empty-name` | Whitespace-only input → trim → empty rejection | `7cc8e5e` |
 | `engine-fallback` | Stub engine → "Run with Claude Code instead?" prompt → fallback path | `5fb0980` |

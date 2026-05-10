@@ -75,6 +75,24 @@ HAPPY_PATH_STEPS = COMMON_FIRSTRUN_STEPS + [
     (re.compile(r'already exists.*\[Y/n\]'),                b'\n', 'Open existing if any'),
 ]
 
+
+# Picks OpenClaw as the doctor type (slot 2, has a real DOCTOR.md) with
+# Claude Code as the engine. Exercises a doctor_slug other than
+# "claude-code" through the cp/symlink/CLAUDE.md generation path - which
+# happy-path never does. Catches regressions where the wizard accidentally
+# hard-codes "claude-code" in template generation or path expansion.
+OPENCLAW_DOCTOR_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n', 'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ', 'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'1', 'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),      b' ', 'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'2', 'Doctor type: 2 (OpenClaw)'),
+    (re.compile(r'Which LLM engine'),                       b'1', 'Engine: 1 (Claude Code)'),
+    (re.compile(r'Setup mode\?'),                           b'1', 'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),   b'\n', 'Default name (openclaw-doctor)'),
+    (re.compile(r'already exists.*\[Y/n\]'),                b'\n', 'Open existing if any'),
+]
+
 # Picks an unsupported engine (OpenClaw stub) and confirms the fallback
 # prompt fires. Verifies the gate from commit 5fb0980 catches stub
 # engines BEFORE the instance directory + DOCTOR.md get created.
@@ -544,6 +562,7 @@ def main():
     # Each entry is (label, kwargs-for-run). Order is the run order.
     SCENARIOS = [
         ('happy-path',        dict(steps=HAPPY_PATH_STEPS)),
+        ('openclaw-doctor',   dict(steps=OPENCLAW_DOCTOR_STEPS)),
         ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS)),
         ('empty-name',        dict(steps=EMPTY_NAME_STEPS)),
         ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS)),
