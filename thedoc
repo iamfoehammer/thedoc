@@ -241,8 +241,10 @@ case "${1:-setup}" in
         echo ""
         ;;
     *)
-        echo "Unknown command: $1"
-        echo "Run 'thedoc help' for usage."
+        echo ""
+        echo "  Unknown command: $1"
+        echo "  Run 'thedoc help' for usage."
+        echo ""
         exit 1
         ;;
 esac

@@ -116,6 +116,8 @@ $r = Invoke-TheDoc totally-bogus-command
 Assert-ExitCode  'thedoc bogus-command: exit non-zero' 1 $r.ExitCode
 Assert-Contains  "thedoc bogus-command: shows 'Unknown command'" 'Unknown command' $r.Output
 Assert-Contains  "thedoc bogus-command: suggests 'thedoc help'"  'thedoc help'     $r.Output
+# iter 150: indent matches the rest of the wrapper's error format
+Assert-Contains  'thedoc bogus-command: indented' '  Unknown command:' $r.Output
 
 # 4. `thedoc list` exits 0 regardless of whether instances exist.
 $r = Invoke-TheDoc list

@@ -108,6 +108,8 @@ set -e
 _assert_exit_code   "thedoc bogus-command: exit non-zero"  1  "$rc"
 _assert_contains    "thedoc bogus-command: shows 'Unknown command'" "Unknown command" "$out"
 _assert_contains    "thedoc bogus-command: suggests 'thedoc help'"  "thedoc help"     "$out"
+# iter 150: indent matches the rest of the wrapper's error format
+_assert_contains    "thedoc bogus-command: indented" "  Unknown command:" "$out"
 
 # 4. `thedoc list` exits 0 regardless of whether instances exist
 "$THEDOC" list >/dev/null 2>&1

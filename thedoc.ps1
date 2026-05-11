@@ -303,8 +303,10 @@ switch ($Command) {
     }
 
     default {
-        Write-Host "Unknown command: $Command"
-        Write-Host "Run 'thedoc help' for usage."
+        Write-Host ''
+        Write-Host "  Unknown command: $Command"
+        Write-Host "  Run 'thedoc help' for usage."
+        Write-Host ''
         exit 1
     }
 }
