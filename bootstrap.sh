@@ -47,13 +47,16 @@ fi
 # Clone to temp. Wrap with a friendly framing - without this the user
 # would see raw 'fatal: Could not resolve host' / 'fatal: unable to
 # access' from git stderr with no context on what bootstrap was doing.
+# mktemp the stderr capture so two concurrent bootstraps don't clobber
+# each other's error log.
+CLONE_ERR=$(mktemp -t thedoc-bootstrap-clone.XXXXXX.err 2>/dev/null || mktemp)
 echo ""
 echo "  Downloading thedoc..."
-if ! git clone --quiet "$REPO" "$TMP_DIR" 2>/tmp/thedoc-bootstrap-clone.err; then
+if ! git clone --quiet "$REPO" "$TMP_DIR" 2>"$CLONE_ERR"; then
     echo ""
     echo "  Clone failed. git said:"
-    sed 's/^/      /' /tmp/thedoc-bootstrap-clone.err
-    rm -f /tmp/thedoc-bootstrap-clone.err
+    sed 's/^/      /' "$CLONE_ERR"
+    rm -f "$CLONE_ERR"
     echo ""
     echo "  Common causes:"
     echo "    - no network connectivity"
@@ -62,7 +65,7 @@ if ! git clone --quiet "$REPO" "$TMP_DIR" 2>/tmp/thedoc-bootstrap-clone.err; the
     echo ""
     exit 1
 fi
-rm -f /tmp/thedoc-bootstrap-clone.err
+rm -f "$CLONE_ERR"
 echo "  Done."
 echo ""
 
