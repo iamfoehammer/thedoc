@@ -25,8 +25,8 @@ State is saved at $XDG_STATE_HOME/thedoc/state (defaults to
 once per machine.
 
 Skip the typing animation any time by pressing space at the
-"Press any key" prompts, or by pressing space mid-paragraph
-(both flip skip mode for the rest of the run).
+"Press any key (space to skip animations)" prompts (flips skip
+mode for the rest of the run).
 
 To skip ALL animations from the very start (no waiting for
 prompts), set the env var THEDOC_TEST_SKIP_TYPING=1:
@@ -254,12 +254,17 @@ typeit() {
         return
     fi
 
-    # Animated path with async space-to-skip. Per-char non-blocking poll;
-    # space anywhere flips SKIP_TYPING=1, dumps the rest of the current
-    # line in one print, and remaining lines fall through to the skip path.
-    # Caveat: any non-space char pressed during animation also gets eaten.
+    # Animated path. Mid-line space-to-skip USED to live here as a
+    # per-char `read -t 0 -rsn1 key` poll, but iter 152 proved that's
+    # dead code: bash's `-t 0` is a *poll only* (returns 0 if data is
+    # available) - it does not actually consume the byte or assign the
+    # variable. The check `[ "$key" = " " ]` therefore always saw the
+    # initial empty string. The heredoc `<<< "$wrapped"` on the loop
+    # also redirected fd 0 to the wrapped text, so even a "real" read
+    # here would never see the user's keyboard. The space-to-skip
+    # feature works at the explicit "Press any key (space to skip)"
+    # prompts (post-iter-151 IFS= fix) - mid-animation skip is gone.
     local first=1
-    local key=""
     while IFS= read -r line || [ -n "$line" ]; do
         [ "$first" -eq 1 ] || echo ""
         first=0
@@ -274,11 +279,6 @@ typeit() {
         local i
         for ((i=0; i<${#line}; i++)); do
             printf '%s' "${line:$i:1}"
-            if read -t 0 -rsn1 key 2>/dev/null && [ "$key" = " " ]; then
-                SKIP_TYPING=1
-                printf '%s' "${line:$((i+1))}"
-                break
-            fi
             sleep "$delay"
         done
     done <<< "$wrapped"

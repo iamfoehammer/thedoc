@@ -42,7 +42,9 @@ $env:LOCALAPPDATA\thedoc\state (then $HOME\.local\state\thedoc\state),
 so the first-run greeting only shows once per machine.
 
 Skip the typing animation any time by pressing space at the
-"Press any key" prompts, or by pressing space mid-paragraph.
+"Press any key" prompts, or by pressing space mid-paragraph
+(mid-paragraph skip is PowerShell-only; the bash port skips only
+at the explicit prompts).
 
 To skip ALL animations from the very start, set $env:THEDOC_TEST_SKIP_TYPING:
   $env:THEDOC_TEST_SKIP_TYPING = 1; .\setup.ps1
@@ -234,7 +236,11 @@ function Write-Typed {
         return
     }
 
-    # Animated path with async space-to-skip.
+    # Animated path with async space-to-skip. PS gets mid-line skip; the
+    # bash port doesn't (iter 152 found bash's per-char `read -t 0` is a
+    # pure poll that never consumes/assigns, and the heredoc-driven outer
+    # loop redirects fd 0 anyway - the bash check has been dead code).
+    # Here KeyAvailable + ReadKey($true) is the correct two-step pattern.
     $delayMs = [int]($Delay * 1000)
     foreach ($line in $lines) {
         if ($Script:SkipTyping) {
@@ -246,9 +252,6 @@ function Write-Typed {
         $chars = $line.ToCharArray()
         for ($i = 0; $i -lt $chars.Length; $i++) {
             Write-Host -NoNewline $chars[$i]
-            # Non-blocking poll. KeyAvailable is the PS analogue of bash's
-            # `read -t 0`, but unlike piped bash it actually consumes the
-            # char only after we call ReadKey.
             if ([Console]::KeyAvailable) {
                 $key = [Console]::ReadKey($true)
                 if ($key.KeyChar -eq ' ') {
@@ -256,8 +259,7 @@ function Write-Typed {
                     Write-Host -NoNewline ($line.Substring($i + 1))
                     break
                 }
-                # Non-space chars during animation are eaten silently
-                # (same trade-off as the bash version).
+                # Non-space chars during animation are eaten silently.
             }
             if (-not $Script:SkipTyping) {
                 Start-Sleep -Milliseconds $delayMs
