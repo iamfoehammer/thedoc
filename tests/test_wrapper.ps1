@@ -93,6 +93,18 @@ Assert-Contains  'thedoc --version: same as version' 'Framework dir' $r.Output
 $r = Invoke-TheDoc setup --help
 Assert-Contains  'thedoc setup --help: shows setup.ps1 help' 'thedoc setup wizard' $r.Output
 
+# 1e. `thedoc test --help` shows the PS-specific test blurb instead
+# of running parse-check + wrapper tests (iter 138 short-circuit).
+$r = Invoke-TheDoc test --help
+Assert-Contains  'thedoc test --help: PS-specific blurb' 'thedoc test (PowerShell)' $r.Output
+# Parse-check header should NOT appear (proving short-circuit fired)
+if ($r.Output -match 'Parse-checking') {
+    Write-Host '  FAIL: thedoc test --help: parse-check ran before help (short-circuit broken)' -ForegroundColor Red
+    $script:failures++
+} else {
+    Write-Host '  PASS: thedoc test --help: short-circuit skipped parse-check' -ForegroundColor Green
+}
+
 # 2. `--help` and `-h` are aliases for help.
 $r = Invoke-TheDoc --help
 Assert-Contains  'thedoc --help: same as help'  'Commands:'  $r.Output

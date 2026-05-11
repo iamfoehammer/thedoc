@@ -81,6 +81,19 @@ _assert_contains    "thedoc -V: same as version"        "Framework dir" "$out"
 out=$("$THEDOC" setup --help 2>&1)
 _assert_contains    "thedoc setup --help: shows setup.sh help" "thedoc setup wizard" "$out"
 
+# 1e. `thedoc test --help` short-circuits the wrapper test run and
+# forwards straight to smoke's --help (iter 137). Pre-iter-137 this
+# ran test_wrapper.sh first (50ms of irrelevant output), THEN forwarded.
+out=$("$THEDOC" test --help 2>&1)
+_assert_contains    "thedoc test --help: shows smoke driver help"  "thedoc smoke test driver" "$out"
+# Wrapper-test header should NOT appear (proving short-circuit fired)
+if echo "$out" | grep -qF "thedoc wrapper tests"; then
+    echo -e "  ${RED}FAIL${RESET}: thedoc test --help: wrapper tests ran before help (short-circuit broken)"
+    failures=$((failures + 1))
+else
+    echo -e "  ${GREEN}PASS${RESET}: thedoc test --help: short-circuit skipped wrapper tests"
+fi
+
 # 2. `thedoc --help` and `thedoc -h` are aliases for help
 out=$("$THEDOC" --help 2>&1)
 _assert_contains    "thedoc --help: same as help"  "Commands:"  "$out"
