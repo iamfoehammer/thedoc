@@ -84,6 +84,19 @@ switch ($Command) {
         # yet (see CI's parse-powershell job, which is the closest thing).
         # Parse-check every .ps1 + run the wrapper test suite. Mirrors
         # what CI's Windows job runs.
+        if ($Arg1 -in @('--help', '-h', 'help')) {
+            Write-Host ''
+            Write-Host '  thedoc test (PowerShell)'
+            Write-Host ''
+            Write-Host '  Runs the Windows-side test suite:'
+            Write-Host '    1. Parse-check every .ps1 file under the framework dir'
+            Write-Host '    2. Run tests/test_wrapper.ps1 (thedoc.ps1 subcommand assertions)'
+            Write-Host ''
+            Write-Host '  The PTY-based smoke driver (tests/smoke_test.py) is POSIX-only'
+            Write-Host '  - run it under WSL / Git Bash / macOS if you need scenario coverage.'
+            Write-Host ''
+            return
+        }
         Write-Host ""
         Write-Host "  Parse-checking .ps1 files..."
         $errors = 0
