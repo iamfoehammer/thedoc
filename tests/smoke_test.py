@@ -812,6 +812,36 @@ def name_validation_assertions(*required_messages):
     return _check
 
 
+def engine_fallback_assertions(cleaned, ctx=None):
+    """User picked the OpenClaw engine (stub), accepted the 'Run with
+    Claude Code instead?' fallback. Transcript checks confirm the
+    "coming soon" branch ran + the 'OK - using Claude Code instead'
+    ack printed. ALSO read the generated CLAUDE.md to verify that
+    engine_name AND engine_slug both got reassigned to Claude Code -
+    a regression where only the slug or only the name was updated
+    would leave CLAUDE.md with '**Engine:** OpenClaw (not yet
+    supported)' (silent-pass class - same shape as iter 153 / 154 /
+    155)."""
+    failures = []
+    for msg in ('OpenClaw engine support is coming soon',
+                'OK - using Claude Code instead'):
+        if msg not in cleaned:
+            failures.append(f"Transcript missing: {msg!r}")
+    failures.extend(default_assertions(cleaned, ctx))
+    claude_md = os.path.join(ctx['project_dir'], 'claude-code-doctor', 'CLAUDE.md')
+    if not os.path.exists(claude_md):
+        failures.append(f"CLAUDE.md missing: {claude_md}")
+        return failures
+    with open(claude_md) as f:
+        content = f.read()
+    marker = '**Engine:** Claude Code'
+    if marker not in content:
+        failures.append(
+            f"CLAUDE.md should contain {marker!r} after fallback; "
+            f"got:\n{_excerpt(content, 'Engine')}")
+    return failures
+
+
 def engine_decline_assertions(cleaned, ctx=None):
     """User declined the 'Run with Claude Code instead?' fallback - setup
     should print the 'Check back later' line and exit without creating any
@@ -1057,9 +1087,7 @@ def main():
                                    assertions=name_validation_assertions(
                                        "Name can't be empty or whitespace"))),
         ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS,
-                                   assertions=name_validation_assertions(
-                                       'OpenClaw engine support is coming soon',
-                                       'OK - using Claude Code instead'))),
+                                   assertions=engine_fallback_assertions)),
         ('engine-fallback-decline', dict(steps=ENGINE_FALLBACK_DECLINE_STEPS,
                                          assertions=engine_decline_assertions)),
         ('open-existing',     dict(steps=OPEN_EXISTING_STEPS,
