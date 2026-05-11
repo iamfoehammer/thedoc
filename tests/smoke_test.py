@@ -875,9 +875,15 @@ def main():
     # Each entry is (label, kwargs-for-run). Order is the run order.
     SCENARIOS = [
         ('happy-path',        dict(steps=HAPPY_PATH_STEPS)),
+        # Assert BOTH the tagline AND a chunk of the ASCII art rendered.
+        # Tagline-only would silently pass if a future refactor broke the
+        # `cat "$SCRIPT_DIR/thedoc.txt"` call (wrong path, empty file,
+        # missing permission) - the tagline prints after the cat regardless.
+        # A run of '@' chars is the strongest content signature in thedoc.txt.
         ('voyager-yes',       dict(steps=VOYAGER_YES_STEPS,
                                    assertions=name_validation_assertions(
-                                       'The Emergency Medical Hologram, reporting for duty'))),
+                                       'The Emergency Medical Hologram, reporting for duty',
+                                       '@@@@@@@@@@@@@@@@@@@@'))),
         ('openclaw-doctor',   dict(steps=OPENCLAW_DOCTOR_STEPS)),
         ('bootstrap-install', dict(steps=HAPPY_PATH_STEPS,
                                    pre_setup=pre_bootstrap,
