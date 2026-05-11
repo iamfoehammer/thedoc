@@ -77,6 +77,7 @@ A surprising number of common patterns are GNU-only:
 | `xargs -r` | `xargs` (no need to skip empty input on BSD) |
 | `sort -V` | `sort -t. -n -k1 -k2 -k3` (or just stick to lexical) |
 | `fold -s -w N` | awk word-wrap (BSD `fold -s` mis-handles tight columns) |
+| `mktemp -t TEMPLATE` | bare `mktemp` (GNU `-t` takes a template; BSD takes a prefix - X's not interpreted) |
 
 Bash 3.2 also has a couple of footguns worth knowing:
 
