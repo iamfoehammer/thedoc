@@ -658,6 +658,13 @@ prompt_projects_dir() {
             custom_path="${custom_path/#\~/$HOME}"
             # Trim leading/trailing whitespace
             custom_path="$(echo "$custom_path" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+            # Strip a single trailing slash so "$PROJECTS_DIR/$x" doesn't
+            # produce double slashes in later messages/paths. Safe even on
+            # "/" (the test below skips an empty-after-strip, but / is its
+            # own root and shouldn't be picked anyway).
+            if [ "${#custom_path}" -gt 1 ]; then
+                custom_path="${custom_path%/}"
+            fi
             if [ -z "$custom_path" ]; then
                 echo -e "  ${YELLOW}Path can't be empty.${RESET}"
                 continue

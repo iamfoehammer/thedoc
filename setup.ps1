@@ -545,6 +545,14 @@ function Get-ProjectsDir {
             $custom = Read-Line '  Enter the full path: '
             $custom = $custom.Trim()
             $custom = $custom -replace '^~', $HOME
+            # Strip a single trailing slash/backslash so "$ProjectsDir\foo"
+            # doesn't produce a double separator in later messages. Skip
+            # for root-like paths ("/" or "C:\").
+            if ($custom.Length -gt 1 -and ($custom.EndsWith('/') -or $custom.EndsWith('\'))) {
+                if ($custom.Length -ne 3 -or $custom[1] -ne ':') {
+                    $custom = $custom.Substring(0, $custom.Length - 1)
+                }
+            }
 
             if ([string]::IsNullOrEmpty($custom)) {
                 Write-Host "  Path can't be empty." -ForegroundColor Yellow
