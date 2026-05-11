@@ -725,6 +725,42 @@ def _excerpt(content, needle, ctx_lines=2):
     return f"(needle {needle!r} not found)"
 
 
+def typed_path_assertions(expected_projects_dir):
+    """Default + verify the instance landed under the typed projects_dir,
+    not in a fallback location. Same silent-pass closing as iter 153:
+    typed-path scenarios sent '3' + a path for many iterations but only
+    checked 'Ready to launch' - a regression where the typed-path branch
+    fell through to $HOME/GitHub fallback would have PASSED visibly
+    (the wizard reaches Ready to launch either way; only the directory
+    where the instance lands differs).
+
+    Also reads state file to confirm projects_dir was persisted under
+    the typed value. The state file is what 'thedoc list' / 'thedoc
+    open' rely on, so if it diverged from the typed-path branch this
+    catches it."""
+    def _check(cleaned, ctx=None):
+        failures = list(default_assertions(cleaned, ctx))
+        expected_instance = os.path.join(expected_projects_dir, 'claude-code-doctor')
+        if not os.path.isdir(expected_instance):
+            failures.append(
+                f"Instance did not land at typed path; expected "
+                f"{expected_instance}")
+        # State file should record the typed path. ctx['state_dir'] is the
+        # XDG_STATE_HOME smoke set up; setup.sh writes to <state_dir>/thedoc/state.
+        state_file = os.path.join(ctx['state_dir'], 'thedoc', 'state')
+        if not os.path.exists(state_file):
+            failures.append(f"State file missing: {state_file}")
+        else:
+            with open(state_file) as f:
+                state = f.read()
+            marker = f"projects_dir={expected_projects_dir}"
+            if marker not in state:
+                failures.append(
+                    f"State file should contain {marker!r}; got:\n{state}")
+        return failures
+    return _check
+
+
 def space_skip_assertions(cleaned, ctx=None):
     """default + lock in that the space-to-skip keypress was actually
     captured. Iter 151 discovered `read -rsn1 key` silently drops space
@@ -1055,9 +1091,13 @@ def main():
         ('coming-soon',       dict(steps=COMING_SOON_STEPS,
                                    assertions=coming_soon_assertions)),
         ('typed-path',          dict(steps=TYPED_PATH_STEPS,
-                                     pre_setup=pre_typed_path)),
+                                     pre_setup=pre_typed_path,
+                                     assertions=typed_path_assertions(
+                                         TYPED_PATH_FIXTURE))),
         ('typed-path-create',   dict(steps=TYPED_PATH_CREATE_STEPS,
-                                     pre_setup=pre_typed_path_create)),
+                                     pre_setup=pre_typed_path_create,
+                                     assertions=typed_path_assertions(
+                                         TYPED_PATH_CREATE))),
         ('typed-path-decline',  dict(steps=TYPED_PATH_DECLINE_STEPS,
                                      pre_setup=pre_typed_path_decline,
                                      assertions=name_validation_assertions(
