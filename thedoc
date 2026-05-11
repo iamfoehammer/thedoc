@@ -158,6 +158,10 @@ case "${1:-setup}" in
         instance_dir="$GITHUB_DIR/$instance"
         if [ ! -d "$instance_dir" ] || [ ! -f "$instance_dir/DOCTOR.md" ]; then
             echo "Not a doctor instance: $instance_dir"
+            if [ "$_state_stale" = "yes" ]; then
+                echo "(state's projects_dir is missing; using fallback $GITHUB_DIR/."
+                echo " your instance may live at the old location instead.)"
+            fi
             echo "Run 'thedoc list' to see available instances."
             exit 1
         fi

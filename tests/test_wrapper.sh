@@ -137,6 +137,20 @@ set -e
 _assert_exit_code   "thedoc open <missing>: exit non-zero" 1 "$rc"
 _assert_contains    "thedoc open <missing>: tells user it's missing" "Not a doctor instance" "$out"
 
+# 6c. `thedoc open <missing>` with stale state also tells the user the
+# state is stale (so they realize their instance might still exist at
+# the old projects_dir location).
+_stale_open_state="$(mktemp -d)"
+mkdir -p "$_stale_open_state/thedoc"
+printf 'projects_dir=/nonexistent/never/existed-open-%s\n' "$$" > "$_stale_open_state/thedoc/state"
+set +e
+out=$(XDG_STATE_HOME="$_stale_open_state" "$THEDOC" open whatever 2>&1)
+rc=$?
+set -e
+_assert_exit_code   "thedoc open <missing> (stale state): exit non-zero" 1 "$rc"
+_assert_contains    "thedoc open <missing> (stale state): mentions stale state" "state's projects_dir is missing" "$out"
+rm -rf "$_stale_open_state"
+
 # 6b. `thedoc open <valid>` when 'claude' is missing from PATH bails with
 # a friendly install hint rather than the cryptic 'bash: exec: claude:
 # not found' that the bare exec would produce. Pre-iter-99 the exec

@@ -152,6 +152,21 @@ $r = Invoke-TheDoc open this-instance-does-not-exist-anywhere-zzz
 Assert-ExitCode  'thedoc open <missing>: exit non-zero' 1 $r.ExitCode
 Assert-Contains  "thedoc open <missing>: tells user it's missing" 'Not a doctor instance' $r.Output
 
+# 6c. `thedoc open <missing>` with stale state mentions the stale state.
+$staleOpenState = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-stale-open-state-$([guid]::NewGuid())"
+New-Item -ItemType Directory -Path (Join-Path $staleOpenState 'thedoc') -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $staleOpenState 'thedoc/state') -Value "projects_dir=/nonexistent/never/existed-open-$PID"
+try {
+    $prevXdg = $env:XDG_STATE_HOME
+    $env:XDG_STATE_HOME = $staleOpenState
+    $r = Invoke-TheDoc open whatever
+    Assert-ExitCode  'thedoc open <missing> (stale state): exit non-zero' 1 $r.ExitCode
+    Assert-Contains  'thedoc open <missing> (stale state): mentions stale state' "state's projects_dir is missing" $r.Output
+} finally {
+    $env:XDG_STATE_HOME = $prevXdg
+    Remove-Item -LiteralPath $staleOpenState -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # 6b. `thedoc open <valid>` when 'claude' is missing from PATH bails
 # with a friendly install hint. Pre-iter-99 the & invocation would
 # surface a "term 'claude' is not recognized" error.

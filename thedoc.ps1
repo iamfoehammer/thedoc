@@ -214,6 +214,10 @@ switch ($Command) {
         if (-not (Test-Path -LiteralPath $instanceDir -PathType Container) -or
             -not (Test-Path -LiteralPath $doctorMd -PathType Leaf)) {
             Write-Host "Not a doctor instance: $instanceDir"
+            if ($StateStale) {
+                Write-Host "(state's projects_dir is missing; using fallback $GithubDir/."
+                Write-Host " your instance may live at the old location instead.)"
+            }
             Write-Host "Run 'thedoc list' to see available instances."
             exit 1
         }
