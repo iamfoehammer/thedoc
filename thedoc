@@ -182,6 +182,24 @@ case "${1:-setup}" in
         cd "$instance_dir"
         exec claude "Re-entering this doctor instance. Start by reading DOCTOR.md for your role and CLAUDE.md for the personal config of this instance. Then ask what I'd like to work on this session."
         ;;
+    version|--version|-V)
+        # Useful for bug reports / "what version are you on?" questions.
+        # No semver here yet; show git describe (or fallback to short
+        # commit sha) so the user has SOMETHING reproducible to share.
+        echo ""
+        echo "  thedoc - Emergency Medical Hologram framework"
+        if [ -d "$SCRIPT_DIR/.git" ] && command -v git >/dev/null 2>&1; then
+            _ver=$(git -C "$SCRIPT_DIR" describe --always --dirty 2>/dev/null || echo unknown)
+            _branch=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
+            echo "  Framework dir: $SCRIPT_DIR"
+            echo "  Branch:        $_branch"
+            echo "  Commit:        $_ver"
+        else
+            echo "  Framework dir: $SCRIPT_DIR"
+            echo "  Commit:        (not a git checkout)"
+        fi
+        echo ""
+        ;;
     help|--help|-h)
         echo ""
         echo "  thedoc - Emergency Medical Hologram framework"
@@ -191,6 +209,7 @@ case "${1:-setup}" in
         echo "    thedoc list     List existing doctor instances"
         echo "    thedoc open     Open an existing instance: thedoc open <name>"
         echo "    thedoc test     Run the wrapper + setup.sh test suites (mirrors CI)"
+        echo "    thedoc version  Show framework version (git commit)"
         echo "    thedoc update   git pull the framework to latest"
         echo "    thedoc help     Show this help"
         echo ""

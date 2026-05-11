@@ -60,6 +60,7 @@ function Invoke-Help {
     Write-Host "    thedoc list     List existing doctor instances"
     Write-Host "    thedoc open     Open an existing instance: thedoc open <name>"
     Write-Host "    thedoc test     Parse-check .ps1 + run wrapper tests (mirrors CI)"
+    Write-Host "    thedoc version  Show framework version (git commit)"
     Write-Host "    thedoc update   git pull the framework to latest"
     Write-Host "    thedoc help     Show this help"
     Write-Host ""
@@ -235,6 +236,28 @@ switch ($Command) {
         } finally {
             Pop-Location
         }
+    }
+
+    { $_ -in 'version', '--version', '-V' } {
+        # Useful for bug reports / "what version are you on?" questions.
+        # Show git describe (or fallback) so the user has something
+        # reproducible to share.
+        Write-Host ''
+        Write-Host '  thedoc - Emergency Medical Hologram framework'
+        if ((Test-Path -LiteralPath (Join-Path $ScriptDir '.git')) -and
+            (Get-Command git -ErrorAction SilentlyContinue)) {
+            $ver    = (git -C $ScriptDir describe --always --dirty 2>$null) -join ''
+            if (-not $ver) { $ver = 'unknown' }
+            $branch = (git -C $ScriptDir rev-parse --abbrev-ref HEAD 2>$null) -join ''
+            if (-not $branch) { $branch = 'unknown' }
+            Write-Host "  Framework dir: $ScriptDir"
+            Write-Host "  Branch:        $branch"
+            Write-Host "  Commit:        $ver"
+        } else {
+            Write-Host "  Framework dir: $ScriptDir"
+            Write-Host '  Commit:        (not a git checkout)'
+        }
+        Write-Host ''
     }
 
     { $_ -in 'help', '--help', '-h' } {

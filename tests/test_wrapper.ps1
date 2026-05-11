@@ -69,6 +69,12 @@ Assert-Contains  "thedoc help: lists 'thedoc setup'"  'thedoc setup'  $r.Output
 Assert-Contains  "thedoc help: lists 'thedoc test'"   'thedoc test'   $r.Output
 Assert-Contains  "thedoc help: lists 'thedoc update'" 'thedoc update' $r.Output
 
+# 1b. `thedoc version` shows framework dir + git info.
+$r = Invoke-TheDoc version
+Assert-ExitCode  'thedoc version: exit 0'       0 $r.ExitCode
+Assert-Contains  'thedoc version: shows dir'    'Framework dir' $r.Output
+Assert-Contains  'thedoc version: shows commit' 'Commit:'       $r.Output
+
 # 2. `--help` and `-h` are aliases for help.
 $r = Invoke-TheDoc --help
 Assert-Contains  'thedoc --help: same as help'  'Commands:'  $r.Output

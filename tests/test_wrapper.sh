@@ -61,6 +61,12 @@ _assert_contains    "thedoc help: lists 'thedoc setup'" "thedoc setup" "$out"
 _assert_contains    "thedoc help: lists 'thedoc test'"  "thedoc test"  "$out"
 _assert_contains    "thedoc help: lists 'thedoc update'" "thedoc update" "$out"
 
+# 1b. `thedoc version` shows framework dir + git info
+out=$("$THEDOC" version 2>&1) && rc=$? || rc=$?
+_assert_exit_code   "thedoc version: exit 0"        0 "$rc"
+_assert_contains    "thedoc version: shows dir"     "Framework dir" "$out"
+_assert_contains    "thedoc version: shows commit"  "Commit:"       "$out"
+
 # 2. `thedoc --help` and `thedoc -h` are aliases for help
 out=$("$THEDOC" --help 2>&1)
 _assert_contains    "thedoc --help: same as help"  "Commands:"  "$out"
