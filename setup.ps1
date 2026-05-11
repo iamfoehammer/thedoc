@@ -547,7 +547,10 @@ function Show-StructureExplainer {
     Write-Typed "- This framework (thedoc) stays where you cloned it"
     Write-Typed "- Each doctor gets its own folder, like $short/claude-doctor/"
     Write-Typed "- The doctor folder has a CLAUDE.md (your personal config)"
-    Write-Typed "  and a DOCTOR.md (shared diagnostic instructions)"
+    # Get-Wrapped splits on whitespace and skips empty tokens, so leading
+    # spaces inside the message get stripped. Use the Prefix arg to get
+    # a 4-space hanging indent that survives the wrap (matches bash).
+    Write-Typed "and a DOCTOR.md (shared diagnostic instructions)" -Prefix '    '
     Write-Typed "- You update thedoc with 'git pull' - your configs are never overwritten"
     Write-Host ''
     Write-Host '  Press any key to continue (space to skip animations)...' -ForegroundColor DarkGray

@@ -756,7 +756,10 @@ print_structure_explainer() {
     typeit "- This framework (thedoc) stays where you cloned it"
     typeit "- Each doctor gets its own folder, like ${short}/claude-doctor/"
     typeit "- The doctor folder has a CLAUDE.md (your personal config)"
-    typeit "  and a DOCTOR.md (shared diagnostic instructions)"
+    # typeit's awk word-wrap splits on whitespace and squashes empty tokens,
+    # so leading spaces inside the message get stripped. Use the prefix arg
+    # to get a 4-space hanging indent that survives the wrap.
+    typeit "and a DOCTOR.md (shared diagnostic instructions)" 0.008 "    "
     typeit "- You update thedoc with 'git pull' - your configs are never overwritten"
     echo ""
     echo -e "  ${DIM}Press any key to continue (space to skip animations)...${RESET}"
