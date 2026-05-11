@@ -23,8 +23,13 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 # state file the wizard wrote - that's what the user chose. Fall back to
 # the parent of the framework dir, which works when bootstrap put thedoc
 # inside <ProjectsDir>/thedoc/.
+# Path precedence matches setup.ps1's Save-State exactly: XDG_STATE_HOME
+# wins (POSIX convention, honored if set), then LOCALAPPDATA (Windows
+# default), then $HOME/.local/state (POSIX default).
 $stateFile = if ($env:XDG_STATE_HOME) {
     Join-Path $env:XDG_STATE_HOME 'thedoc/state'
+} elseif ($env:LOCALAPPDATA) {
+    Join-Path $env:LOCALAPPDATA 'thedoc/state'
 } else {
     Join-Path $HOME '.local/state/thedoc/state'
 }

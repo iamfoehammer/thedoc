@@ -21,6 +21,22 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     exit 1
 }
 
+# setup.ps1 targets Windows-native PowerShell 7+. pwsh on Linux/macOS is
+# also PS 7+, but key paths ($env:LOCALAPPDATA, Junction-style symlinks,
+# User-scoped PATH env via [Environment]) are Windows-only. Non-Windows
+# pwsh users should run setup.sh under their native shell instead. Without
+# this check, an empty $env:LOCALAPPDATA crashes Join-Path at first use
+# of $StateDir with an unhandled exception, not a friendly message.
+if (-not ($IsWindows -or $env:OS -eq 'Windows_NT')) {
+    Write-Host ""
+    Write-Host "  thedoc setup.ps1 targets Windows-native PowerShell 7+."
+    Write-Host "  Looks like you're on $($PSVersionTable.OS)."
+    Write-Host "  Run setup.sh under your native shell instead:"
+    Write-Host "      bash $(Split-Path -Parent $MyInvocation.MyCommand.Path)/setup.sh"
+    Write-Host ""
+    exit 1
+}
+
 foreach ($cmd in @('git')) {
     if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
         Write-Host ""
@@ -73,26 +89,51 @@ $Quips = @(
 )
 
 # ── State file ───────────────────────────────────────────────────────
-$StateDir  = Join-Path $env:LOCALAPPDATA 'thedoc'
-$StateFile = Join-Path $StateDir 'state.json'
+# Path precedence and format match bash setup.sh exactly so the same state
+# file works across ports if a user happens to share it (e.g. a cross-shell
+# script setting XDG_STATE_HOME explicitly):
+#   1. $env:XDG_STATE_HOME (POSIX convention, honored if set)
+#   2. $env:LOCALAPPDATA   (Windows default)
+#   3. $HOME/.local/state  (POSIX default)
+# Format is KEY=VALUE (one per line), not JSON - thedoc.ps1 already parses
+# this with Select-String '^projects_dir=' and bash uses sed -n
+# 's/^projects_dir=//p'.
+$StateDir = if ($env:XDG_STATE_HOME) {
+    Join-Path $env:XDG_STATE_HOME 'thedoc'
+} elseif ($env:LOCALAPPDATA) {
+    Join-Path $env:LOCALAPPDATA 'thedoc'
+} else {
+    Join-Path $HOME '.local/state/thedoc'
+}
+$StateFile = Join-Path $StateDir 'state'
 
 function Test-FirstRun { -not (Test-Path $StateFile) }
 
 function Save-State {
     param([string]$ProjectsDir, [string]$Platform)
     if (-not (Test-Path $StateDir)) { New-Item -Type Directory -Path $StateDir | Out-Null }
-    @{
-        first_run    = (Get-Date).ToString('o')
-        projects_dir = $ProjectsDir
-        platform     = $Platform
-    } | ConvertTo-Json | Set-Content -Path $StateFile -Encoding UTF8
+    $firstRun = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+    $lines = @(
+        "first_run=$firstRun"
+        "projects_dir=$ProjectsDir"
+        "platform=$Platform"
+    )
+    Set-Content -LiteralPath $StateFile -Value $lines -Encoding UTF8
 }
 
 function Get-State {
-    if (Test-Path $StateFile) {
-        return Get-Content $StateFile -Raw | ConvertFrom-Json
-    }
-    return $null
+    if (-not (Test-Path $StateFile)) { return $null }
+    $state = @{}
+    try {
+        Get-Content -LiteralPath $StateFile -ErrorAction Stop | ForEach-Object {
+            if ($_ -match '^([a-z_]+)=(.*)$') {
+                $state[$Matches[1]] = $Matches[2]
+            }
+        }
+    } catch { return $null }
+    # Surface dotted-access (state.projects_dir) for callers used to the
+    # old JSON shape: ConvertFrom-Json returned a PSCustomObject.
+    return [PSCustomObject]$state
 }
 
 # ── Typing effect ────────────────────────────────────────────────────
