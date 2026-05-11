@@ -7,7 +7,38 @@
 # This is the Windows-native counterpart to bootstrap.sh. Linux/macOS/WSL/Git
 # Bash users should use the bash one-liner from the README instead.
 
+[CmdletBinding()]
+param([Parameter(Position=0)][string]$Command)
+
 $ErrorActionPreference = 'Stop'
+
+# ── --help short-circuit (mirrors bootstrap.sh) ──────────────────────
+if ($Command -in @('--help', '-h', 'help')) {
+    @'
+thedoc bootstrap (PowerShell)
+
+Usage:
+  irm https://raw.githubusercontent.com/iamfoehammer/thedoc/main/bootstrap.ps1 | iex
+
+What it does:
+  1. Clones the thedoc repo to a temp directory.
+  2. Runs setup.ps1 from there. The wizard moves the repo to
+     wherever you point it at (typically $HOME\GitHub\thedoc) and
+     adds it to your User PATH.
+  3. Wires ~/.secrets.ps1 into your PowerShell profile so
+     llm-secrets.ps1 env vars auto-load in new sessions.
+
+Requirements:
+  - git on PATH (Git for Windows or any PowerShell-accessible git)
+  - PowerShell 7+ (pwsh, not Windows PowerShell 5.1)
+
+Manual install (no irm | iex):
+  git clone https://github.com/iamfoehammer/thedoc.git $HOME\GitHub\thedoc
+  $env:PATH = "$HOME\GitHub\thedoc;$env:PATH"
+  .\thedoc.ps1
+'@
+    exit 0
+}
 
 $Repo   = 'https://github.com/iamfoehammer/thedoc.git'
 $TmpDir = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-$([guid]::NewGuid())"

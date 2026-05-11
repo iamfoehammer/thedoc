@@ -8,9 +8,52 @@
 # bash version has live E2E tests; this one is verified structurally only
 # until run on a real Windows host.
 
+[CmdletBinding()]
+param([Parameter(Position=0)][string]$Command)
+
 $ErrorActionPreference = 'Stop'
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+# ── --help short-circuit ─────────────────────────────────────────────
+# Mirrors setup.sh's help text so the bash-vs-PS UX matches: a user on
+# Windows native pwsh can run 'setup.ps1 --help' and get usage info
+# before the preflight checks fire.
+if ($Command -in @('--help', '-h', 'help')) {
+    @'
+thedoc setup wizard (PowerShell)
+
+Usage:
+  setup.ps1           Run the interactive setup wizard.
+  setup.ps1 --help    Show this help.
+
+The wizard walks through:
+  1. System scan (platform, shell, git, claude)
+  2. Picking your projects directory
+  3. Choosing a doctor type (Claude Code or OpenClaw today)
+  4. Choosing an LLM engine
+  5. Naming the instance folder
+
+State is saved at $env:XDG_STATE_HOME\thedoc\state, falling back to
+$env:LOCALAPPDATA\thedoc\state (then $HOME\.local\state\thedoc\state),
+so the first-run greeting only shows once per machine.
+
+Skip the typing animation any time by pressing space at the
+"Press any key" prompts, or by pressing space mid-paragraph.
+
+To skip ALL animations from the very start, set $env:THEDOC_TEST_SKIP_TYPING:
+  $env:THEDOC_TEST_SKIP_TYPING = 1; .\setup.ps1
+
+For most users the friendlier entry point is the 'thedoc' wrapper:
+  thedoc            same as 'thedoc setup'
+  thedoc list       list existing doctor instances
+  thedoc open NAME  open an existing instance directly
+  thedoc test       parse-check + wrapper tests (Windows-side coverage)
+  thedoc update     git pull the framework to latest
+  thedoc help       show wrapper help
+'@
+    exit 0
+}
 
 # ── Preflight ────────────────────────────────────────────────────────
 if ($PSVersionTable.PSVersion.Major -lt 7) {

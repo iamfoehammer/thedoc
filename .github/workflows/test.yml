@@ -104,6 +104,24 @@ jobs:
         shell: pwsh
         run: $PSVersionTable | Format-Table -AutoSize
 
+      - name: Verify --help short-circuit (no preflight)
+        shell: pwsh
+        run: |
+          # Mirrors the bash CI step: --help must exit cleanly with usage
+          # info BEFORE the version/git preflight (which would otherwise
+          # block running on misconfigured systems).
+          $setup     = & .\setup.ps1     --help 2>&1 | Out-String
+          $bootstrap = & .\bootstrap.ps1 --help 2>&1 | Out-String
+          if ($setup -notmatch 'thedoc setup wizard') {
+              Write-Error "setup.ps1 --help missing 'thedoc setup wizard'"
+              exit 1
+          }
+          if ($bootstrap -notmatch 'thedoc bootstrap') {
+              Write-Error "bootstrap.ps1 --help missing 'thedoc bootstrap'"
+              exit 1
+          }
+          Write-Host 'Both --help short-circuits OK'
+
       - name: Parse-check all .ps1 files
         shell: pwsh
         run: |
