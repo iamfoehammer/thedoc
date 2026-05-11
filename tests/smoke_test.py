@@ -708,7 +708,14 @@ def main():
 
     # Optional argv filter: `python3 smoke_test.py happy-path negative-name`
     # runs only the named scenarios. No args = run all.
-    requested = sys.argv[1:]
+    # --keep-logs preserves per-scenario PTY logs even on PASS, for visual
+    # inspection of what setup.sh actually rendered (rendering glitches
+    # don't always trip the regex/error-pattern assertions). Iter 82's
+    # hanging-indent fix was found this way.
+    argv = sys.argv[1:]
+    keep_logs = '--keep-logs' in argv
+    argv = [a for a in argv if a != '--keep-logs']
+    requested = argv
     if requested == ['--list']:
         for label, _ in SCENARIOS:
             print(label)
@@ -736,7 +743,8 @@ def main():
     # On full PASS, remove the per-scenario PTY logs - they're only useful
     # for postmortem on failure, and /tmp can otherwise accumulate hundreds
     # of stale logs across many runs. On any FAIL, all logs are kept.
-    if failures == 0:
+    # --keep-logs overrides: useful for visual inspection of rendered output.
+    if failures == 0 and not keep_logs:
         for lp in log_files:
             try:
                 os.remove(lp)

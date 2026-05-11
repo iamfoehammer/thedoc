@@ -22,8 +22,15 @@ python3 tests/smoke_test.py                      # smoke: all scenarios
 python3 tests/smoke_test.py happy-path           # smoke: one scenario
 python3 tests/smoke_test.py typed-path typed-path-create
 python3 tests/smoke_test.py --list               # list smoke labels
+python3 tests/smoke_test.py happy-path --keep-logs  # keep PTY logs on PASS
 thedoc test                                      # everything available on this OS
 ```
+
+`--keep-logs` preserves the per-scenario `/tmp/thedoc-smoke-*.log`
+files even on overall PASS. Useful when visually inspecting what
+setup.sh actually rendered - some glitches (mid-bullet wrap, indent
+loss, color-bleed) don't trip the regex/error-pattern assertions
+but show clearly in the cleaned PTY transcript.
 
 The smoke suite requires Python 3 and a real PTY (Linux/macOS — won't run
 under cmd.exe). Each scenario takes 1–3s; the full suite finishes in
