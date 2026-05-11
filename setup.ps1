@@ -669,14 +669,18 @@ Add new issues and fixes to the Known Issues & Fixes table above.
         exit 0
     }
 
+    # By here engineSlug is either claude-code (real) or a stub that the
+    # user accepted fallback for (so engineSlug got rewritten to claude-code
+    # above). The earlier Test-IsStub gate already caught missing/stub
+    # launchers, so this Test-Path is just a paranoid backstop for the
+    # claude-code.ps1-was-deleted-from-the-checkout case.
     $engineScript = Join-Path $ScriptDir "engines/$EngineSlug.ps1"
     if (Test-Path -LiteralPath $engineScript) {
         & $engineScript -InstanceDir $instanceDir -SetupMode $SetupMode -DoctorType $DoctorSlug
     }
     else {
-        Write-Host "  PowerShell engine launcher not found: $engineScript" -ForegroundColor Red
-        Write-Host '  Other engines (OpenClaw, Gemini) are bash-only today;' -ForegroundColor DarkGray
-        Write-Host '  use WSL2 / Git Bash for those, or contribute the .ps1 launcher.' -ForegroundColor DarkGray
+        Write-Host "  Engine launcher missing: $engineScript" -ForegroundColor Red
+        Write-Host "  This shouldn't happen - try 'thedoc update' to refresh the framework." -ForegroundColor DarkGray
         exit 1
     }
 }
@@ -776,10 +780,12 @@ $engineIdx  = Show-Menu -Prompt 'Which LLM engine will power this doctor?' -Opti
 $engineSlug = $EngineSlugs[$engineIdx]
 $engineName = $EngineTypes[$engineIdx]
 
-# Engine supported? Reads the canonical .sh marker (the convention lives
-# there; PS siblings don't always exist yet). Test-IsStub handles both
-# missing-file and stub-with-marker cases.
-if (Test-IsStub (Join-Path $ScriptDir "engines/$engineSlug.sh")) {
+# Engine supported on this platform? The .ps1 launcher is the one this
+# script will exec, so checking it (not the .sh sibling) is correct: if
+# someone fills in claude-code.sh but leaves openclaw.ps1 as a stub, a
+# PowerShell user should still see "coming soon" rather than crashing
+# later. Test-IsStub returns true for both missing and stub-marked files.
+if (Test-IsStub (Join-Path $ScriptDir "engines/$engineSlug.ps1")) {
     Write-Host ''
     Write-Host "  $engineName engine support is coming soon." -ForegroundColor Yellow
     Write-Host ''
