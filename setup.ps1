@@ -808,27 +808,40 @@ Add new issues and fixes to the Known Issues & Fixes table above.
 # ── Main ─────────────────────────────────────────────────────────────
 
 # Re-bootstrap shortcut: if state already exists AND bootstrap set
-# THEDOC_BOOTSTRAP_DIR, just update the installed framework in place
-# and exit. Mirror of the setup.sh re-bootstrap branch - without this,
-# the iex/irm re-paste would leave the new clone orphaned in TEMP.
+# THEDOC_BOOTSTRAP_DIR, the user re-ran the install one-liner - they
+# want update/re-install, not "create another instance". Handle both
+# subcases (matches setup.sh branch above):
+#   1. installed framework still exists - update in place
+#   2. framework deleted but state intact - re-install (move from TEMP)
 if ($env:THEDOC_BOOTSTRAP_DIR -and
     (Test-Path -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -PathType Container) -and
     -not (Test-FirstRun)) {
     $state = Get-State
-    if ($state -and $state.projects_dir) {
+    if ($state -and $state.projects_dir -and (Test-Path -LiteralPath $state.projects_dir -PathType Container)) {
         $thedocFinal = Join-Path $state.projects_dir 'thedoc'
+        Write-Host ''
         if (Test-Path -LiteralPath $thedocFinal -PathType Container) {
-            Write-Host ''
             Write-Host "  Updating thedoc at $(Get-ShortPath $thedocFinal)..."
             Copy-Item -Path (Join-Path $env:THEDOC_BOOTSTRAP_DIR '*') `
                       -Destination $thedocFinal -Recurse -Force -ErrorAction SilentlyContinue
             Remove-Item -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -Recurse -Force -ErrorAction SilentlyContinue
             Write-Host '  Updated thedoc.' -ForegroundColor Green
-            Write-Host ''
-            Write-Host "  Run 'thedoc' to create another instance, or 'thedoc open <name>' to resume." -ForegroundColor DarkGray
-            Write-Host ''
-            exit 0
+        } else {
+            Write-Host "  Re-installing thedoc at $(Get-ShortPath $thedocFinal)..."
+            try {
+                Move-Item -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -Destination $thedocFinal -ErrorAction Stop
+            } catch {
+                New-Item -ItemType Directory -Path $thedocFinal -Force | Out-Null
+                Copy-Item -Path (Join-Path $env:THEDOC_BOOTSTRAP_DIR '*') `
+                          -Destination $thedocFinal -Recurse -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            Write-Host '  Installed thedoc.' -ForegroundColor Green
         }
+        Write-Host ''
+        Write-Host "  Run 'thedoc' to create another instance, or 'thedoc open <name>' to resume." -ForegroundColor DarkGray
+        Write-Host ''
+        exit 0
     }
 }
 

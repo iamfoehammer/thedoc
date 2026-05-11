@@ -247,6 +247,56 @@ def pre_bootstrap_rerun_with_state(project_dir, state_dir):
     return {'THEDOC_BOOTSTRAP_DIR': bootstrap_dir}
 
 
+def pre_bootstrap_rerun_no_install(project_dir, state_dir):
+    """Same as pre_bootstrap_rerun_with_state but with NO installed framework
+    at project_dir/thedoc. Simulates: user deleted ~/GitHub/thedoc but the
+    state file still points at ~/GitHub. Iter 101 added the re-install
+    branch for this sub-case so the new clone gets moved over instead of
+    orphaned in TMP."""
+    # Pre-existing state file (returning user)
+    thedoc_dir = os.path.join(state_dir, 'thedoc')
+    os.makedirs(thedoc_dir, exist_ok=True)
+    with open(os.path.join(thedoc_dir, 'state'), 'w') as f:
+        f.write('first_run=2026-05-10T00:00:00Z\n')
+        f.write(f'projects_dir={project_dir}\n')
+        f.write('platform=linux\n')
+
+    # Deliberately DO NOT create project_dir/thedoc - that's the bug surface
+
+    # Fresh clone temp dir
+    bootstrap_dir = f'/tmp/thedoc-smoke-bootstrap-reinstall-{os.getpid()}'
+    shutil.rmtree(bootstrap_dir, ignore_errors=True)
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    shutil.copytree(
+        repo_root, bootstrap_dir,
+        symlinks=False,
+        ignore=shutil.ignore_patterns('.git', '__pycache__', '*.pyc'),
+    )
+    with open(os.path.join(bootstrap_dir, 'reinstall-canary.txt'), 'w') as f:
+        f.write('proves the move/cp happened\n')
+    return {'THEDOC_BOOTSTRAP_DIR': bootstrap_dir}
+
+
+def bootstrap_reinstall_branch_assertions(cleaned, ctx):
+    """Re-bootstrap when framework is missing: setup.sh should print
+    'Re-installing thedoc at <path>' and 'Installed thedoc.' then exit.
+    Canary file from the clone must land in the (now-created) framework
+    dir."""
+    failures = []
+    if 'Re-installing thedoc at' not in cleaned:
+        failures.append("Re-install branch did not run ('Re-installing thedoc at' missing)")
+    if 'Installed thedoc' not in cleaned:
+        failures.append("Did not print final 'Installed thedoc'")
+    if 'Ready to launch' in cleaned:
+        failures.append("Reached 'Ready to launch' - should have exited at install")
+    if 'Hologram activated' in cleaned:
+        failures.append("Greeting fired - should have exited before Show-Greeting")
+    canary = os.path.join(ctx['project_dir'], 'thedoc', 'reinstall-canary.txt')
+    if not os.path.exists(canary):
+        failures.append(f"Re-install did not move clone: {canary} missing")
+    return failures
+
+
 def bootstrap_rerun_assertions(cleaned, ctx):
     """Re-bootstrap on existing install: setup.sh should print 'Updating
     thedoc at <path>' and exit before reaching Show-Greeting / Ready to
@@ -776,6 +826,11 @@ def main():
         ('bootstrap-rerun',   dict(steps=[],
                                    pre_setup=pre_bootstrap_rerun_with_state,
                                    assertions=bootstrap_rerun_assertions,
+                                   timeout=10.0)),
+        ('bootstrap-rerun-missing-install',
+                              dict(steps=[],
+                                   pre_setup=pre_bootstrap_rerun_no_install,
+                                   assertions=bootstrap_reinstall_branch_assertions,
                                    timeout=10.0)),
         ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS,
                                    assertions=name_validation_assertions(

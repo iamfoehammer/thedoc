@@ -806,19 +806,35 @@ load_state
 # (THEDOC_BOOTSTRAP_DIR set + state file already exists) should get the
 # framework UPDATED in place, not orphaned in $TMPDIR. The pre-iter-100
 # behavior gated the entire bootstrap branch on `is_first_run`, so on
-# re-paste the clone stayed in TMP and nothing visible happened. Now we
-# detect that combination, do the file-level update, and exit before
-# launching another instance wizard (the user re-ran bootstrap to
-# update, not to create a new doctor).
+# re-paste the clone stayed in TMP and nothing visible happened.
+#
+# Two sub-cases for "returning user pastes bootstrap again":
+#   1. installed framework at $PROJECTS_DIR/thedoc still exists - update in place
+#   2. user deleted the framework dir but state still points at the projects
+#      dir - re-install (move temp -> projects/thedoc) instead of orphaning
+# Both exit 0 before the wizard runs (the user pasted to update/re-install,
+# not to create another instance).
 if [ -n "${THEDOC_BOOTSTRAP_DIR:-}" ] && [ -d "${THEDOC_BOOTSTRAP_DIR:-}" ] && \
-   ! is_first_run && [ -n "${PROJECTS_DIR:-}" ] && [ -d "$PROJECTS_DIR/thedoc" ]; then
+   ! is_first_run && [ -n "${PROJECTS_DIR:-}" ] && [ -d "$PROJECTS_DIR" ]; then
     THEDOC_FINAL="$PROJECTS_DIR/thedoc"
     echo ""
-    echo "  Updating thedoc at $(short_path "$THEDOC_FINAL")..."
-    cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
-    cp -rf "$THEDOC_BOOTSTRAP_DIR/".[!.]* "$THEDOC_FINAL/" 2>/dev/null || true
-    rm -rf "$THEDOC_BOOTSTRAP_DIR" 2>/dev/null || true
-    echo -e "  ${GREEN}Updated${RESET} thedoc."
+    if [ -d "$THEDOC_FINAL" ]; then
+        echo "  Updating thedoc at $(short_path "$THEDOC_FINAL")..."
+        cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
+        cp -rf "$THEDOC_BOOTSTRAP_DIR/".[!.]* "$THEDOC_FINAL/" 2>/dev/null || true
+        rm -rf "$THEDOC_BOOTSTRAP_DIR" 2>/dev/null || true
+        echo -e "  ${GREEN}Updated${RESET} thedoc."
+    else
+        echo "  Re-installing thedoc at $(short_path "$THEDOC_FINAL")..."
+        # cross-fs-safe move (same as first-run bootstrap branch below)
+        if ! mv "$THEDOC_BOOTSTRAP_DIR" "$THEDOC_FINAL" 2>/dev/null; then
+            mkdir -p "$THEDOC_FINAL"
+            cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
+            cp -rf "$THEDOC_BOOTSTRAP_DIR/".[!.]* "$THEDOC_FINAL/" 2>/dev/null || true
+            rm -rf "$THEDOC_BOOTSTRAP_DIR" 2>/dev/null || true
+        fi
+        echo -e "  ${GREEN}Installed${RESET} thedoc."
+    fi
     echo ""
     echo -e "  ${DIM}Run 'thedoc' to create another instance, or 'thedoc open <name>' to resume.${RESET}"
     echo ""
