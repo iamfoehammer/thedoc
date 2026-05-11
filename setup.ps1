@@ -290,6 +290,12 @@ function Show-Menu {
     $selected = 0
     $count    = $Options.Count
 
+    # Drain stale keypresses from the input buffer. Mirrors bash
+    # flush_input: if the user mashed keys (or hit a digit) during
+    # the typing animation, that key would otherwise pop out of
+    # ReadKey on the first menu render and auto-select an option.
+    while ([Console]::KeyAvailable) { [Console]::ReadKey($true) | Out-Null }
+
     Write-Host "  $Prompt"
     Write-Host ''
     $startTop = [Console]::CursorTop
