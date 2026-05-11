@@ -545,7 +545,10 @@ function Show-StructureExplainer {
     Write-Host ''
     Write-Typed "Here's how thedoc works:"
     Write-Typed "- This framework (thedoc) stays where you cloned it"
-    Write-Typed "- Each doctor gets its own folder, like $short/claude-doctor/"
+    # Use a generic example to keep this bullet short (mirrors setup.sh):
+    # inlining $short blew past 80 cols when the user typed a long
+    # absolute path, and the word-wrap continuation lost its indent.
+    Write-Typed "- Each doctor gets its own folder (e.g. claude-code-doctor/)"
     Write-Typed "- The doctor folder has a CLAUDE.md (your personal config)"
     # Get-Wrapped splits on whitespace and skips empty tokens, so leading
     # spaces inside the message get stripped. Use the Prefix arg to get

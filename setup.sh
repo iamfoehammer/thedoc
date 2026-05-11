@@ -754,7 +754,12 @@ print_structure_explainer() {
     echo ""
     typeit "Here's how thedoc works:"
     typeit "- This framework (thedoc) stays where you cloned it"
-    typeit "- Each doctor gets its own folder, like ${short}/claude-doctor/"
+    # Use a generic example to keep this bullet short. Inlining ${short}
+    # blew past 80 cols when the user typed a long absolute path - the
+    # awk wrap continued flush-left at the typeit-prefix level, breaking
+    # the bullet visually. The "Got it. Your doctors will live in <X>/"
+    # line above already echoes the chosen path.
+    typeit "- Each doctor gets its own folder (e.g. claude-code-doctor/)"
     typeit "- The doctor folder has a CLAUDE.md (your personal config)"
     # typeit's awk word-wrap splits on whitespace and squashes empty tokens,
     # so leading spaces inside the message get stripped. Use the prefix arg
