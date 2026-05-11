@@ -27,13 +27,14 @@ thedoc/
 ```bash
 # POSIX shells (Linux/macOS/WSL/Git Bash)
 bash tests/test_wrapper.sh             # wrapper subcommand assertions, ~50ms
-python3 tests/smoke_test.py            # setup.sh end-to-end via PTY, ~35s
+python3 tests/smoke_test.py            # setup.sh end-to-end via PTY, ~47s
+python3 tests/smoke_test.py --help     # all driver flags + exit codes
 
 # PowerShell
 pwsh -File tests/test_wrapper.ps1      # thedoc.ps1 subcommand assertions
 
 # Or run everything for the current OS:
-thedoc test
+thedoc test                            # forwards args to smoke (--keep-logs, scenario name, etc.)
 ```
 
 The smoke driver uses `pty.fork()` and is POSIX-only — it won't
@@ -49,6 +50,16 @@ scenario runs with typing animations and dramatic pauses
 disabled. If you're debugging a race or stress-testing the
 animated path, run `python3 tests/smoke_test.py happy-path`
 under a debugger that doesn't propagate the env var.
+
+Useful smoke flags when investigating a rendering issue:
+
+- `--keep-logs` — preserve `/tmp/thedoc-smoke-*.log` even on PASS so
+  you can `sed 's/\x1b\[[0-9;]*m//g'` and read the cleaned PTY transcript.
+  Several rendering bugs (iter 82's hanging indent, iter 84's stub
+  redundancy, iter 86's wrap overflow) were found by reading the
+  transcript directly, not by writing more assertions.
+- `--clean-logs` — nuke all kept logs and exit. `/tmp/` can accumulate
+  hundreds of files from repeated `--keep-logs` runs.
 
 ## Code style and portability
 
