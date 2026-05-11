@@ -76,6 +76,18 @@ _assert_contains    "thedoc --version: same as version" "Framework dir" "$out"
 out=$("$THEDOC" -V 2>&1)
 _assert_contains    "thedoc -V: same as version"        "Framework dir" "$out"
 
+# 1f. `thedoc version` from a non-git directory shows the friendly
+# "(not a git checkout)" line instead of crashing on `git describe`.
+# The wrapper's version branch has had this case-handling since iter 88;
+# this test pins it. Same idiom as #7 below (non-git update).
+_scratch_ver="$(mktemp -d)"
+cp "$THEDOC" "$_scratch_ver/thedoc"
+out=$("$_scratch_ver/thedoc" version 2>&1)
+rc=$?
+_assert_exit_code   "thedoc version (non-git dir): exit 0" 0 "$rc"
+_assert_contains    "thedoc version (non-git dir): says so" "not a git checkout" "$out"
+rm -rf "$_scratch_ver"
+
 # 1d. `thedoc setup --help` forwards to setup.sh --help (iter 120).
 # Without forwarding the user would get the wizard, not the help text.
 out=$("$THEDOC" setup --help 2>&1)

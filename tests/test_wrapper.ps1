@@ -87,6 +87,22 @@ Assert-Contains  'thedoc version: shows commit' 'Commit:'       $r.Output
 $r = Invoke-TheDoc --version
 Assert-Contains  'thedoc --version: same as version' 'Framework dir' $r.Output
 
+# 1f. `thedoc version` from a non-git directory shows the friendly
+# "(not a git checkout)" instead of crashing on `git describe`. Mirror
+# of bash #1f. Same scratch-dir-copy-wrapper idiom as #7 (non-git update).
+$scratchVer = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-wrapper-ver-$([guid]::NewGuid())"
+New-Item -ItemType Directory -Path $scratchVer -Force | Out-Null
+try {
+    Copy-Item -LiteralPath $TheDoc -Destination (Join-Path $scratchVer 'thedoc.ps1')
+    $scratchTheDoc = Join-Path $scratchVer 'thedoc.ps1'
+    $output = & $scratchTheDoc version 2>&1 | Out-String
+    $rc = $LASTEXITCODE
+    Assert-ExitCode  'thedoc version (non-git dir): exit 0' 0 $rc
+    Assert-Contains  'thedoc version (non-git dir): says so' 'not a git checkout' $output
+} finally {
+    Remove-Item -LiteralPath $scratchVer -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # 1d. `thedoc setup --help` forwards --help through to setup.ps1
 # (iter 120). Without forwarding the user would get the wizard
 # preflight instead of help text. Mirror of the bash 1d test.
