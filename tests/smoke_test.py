@@ -827,6 +827,28 @@ def name_validation_assertions(*required_messages):
     return _check
 
 
+def returning_user_assertions(cleaned, ctx=None):
+    """Returning-user flow: state file exists, setup.sh should skip the
+    first-run greeting (Voyager check, tricorder scan, projects-folder
+    pick, structure explainer) and jump straight to the doctor-type
+    prompt. Default assertions catch a full regression (script times out
+    waiting for "What is this doctor for?" if first-run still fires),
+    but a PARTIAL regression where only some first-run gates trigger
+    is invisible. Iter 160 add: assert the first-run markers are absent
+    so a subtle is_first_run() regression that lets through e.g. the
+    tricorder scan but not the voyager prompt fails loudly."""
+    failures = list(default_assertions(cleaned, ctx))
+    for forbidden in (
+        'Have you ever seen Star Trek: Voyager?',
+        "I'm going to need to scan your system",
+        "Here's how thedoc works:",
+    ):
+        if forbidden in cleaned:
+            failures.append(
+                f"First-run path leaked into returning-user flow: {forbidden!r}")
+    return failures
+
+
 def engine_fallback_assertions(cleaned, ctx=None):
     """User picked the OpenClaw engine (stub), accepted the 'Run with
     Claude Code instead?' fallback. Transcript checks confirm the
@@ -1124,7 +1146,8 @@ def main():
                                    assertions=name_validation_assertions(
                                        "isn't a thedoc instance"))),
         ('returning-user',    dict(steps=RETURNING_USER_STEPS,
-                                   pre_setup=pre_write_state)),
+                                   pre_setup=pre_write_state,
+                                   assertions=returning_user_assertions)),
         # Stale-state warning scenario: state file's projects_dir is gone,
         # setup.sh falls back to dirname-of-script. We only need to verify
         # the warning appears - the full doctor-creation flow lands the
