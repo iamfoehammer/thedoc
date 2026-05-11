@@ -98,6 +98,18 @@ switch ($Command) {
             Write-Host ''
             return
         }
+        # Preflight: if the framework dir has no tests/ at all, the user is
+        # likely running a stray copy of thedoc.ps1 (or a clone that didn't
+        # finish). Mirror the bash port's friendly error instead of silently
+        # parse-checking just thedoc.ps1 and exiting 0.
+        $wrapperTestPath = Join-Path $ScriptDir 'tests/test_wrapper.ps1'
+        if (-not (Test-Path -LiteralPath $wrapperTestPath -PathType Leaf)) {
+            Write-Host ''
+            Write-Host "  Tests not found under $ScriptDir/tests/"
+            Write-Host "  Try 'thedoc update' to refresh the framework."
+            Write-Host ''
+            exit 1
+        }
         Write-Host ""
         Write-Host "  Parse-checking .ps1 files..."
         $errors = 0
@@ -121,13 +133,9 @@ switch ($Command) {
         Write-Host ""
 
         # Wrapper tests for thedoc.ps1 itself (mirrors test_wrapper.sh).
-        $wrapperTests = Join-Path $ScriptDir 'tests/test_wrapper.ps1'
-        if (Test-Path -LiteralPath $wrapperTests -PathType Leaf) {
-            & $wrapperTests
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        } else {
-            Write-Host "  (tests/test_wrapper.ps1 not found - skipping)" -ForegroundColor DarkGray
-        }
+        # The preflight above already verified $wrapperTestPath exists.
+        & $wrapperTestPath
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Write-Host "  (The PTY-based smoke suite is POSIX-only; run it under WSL/macOS)" -ForegroundColor DarkGray
         Write-Host ""
     }

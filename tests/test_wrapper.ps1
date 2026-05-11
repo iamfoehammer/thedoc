@@ -284,6 +284,23 @@ try {
     Remove-Item -LiteralPath $scratchDirty -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# 9. `thedoc test` from a scratch dir without tests/ bails before running
+# anything. Iter 156 found the PS port was silently parse-checking just
+# thedoc.ps1 and exiting 0 - a clone with a corrupted tests/ dir would
+# look "passed" with no warning to the user. Mirrors bash test #9.
+$scratchNoTests = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-wrapper-notests-$([guid]::NewGuid())"
+New-Item -ItemType Directory -Path $scratchNoTests -Force | Out-Null
+try {
+    Copy-Item -LiteralPath $TheDoc -Destination (Join-Path $scratchNoTests 'thedoc.ps1')
+    $scratchTheDoc = Join-Path $scratchNoTests 'thedoc.ps1'
+    $output = & $scratchTheDoc test 2>&1 | Out-String
+    $rc = $LASTEXITCODE
+    Assert-ExitCode  'thedoc test (no tests/ dir): exit non-zero' 1 $rc
+    Assert-Contains  'thedoc test (no tests/ dir): explains why'  'Tests not found' $output
+} finally {
+    Remove-Item -LiteralPath $scratchNoTests -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 Write-Host ''
 Write-Host '============================================================'
 if ($failures -eq 0) {
