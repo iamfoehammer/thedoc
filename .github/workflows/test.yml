@@ -155,3 +155,7 @@ jobs:
               exit 1
           }
           Write-Host "All $($expected.Count) expected functions present in setup.ps1"
+
+      - name: Run thedoc.ps1 wrapper tests
+        shell: pwsh
+        run: pwsh -NoProfile -File tests/test_wrapper.ps1

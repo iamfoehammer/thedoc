@@ -1,23 +1,28 @@
 # thedoc tests
 
-Two test suites for the framework. Both run in CI on Ubuntu and macOS.
+Three test suites for the framework. The bash + smoke suites run in CI on
+Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 
 | File | What it covers | Runtime |
 |---|---|---|
-| `test_wrapper.sh` | Wrapper subcommand surface (`thedoc help/list/open/...`) — non-PTY, exit codes + output strings | ~50ms |
+| `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface — non-PTY, exit codes + output strings | ~50ms |
+| `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands — same assertions on the PowerShell side | ~1s |
 | `smoke_test.py` | `setup.sh` end-to-end via real PTY across 16 scenarios | ~35s |
 
-`thedoc test` runs both in order, mirroring CI.
+`thedoc test` runs the bash wrapper + smoke (POSIX shells) or
+parse-checks .ps1 + the PowerShell wrapper suite (Windows). Both
+mirror what CI runs.
 
 ## Running
 
 ```bash
-bash tests/test_wrapper.sh                       # wrapper only
+bash tests/test_wrapper.sh                       # bash wrapper only
+pwsh -File tests/test_wrapper.ps1                # PowerShell wrapper only
 python3 tests/smoke_test.py                      # smoke: all scenarios
 python3 tests/smoke_test.py happy-path           # smoke: one scenario
 python3 tests/smoke_test.py typed-path typed-path-create
 python3 tests/smoke_test.py --list               # list smoke labels
-thedoc test                                      # wrapper + smoke
+thedoc test                                      # everything available on this OS
 ```
 
 The smoke suite requires Python 3 and a real PTY (Linux/macOS — won't run

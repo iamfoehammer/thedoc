@@ -62,19 +62,21 @@ switch ($Command) {
         # The PTY-based smoke test driver uses pty.fork() which is
         # POSIX-only - there's no equivalent Windows-native test driver
         # yet (see CI's parse-powershell job, which is the closest thing).
-        # Do the same parse + AST checks here so users get instant
-        # feedback before pushing.
+        # Parse-check every .ps1 + run the wrapper test suite. Mirrors
+        # what CI's Windows job runs.
+        Write-Host ""
+        Write-Host "  Parse-checking .ps1 files..."
         $errors = 0
         Get-ChildItem -LiteralPath $ScriptDir -Recurse -File -Filter '*.ps1' | ForEach-Object {
             $tokens = $null; $perr = $null
             [System.Management.Automation.Language.Parser]::ParseFile(
                 $_.FullName, [ref]$tokens, [ref]$perr) | Out-Null
             if ($perr.Count -gt 0) {
-                Write-Host "  FAIL: $($_.FullName)" -ForegroundColor Red
-                $perr | ForEach-Object { Write-Host "    $_" }
+                Write-Host "    FAIL: $($_.FullName)" -ForegroundColor Red
+                $perr | ForEach-Object { Write-Host "      $_" }
                 $errors++
             } else {
-                Write-Host "  OK:   $($_.Name)" -ForegroundColor Green
+                Write-Host "    OK:   $($_.Name)" -ForegroundColor Green
             }
         }
         if ($errors -gt 0) {
@@ -83,7 +85,15 @@ switch ($Command) {
             exit 1
         }
         Write-Host ""
-        Write-Host "  All .ps1 files parse cleanly." -ForegroundColor Green
+
+        # Wrapper tests for thedoc.ps1 itself (mirrors test_wrapper.sh).
+        $wrapperTests = Join-Path $ScriptDir 'tests/test_wrapper.ps1'
+        if (Test-Path -LiteralPath $wrapperTests -PathType Leaf) {
+            & $wrapperTests
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        } else {
+            Write-Host "  (tests/test_wrapper.ps1 not found - skipping)" -ForegroundColor DarkGray
+        }
         Write-Host "  (The PTY-based smoke suite is POSIX-only; run it under WSL/macOS)" -ForegroundColor DarkGray
         Write-Host ""
     }
