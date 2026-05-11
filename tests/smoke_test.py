@@ -18,6 +18,7 @@ the path to the captured log for postmortem.
 from __future__ import annotations
 
 import atexit
+import glob
 import os
 import pty
 import re
@@ -46,7 +47,6 @@ def _cleanup_bootstrap_fixtures():
     In the happy path setup.sh's bootstrap branch already moves/rm's
     them, but a Ctrl+C between pre_setup and the move would leak. Glob
     by PID so we don't nuke parallel runs."""
-    import glob
     for p in glob.glob(f'/tmp/thedoc-smoke-bootstrap-*-{os.getpid()}'):
         shutil.rmtree(p, ignore_errors=True)
     # Also the PID-suffixed but not -prefixed variant (pre_bootstrap uses
@@ -207,7 +207,6 @@ def pre_create_non_thedoc_folder(project_dir, state_dir, slug='claude-code'):
 def pre_typed_path(project_dir, state_dir):
     """Pre-create TYPED_PATH_FIXTURE with one subdir so the 'Type a path'
     branch finds a valid existing directory and skips the create prompt."""
-    import shutil
     shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
     os.makedirs(os.path.join(TYPED_PATH_FIXTURE, 'sub-project'))
 
@@ -215,7 +214,6 @@ def pre_typed_path(project_dir, state_dir):
 def pre_typed_path_create(project_dir, state_dir):
     """Ensure TYPED_PATH_CREATE does NOT exist so setup.sh hits the
     'doesn't exist. Create it? [Y/n]' branch and exercises mkdir."""
-    import shutil
     shutil.rmtree(TYPED_PATH_CREATE, ignore_errors=True)
 
 
@@ -478,7 +476,6 @@ def pre_typed_path_decline(project_dir, state_dir):
     then a real path on re-prompt (must exist). Reset both fixtures - the
     create scenario typically runs before this one and leaves
     TYPED_PATH_CREATE created behind."""
-    import shutil
     shutil.rmtree(TYPED_PATH_CREATE, ignore_errors=True)
     shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
     os.makedirs(os.path.join(TYPED_PATH_FIXTURE, 'sub-project'))
@@ -984,7 +981,6 @@ def main():
     # --clean-logs: nuke all kept PTY logs and exit. Hundreds of /tmp/thedoc-smoke-*
     # logs can accumulate from --keep-logs / failed runs; this is the recovery.
     if '--clean-logs' in argv:
-        import glob
         removed = 0
         for p in glob.glob('/tmp/thedoc-smoke-*.log'):
             try:
