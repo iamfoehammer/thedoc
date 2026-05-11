@@ -83,17 +83,32 @@ _assert_exit_code   "thedoc list: exit 0" 0 "$rc"
 # file pointing at a synthetic projects dir with one valid instance, then
 # asserts the instance name appears in the output. Catches regressions in
 # state-file parsing or path resolution.
+# Creates THREE instances with deliberately non-alphabetical mkdir order
+# so the alphabetical-sort assertion catches list-order regressions.
 _list_state="$(mktemp -d)"
 _list_proj="$(mktemp -d)"
-mkdir -p "$_list_proj/fake-doctor-instance"
-echo '# Pretend Doctor' > "$_list_proj/fake-doctor-instance/DOCTOR.md"
-echo '- **Doctor type:** Pretend' > "$_list_proj/fake-doctor-instance/CLAUDE.md"
-echo '- **Created:** 2026-05-10T00:00:00Z' >> "$_list_proj/fake-doctor-instance/CLAUDE.md"
+for name in zebra-doctor alpha-doctor mango-doctor; do
+    mkdir -p "$_list_proj/$name"
+    echo "# Pretend Doctor: $name" > "$_list_proj/$name/DOCTOR.md"
+    printf -- '- **Doctor type:** Pretend\n- **Created:** 2026-05-10T00:00:00Z\n' > "$_list_proj/$name/CLAUDE.md"
+done
 mkdir -p "$_list_state/thedoc"
 printf 'first_run=2026-05-10T00:00:00Z\nprojects_dir=%s\nplatform=linux\n' "$_list_proj" > "$_list_state/thedoc/state"
 out=$(XDG_STATE_HOME="$_list_state" "$THEDOC" list 2>&1)
-_assert_contains    "thedoc list: shows instance from state-pointed dir" "fake-doctor-instance" "$out"
+_assert_contains    "thedoc list: shows alpha-doctor"  "alpha-doctor"  "$out"
+_assert_contains    "thedoc list: shows mango-doctor"  "mango-doctor"  "$out"
+_assert_contains    "thedoc list: shows zebra-doctor"  "zebra-doctor"  "$out"
 _assert_contains    "thedoc list: shows doctor type from CLAUDE.md" "Pretend" "$out"
+# Verify alphabetical order: alpha-doctor must precede zebra-doctor in
+# the output. grep -n returns line numbers; lower must come first.
+_alpha_line=$(echo "$out" | grep -n 'alpha-doctor' | head -1 | cut -d: -f1)
+_zebra_line=$(echo "$out" | grep -n 'zebra-doctor' | head -1 | cut -d: -f1)
+if [ -n "$_alpha_line" ] && [ -n "$_zebra_line" ] && [ "$_alpha_line" -lt "$_zebra_line" ]; then
+    echo -e "  ${GREEN}PASS${RESET}: thedoc list: instances are alphabetical"
+else
+    echo -e "  ${RED}FAIL${RESET}: thedoc list: alpha-doctor (line $_alpha_line) should precede zebra-doctor (line $_zebra_line)"
+    failures=$((failures + 1))
+fi
 rm -rf "$_list_state" "$_list_proj"
 
 # 5. `thedoc open` with no arg fails with usage hint

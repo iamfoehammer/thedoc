@@ -156,7 +156,14 @@ switch ($Command) {
         Write-Host "  Doctor instances in $GithubDir/:"
         Write-Host ""
         $found = $false
-        Get-ChildItem -LiteralPath $GithubDir -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+        # Sort by name for deterministic, alphabetical output - matches
+        # bash thedoc's `for dir in "$GITHUB_DIR"/*/` which globs in
+        # alphabetical order. Without Sort-Object, Get-ChildItem returns
+        # filesystem order (close to alphabetical on Windows but not
+        # guaranteed); a user with multiple instances could see a
+        # different ordering than the bash wrapper.
+        Get-ChildItem -LiteralPath $GithubDir -Directory -ErrorAction SilentlyContinue |
+            Sort-Object Name | ForEach-Object {
             $doctorMd = Join-Path $_.FullName 'DOCTOR.md'
             if (-not (Test-Path -LiteralPath $doctorMd -PathType Leaf)) { return }
 

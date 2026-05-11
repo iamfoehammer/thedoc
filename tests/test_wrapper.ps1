@@ -85,18 +85,20 @@ Assert-ExitCode  'thedoc list: exit 0' 0 $r.ExitCode
 
 # 4b. `thedoc list` finds an instance via the state file. Mirrors the
 # bash test - writes a fake state file pointing at a synthetic projects
-# dir with one valid instance, asserts the instance name appears in the
-# output. Catches regressions in state-file path / format (iter 73
-# unified PS and bash here).
+# dir with multiple instances, asserts they appear in alphabetical
+# order. Catches regressions in state-file path / format (iter 73 unified
+# PS and bash here) AND list ordering (iter 95 added Sort-Object).
 $listState = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-list-state-$([guid]::NewGuid())"
 $listProj  = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-list-proj-$([guid]::NewGuid())"
-$instance  = Join-Path $listProj 'fake-doctor-instance'
-New-Item -ItemType Directory -Path $instance -Force | Out-Null
-Set-Content -LiteralPath (Join-Path $instance 'DOCTOR.md') -Value '# Pretend Doctor'
-Set-Content -LiteralPath (Join-Path $instance 'CLAUDE.md') -Value @(
-    '- **Doctor type:** Pretend'
-    '- **Created:** 2026-05-10T00:00:00Z'
-)
+foreach ($name in 'zebra-doctor', 'alpha-doctor', 'mango-doctor') {
+    $inst = Join-Path $listProj $name
+    New-Item -ItemType Directory -Path $inst -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $inst 'DOCTOR.md') -Value "# Pretend Doctor: $name"
+    Set-Content -LiteralPath (Join-Path $inst 'CLAUDE.md') -Value @(
+        '- **Doctor type:** Pretend'
+        '- **Created:** 2026-05-10T00:00:00Z'
+    )
+}
 New-Item -ItemType Directory -Path (Join-Path $listState 'thedoc') -Force | Out-Null
 Set-Content -LiteralPath (Join-Path $listState 'thedoc/state') -Value @(
     'first_run=2026-05-10T00:00:00Z'
@@ -107,8 +109,20 @@ try {
     $prevXdg = $env:XDG_STATE_HOME
     $env:XDG_STATE_HOME = $listState
     $r = Invoke-TheDoc list
-    Assert-Contains  'thedoc list: shows instance from state-pointed dir' 'fake-doctor-instance' $r.Output
-    Assert-Contains  'thedoc list: shows doctor type from CLAUDE.md'      'Pretend'              $r.Output
+    Assert-Contains  'thedoc list: shows alpha-doctor'  'alpha-doctor'  $r.Output
+    Assert-Contains  'thedoc list: shows mango-doctor'  'mango-doctor'  $r.Output
+    Assert-Contains  'thedoc list: shows zebra-doctor'  'zebra-doctor'  $r.Output
+    Assert-Contains  'thedoc list: shows doctor type from CLAUDE.md' 'Pretend' $r.Output
+
+    # alpha-doctor must precede zebra-doctor in the output (alphabetical).
+    $alphaIdx = $r.Output.IndexOf('alpha-doctor')
+    $zebraIdx = $r.Output.IndexOf('zebra-doctor')
+    if ($alphaIdx -ge 0 -and $zebraIdx -gt $alphaIdx) {
+        Write-Host '  PASS: thedoc list: instances are alphabetical' -ForegroundColor Green
+    } else {
+        Write-Host "  FAIL: thedoc list: alpha-doctor ($alphaIdx) should precede zebra-doctor ($zebraIdx)" -ForegroundColor Red
+        $script:failures++
+    }
 } finally {
     $env:XDG_STATE_HOME = $prevXdg
     Remove-Item -LiteralPath $listState -Recurse -Force -ErrorAction SilentlyContinue
