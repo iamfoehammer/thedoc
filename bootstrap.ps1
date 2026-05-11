@@ -82,5 +82,13 @@ Write-Host "  Done."
 Write-Host ""
 
 # ── Hand off to setup.ps1 ─────────────────────────────────────────────
+# Propagate setup.ps1's exit code. Without this, a setup-preflight
+# failure (e.g. PS version too old) prints an error and exits 1, but
+# bootstrap.ps1 then exits 0 - a caller using `pwsh -File bootstrap.ps1`
+# (or any wrapper that reads $LASTEXITCODE) would think the install
+# succeeded. Doesn't matter for `irm | iex` since iex evaluates in the
+# current scope and exit-statement terminates the pipeline directly,
+# but `-File` invocations are the more common scripted entry point.
 $env:THEDOC_BOOTSTRAP_DIR = $TmpDir
 & (Join-Path $TmpDir 'setup.ps1')
+exit $LASTEXITCODE

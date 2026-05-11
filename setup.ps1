@@ -831,6 +831,12 @@ Add new issues and fixes to the Known Issues & Fixes table above.
     $engineScript = Join-Path $ScriptDir "engines/$EngineSlug.ps1"
     if (Test-Path -LiteralPath $engineScript) {
         & $engineScript -InstanceDir $instanceDir -SetupMode $SetupMode -DoctorType $DoctorSlug
+        # Propagate the engine's exit code. Bash uses `exec engines/X.sh`
+        # which inherits exit code automatically; PS's `&` does not, so
+        # without this an engine crash (e.g. claude exits 1) would
+        # surface as setup.ps1 exit 0 in the parent (thedoc.ps1, CI,
+        # any caller). Iter 162 propagation fix.
+        exit $LASTEXITCODE
     }
     else {
         Write-Host "  Engine launcher missing: $engineScript" -ForegroundColor Red
