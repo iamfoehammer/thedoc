@@ -23,6 +23,7 @@ python3 tests/smoke_test.py happy-path           # smoke: one scenario
 python3 tests/smoke_test.py typed-path typed-path-create
 python3 tests/smoke_test.py --list               # list smoke labels
 python3 tests/smoke_test.py happy-path --keep-logs  # keep PTY logs on PASS
+python3 tests/smoke_test.py --clean-logs         # nuke all /tmp/thedoc-smoke-*.log
 thedoc test                                      # everything available on this OS
 ```
 

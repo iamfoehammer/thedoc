@@ -926,6 +926,21 @@ def main():
     argv = sys.argv[1:]
     keep_logs = '--keep-logs' in argv
     argv = [a for a in argv if a != '--keep-logs']
+
+    # --clean-logs: nuke all kept PTY logs and exit. Hundreds of /tmp/thedoc-smoke-*
+    # logs can accumulate from --keep-logs / failed runs; this is the recovery.
+    if '--clean-logs' in argv:
+        import glob
+        removed = 0
+        for p in glob.glob('/tmp/thedoc-smoke-*.log'):
+            try:
+                os.remove(p)
+                removed += 1
+            except OSError:
+                pass
+        print(f'Removed {removed} log file(s) under /tmp/thedoc-smoke-*.log')
+        return
+
     requested = argv
     if requested == ['--list']:
         for label, _ in SCENARIOS:
