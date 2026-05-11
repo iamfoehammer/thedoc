@@ -1,0 +1,34 @@
+# thedoc - git line-ending normalization
+#
+# Without this file, Windows clones with core.autocrlf=true (a common
+# default) convert bash scripts to CRLF, which breaks heredocs and
+# subtle end-of-line behaviors. Force LF for shell + Python + PS +
+# markdown + YAML so the working tree matches what we authored
+# regardless of the user's platform.
+#
+# .cmd files keep their default (which on Windows means CRLF after
+# autocrlf-normalized checkout) - cmd.exe handles either fine but
+# CRLF is the native convention.
+
+# Default: LF for text. This is conservative; the file-type rules
+# below tighten it for files where mismatch causes real bugs.
+* text=auto eol=lf
+
+# Bash/Python/PowerShell: CRLF in any of these breaks parsing or
+# runtime behavior. Pin to LF.
+*.sh   text eol=lf
+*.py   text eol=lf
+*.ps1  text eol=lf
+
+# Markdown and YAML: tooling generally handles both, but consistency
+# helps diffs across platforms.
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# cmd batch: leave default. cmd.exe on modern Windows handles LF,
+# but the format is Windows-native and CRLF is the convention.
+*.cmd  text
+
+# ASCII art and other text resources: LF (matches our authoring).
+*.txt  text eol=lf
