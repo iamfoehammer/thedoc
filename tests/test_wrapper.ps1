@@ -85,6 +85,12 @@ Assert-Contains  'thedoc version: shows commit' 'Commit:'       $r.Output
 $r = Invoke-TheDoc --version
 Assert-Contains  'thedoc --version: same as version' 'Framework dir' $r.Output
 
+# 1d. `thedoc setup --help` forwards --help through to setup.ps1
+# (iter 120). Without forwarding the user would get the wizard
+# preflight instead of help text. Mirror of the bash 1d test.
+$r = Invoke-TheDoc setup --help
+Assert-Contains  'thedoc setup --help: shows setup.ps1 help' 'thedoc setup wizard' $r.Output
+
 # 2. `--help` and `-h` are aliases for help.
 $r = Invoke-TheDoc --help
 Assert-Contains  'thedoc --help: same as help'  'Commands:'  $r.Output
