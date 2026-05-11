@@ -7,7 +7,7 @@ Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 |---|---|---|
 | `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface — non-PTY, exit codes + output strings | ~50ms |
 | `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands — same assertions on the PowerShell side | ~1s |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 22 scenarios | ~49s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 22 scenarios | ~45s |
 
 `thedoc test` runs the bash wrapper + smoke (POSIX shells) or
 parse-checks .ps1 + the PowerShell wrapper suite (Windows). Both
@@ -34,9 +34,9 @@ loss, color-bleed) don't trip the regex/error-pattern assertions
 but show clearly in the cleaned PTY transcript.
 
 The smoke suite requires Python 3 and a real PTY (Linux/macOS — won't run
-under cmd.exe). Each scenario takes 1–3s; the full suite finishes in
-~25s. Exit codes: 0 = all PASS, 1 = at least one FAIL, 2 = unknown
-smoke scenario name.
+under cmd.exe). Each scenario takes 1–3s; the full 22-scenario suite
+finishes in ~45s. Exit codes: 0 = all PASS, 1 = at least one FAIL,
+2 = unknown smoke scenario name.
 
 ## What it does
 
