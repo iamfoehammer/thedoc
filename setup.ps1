@@ -736,6 +736,29 @@ if (Test-FirstRun) {
             $env:PATH = "$thedocFinal;$env:PATH"
             Write-Host "  Added thedoc to User PATH" -ForegroundColor Green
         }
+
+        # Wire ~/.secrets.ps1 into the user's PowerShell profile so
+        # llm-secrets.ps1's stored env vars are loaded in new shells.
+        # Mirrors the bash branch's '[ -f ~/.secrets ] && source ~/.secrets'
+        # bashrc append. CurrentUserAllHosts is shared between pwsh and
+        # powershell.exe, which is what we want.
+        $profilePath = $PROFILE.CurrentUserAllHosts
+        $profileDir  = Split-Path -Parent $profilePath
+        if (-not (Test-Path -LiteralPath $profileDir -PathType Container)) {
+            New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+        }
+        $secretsLine = 'if (Test-Path "$HOME/.secrets.ps1") { . "$HOME/.secrets.ps1" }'
+        $existing = if (Test-Path -LiteralPath $profilePath -PathType Leaf) {
+            Get-Content -LiteralPath $profilePath -Raw
+        } else { '' }
+        if ($existing -notmatch [regex]::Escape('.secrets.ps1')) {
+            if ($existing -and -not $existing.EndsWith("`n")) {
+                Add-Content -LiteralPath $profilePath -Value ''
+            }
+            Add-Content -LiteralPath $profilePath -Value '# thedoc - load llm-secrets'
+            Add-Content -LiteralPath $profilePath -Value $secretsLine
+            Write-Host "  Added secrets sourcing to $(Split-Path -Leaf $profilePath)" -ForegroundColor Green
+        }
         Write-Host ''
     }
 
