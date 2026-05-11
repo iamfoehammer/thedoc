@@ -205,16 +205,30 @@ def pre_bootstrap(project_dir, state_dir):
     return {'THEDOC_BOOTSTRAP_DIR': bootstrap_dir}
 
 
-def bootstrap_assertions(cleaned):
+def bootstrap_assertions(cleaned, ctx):
     """Bootstrap-install scenario: setup.sh moved thedoc into projects dir
-    and added it to PATH + secrets sourcing. Verifies the visible markers
-    of those side effects (output strings); .bashrc filesystem inspection
-    would need a bigger driver refactor."""
-    failures = list(default_assertions(cleaned))
+    and added it to PATH + secrets sourcing. Verifies both the visible
+    output markers AND the side effects on disk (HOME/.bashrc gets the
+    PATH and source lines), each appearing exactly once (idempotency
+    guard from iter 70's tightened grep checks)."""
+    failures = list(default_assertions(cleaned, ctx))
     if 'Installed thedoc to' not in cleaned:
         failures.append("Bootstrap branch did not run ('Installed thedoc to' missing)")
     if 'Added thedoc to PATH' not in cleaned:
         failures.append("PATH append did not run ('Added thedoc to PATH' missing)")
+
+    bashrc = os.path.join(ctx['fake_home'], '.bashrc')
+    if not os.path.exists(bashrc):
+        failures.append(f"Bootstrap branch did not write {bashrc}")
+        return failures
+    with open(bashrc) as f:
+        rc_content = f.read()
+    path_lines    = rc_content.count('export PATH="') + rc_content.count("export PATH='")
+    secrets_lines = rc_content.count('source "$HOME/.secrets"')
+    if path_lines != 1:
+        failures.append(f".bashrc has {path_lines} PATH export lines (expected 1)")
+    if secrets_lines != 1:
+        failures.append(f".bashrc has {secrets_lines} secrets-source lines (expected 1)")
     return failures
 
 
@@ -375,7 +389,7 @@ def red(s):    return f'\x1b[31m{s}\x1b[0m'
 def yellow(s): return f'\x1b[33m{s}\x1b[0m'
 
 
-def default_assertions(cleaned):
+def default_assertions(cleaned, ctx=None):
     """Standard pass criteria: setup.sh reached the launch gate cleanly."""
     failures = []
     if 'Ready to launch' not in cleaned:
@@ -385,7 +399,7 @@ def default_assertions(cleaned):
     return failures
 
 
-def coming_soon_assertions(cleaned):
+def coming_soon_assertions(cleaned, ctx=None):
     """For scenarios that pick an unsupported doctor type and bail early."""
     failures = []
     if 'doctor templates are coming soon' not in cleaned:
@@ -395,7 +409,7 @@ def coming_soon_assertions(cleaned):
     return failures
 
 
-def engine_decline_assertions(cleaned):
+def engine_decline_assertions(cleaned, ctx=None):
     """User declined the 'Run with Claude Code instead?' fallback - setup
     should print the 'Check back later' line and exit without creating any
     instance (no Ready to launch)."""
@@ -548,7 +562,12 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
     # for paths that intentionally exit early (e.g. unsupported doctor type).
     if assertions is None:
         assertions = default_assertions
-    failures = list(assertions(cleaned))
+    ctx = {
+        'fake_home':   fake_home,
+        'project_dir': project_dir,
+        'state_dir':   state_dir,
+    }
+    failures = list(assertions(cleaned, ctx))
 
     error_patterns = [
         ('unbound variable',        'set -u tripped'),
