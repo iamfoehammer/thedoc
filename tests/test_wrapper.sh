@@ -100,12 +100,14 @@ _assert_contains    "thedoc --help: same as help"  "Commands:"  "$out"
 out=$("$THEDOC" -h 2>&1)
 _assert_contains    "thedoc -h: same as help"      "Commands:"  "$out"
 
-# 3. Unknown command exits non-zero
+# 3. Unknown command exits non-zero AND surfaces a friendly hint
 set +e
-"$THEDOC" totally-bogus-command >/dev/null 2>&1
+out=$("$THEDOC" totally-bogus-command 2>&1)
 rc=$?
 set -e
 _assert_exit_code   "thedoc bogus-command: exit non-zero"  1  "$rc"
+_assert_contains    "thedoc bogus-command: shows 'Unknown command'" "Unknown command" "$out"
+_assert_contains    "thedoc bogus-command: suggests 'thedoc help'"  "thedoc help"     "$out"
 
 # 4. `thedoc list` exits 0 regardless of whether instances exist
 "$THEDOC" list >/dev/null 2>&1

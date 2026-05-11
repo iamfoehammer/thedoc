@@ -111,9 +111,11 @@ Assert-Contains  'thedoc --help: same as help'  'Commands:'  $r.Output
 $r = Invoke-TheDoc -h
 Assert-Contains  'thedoc -h: same as help'      'Commands:'  $r.Output
 
-# 3. Unknown command exits non-zero.
+# 3. Unknown command exits non-zero AND surfaces a friendly hint.
 $r = Invoke-TheDoc totally-bogus-command
 Assert-ExitCode  'thedoc bogus-command: exit non-zero' 1 $r.ExitCode
+Assert-Contains  "thedoc bogus-command: shows 'Unknown command'" 'Unknown command' $r.Output
+Assert-Contains  "thedoc bogus-command: suggests 'thedoc help'"  'thedoc help'     $r.Output
 
 # 4. `thedoc list` exits 0 regardless of whether instances exist.
 $r = Invoke-TheDoc list
