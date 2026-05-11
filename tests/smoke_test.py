@@ -666,7 +666,8 @@ def setup_mode_assertions(expected_mode):
     return _check
 
 
-def doctor_type_assertions(expected_slug, expected_display_name):
+def doctor_type_assertions(expected_slug, expected_display_name,
+                            expected_engine=None):
     """Default + verify the right doctor template actually got installed.
     Same silent-pass closing as setup_mode_assertions (iter 153): the
     openclaw-doctor scenario sends '2' at the doctor-type prompt but
@@ -680,6 +681,14 @@ def doctor_type_assertions(expected_slug, expected_display_name):
       3. DOCTOR.md must contain the per-doctor H1 ('Emergency Medical
          Hologram - <display_name>') so we know the right template
          file got copied, not just renamed cosmetically
+
+    `expected_engine` (iter 159 add) optionally pins the
+    '**Engine:** <name>' line - useful when the scenario picks a
+    specific engine and you want a regression-swap of ENGINE_TYPES
+    vs DOCTOR_TYPES to surface. Without it, a refactor that
+    accidentally crossed the doctor and engine arrays would leave
+    doctor=correct, engine=wrong, and only this assertion would
+    notice.
     """
     def _check(cleaned, ctx=None):
         failures = list(default_assertions(cleaned, ctx))
@@ -699,6 +708,12 @@ def doctor_type_assertions(expected_slug, expected_display_name):
                 failures.append(
                     f"CLAUDE.md should contain {marker!r}; "
                     f"got:\n{_excerpt(content, 'Doctor type')}")
+            if expected_engine is not None:
+                engine_marker = f"**Engine:** {expected_engine}"
+                if engine_marker not in content:
+                    failures.append(
+                        f"CLAUDE.md should contain {engine_marker!r}; "
+                        f"got:\n{_excerpt(content, 'Engine')}")
         if not os.path.exists(doctor_md):
             failures.append(f"DOCTOR.md missing: {doctor_md}")
         else:
@@ -1061,9 +1076,14 @@ def main():
                                    assertions=name_validation_assertions(
                                        'The Emergency Medical Hologram, reporting for duty',
                                        '@@@@@@@@@@@@@@@@@@@@'))),
+        # Pin BOTH doctor=OpenClaw AND engine=Claude Code. The scenario
+        # picks doctor option 2 + engine option 1, so a refactor that
+        # crossed the DOCTOR_TYPES/ENGINE_TYPES arrays would leave
+        # doctor=correct and engine=wrong - or vice versa.
         ('openclaw-doctor',   dict(steps=OPENCLAW_DOCTOR_STEPS,
                                    assertions=doctor_type_assertions(
-                                       'openclaw', 'OpenClaw'))),
+                                       'openclaw', 'OpenClaw',
+                                       expected_engine='Claude Code'))),
         ('bootstrap-install', dict(steps=HAPPY_PATH_STEPS,
                                    pre_setup=pre_bootstrap,
                                    assertions=bootstrap_assertions)),
