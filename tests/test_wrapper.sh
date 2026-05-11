@@ -67,6 +67,12 @@ _assert_exit_code   "thedoc version: exit 0"        0 "$rc"
 _assert_contains    "thedoc version: shows dir"     "Framework dir" "$out"
 _assert_contains    "thedoc version: shows commit"  "Commit:"       "$out"
 
+# 1c. `--version` and `-V` are aliases for version
+out=$("$THEDOC" --version 2>&1)
+_assert_contains    "thedoc --version: same as version" "Framework dir" "$out"
+out=$("$THEDOC" -V 2>&1)
+_assert_contains    "thedoc -V: same as version"        "Framework dir" "$out"
+
 # 2. `thedoc --help` and `thedoc -h` are aliases for help
 out=$("$THEDOC" --help 2>&1)
 _assert_contains    "thedoc --help: same as help"  "Commands:"  "$out"
