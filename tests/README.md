@@ -7,7 +7,7 @@ Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 |---|---|---|
 | `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface — non-PTY, exit codes + output strings | ~50ms |
 | `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands — same assertions on the PowerShell side | ~1s |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 20 scenarios | ~44s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 21 scenarios | ~47s |
 
 `thedoc test` runs the bash wrapper + smoke (POSIX shells) or
 parse-checks .ps1 + the PowerShell wrapper suite (Windows). Both
@@ -79,6 +79,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `open-existing-decline` | Same setup, user declines → re-prompts for fresh name in same wizard | iter 61 |
 | `non-thedoc-folder` | Pre-populated random project folder rejected ("isn't a thedoc instance") | `176d16f` |
 | `returning-user` | State file present → wizard skips greeting/scan/projects, jumps to doctor pick | baseline |
+| `returning-user-stale-state` | State file points at a deleted projects_dir → setup warns + falls back to dirname-of-script | iter 104 |
 | `coming-soon` | Stub doctor type (Gemini) → "templates are coming soon" early exit | `5a93d35` |
 | `typed-path` | Custom projects-folder path, target already exists | baseline |
 | `typed-path-create` | Custom projects-folder path, target doesn't exist → mkdir branch | baseline |

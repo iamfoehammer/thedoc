@@ -917,10 +917,22 @@ if is_first_run; then
     # Step 4: Explain the structure
     print_structure_explainer
 else
-    # Returning user - use saved projects dir, fall back to parent of script
-    if [ -z "${PROJECTS_DIR:-}" ] || [ ! -d "${PROJECTS_DIR:-}" ]; then
+    # Returning user - use saved projects dir, fall back to parent of script.
+    # Note the stale case explicitly so the user sees WHERE the new instance
+    # will land (iter 102/103 made list/open surface this; doing the same
+    # for setup so the wizard doesn't silently create an instance in the
+    # wrong projects folder when state points at a deleted directory).
+    _saved_projects="${PROJECTS_DIR:-}"
+    if [ -z "$_saved_projects" ] || [ ! -d "$_saved_projects" ]; then
         PROJECTS_DIR="$(dirname "$SCRIPT_DIR")"
+        if [ -n "$_saved_projects" ] && [ ! -d "$_saved_projects" ]; then
+            echo ""
+            echo -e "  ${YELLOW}Note: state's projects_dir ($(short_path "$_saved_projects")) is missing.${RESET}"
+            echo -e "  ${DIM}New instances will be created in $(short_path "$PROJECTS_DIR")/ for this run.${RESET}"
+            echo ""
+        fi
     fi
+    unset _saved_projects
 fi
 
 # ── Doctor setup flow ──────────────────────────────────────────────

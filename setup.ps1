@@ -939,6 +939,15 @@ else {
         $script:ProjectsDir = $state.projects_dir
     } else {
         $script:ProjectsDir = Split-Path -Parent $ScriptDir
+        # Surface stale state explicitly so the user sees WHERE the new
+        # instance will land (mirrors setup.sh; same UX as list/open in
+        # iter 102/103).
+        if ($state -and $state.projects_dir -and -not (Test-Path -LiteralPath $state.projects_dir)) {
+            Write-Host ''
+            Write-Host "  Note: state's projects_dir ($(Get-ShortPath $state.projects_dir)) is missing." -ForegroundColor Yellow
+            Write-Host "  New instances will be created in $(Get-ShortPath $script:ProjectsDir)/ for this run." -ForegroundColor DarkGray
+            Write-Host ''
+        }
     }
 }
 

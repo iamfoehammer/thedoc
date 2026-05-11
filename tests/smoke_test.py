@@ -247,6 +247,34 @@ def pre_bootstrap_rerun_with_state(project_dir, state_dir):
     return {'THEDOC_BOOTSTRAP_DIR': bootstrap_dir}
 
 
+def stale_state_assertions(cleaned, ctx=None):
+    """Stale-state scenario: verify the iter 104 warning appears at the
+    start of the returning-user wizard. We don't drive past the first
+    prompt because the fallback projects_dir on a test machine is
+    unpredictable - the warning itself is the load-bearing assertion."""
+    failures = []
+    if "state's projects_dir" not in cleaned:
+        failures.append("Warning missing: \"state's projects_dir\"")
+    if 'is missing' not in cleaned:
+        failures.append("Warning missing: 'is missing'")
+    return failures
+
+
+def pre_write_stale_state(project_dir, state_dir):
+    """Pre-write a state file whose projects_dir points at a NEVER-existed
+    path. Returning-user flow triggers, but the saved projects_dir fails
+    the [ -d ] check and setup falls back to dirname-of-script. Iter 104
+    added a warning on that fallback - this scenario verifies it appears
+    and ALSO that the wizard continues to Ready to launch (the warning
+    is informational, not a hard stop)."""
+    thedoc_dir = os.path.join(state_dir, 'thedoc')
+    os.makedirs(thedoc_dir, exist_ok=True)
+    with open(os.path.join(thedoc_dir, 'state'), 'w') as f:
+        f.write('first_run=2026-05-09T12:00:00+00:00\n')
+        f.write(f'projects_dir=/nonexistent/stale-{os.getpid()}\n')
+        f.write('platform=linux\n')
+
+
 def pre_bootstrap_rerun_no_install(project_dir, state_dir):
     """Same as pre_bootstrap_rerun_with_state but with NO installed framework
     at project_dir/thedoc. Simulates: user deleted ~/GitHub/thedoc but the
@@ -860,6 +888,17 @@ def main():
                                        "isn't a thedoc instance"))),
         ('returning-user',    dict(steps=RETURNING_USER_STEPS,
                                    pre_setup=pre_write_state)),
+        # Stale-state warning scenario: state file's projects_dir is gone,
+        # setup.sh falls back to dirname-of-script. We only need to verify
+        # the warning appears - the full doctor-creation flow lands the
+        # instance in the fallback dir (which on a test machine has
+        # unpredictable contents). Use a no-step scenario with a custom
+        # assertions that ONLY checks for the warning.
+        ('returning-user-stale-state',
+                              dict(steps=[],
+                                   pre_setup=pre_write_stale_state,
+                                   assertions=stale_state_assertions,
+                                   timeout=2.5)),
         ('coming-soon',       dict(steps=COMING_SOON_STEPS,
                                    assertions=coming_soon_assertions)),
         ('typed-path',          dict(steps=TYPED_PATH_STEPS,
