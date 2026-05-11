@@ -169,6 +169,9 @@ try {
     Remove-Item -LiteralPath $listProj  -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# 4c. `thedoc list` warns when state's projects_dir is gone. Pre-iter-102
+# the fallback to dirname-of-script was silent, so the user got
+# "(none found)" with no clue why. Mirror of bash test #4c.
 $staleState = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-stale-state-$([guid]::NewGuid())"
 New-Item -ItemType Directory -Path (Join-Path $staleState 'thedoc') -Force | Out-Null
 Set-Content -LiteralPath (Join-Path $staleState 'thedoc/state') -Value "projects_dir=/nonexistent/never/existed-$PID"
@@ -180,6 +183,45 @@ try {
 } finally {
     $env:XDG_STATE_HOME = $prevXdg
     Remove-Item -LiteralPath $staleState -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# 4d. `thedoc list` handles a CRLF-format state file. Set-Content on Windows
+# defaults to CRLF. PowerShell's Get-Content / Select-String strips CR
+# natively, so this is a parity check rather than a bug guard - but if a
+# future refactor switched to byte-level reads (or someone mis-uses
+# [System.IO.File]::ReadAllBytes) the regression would silently fall back.
+# Mirror of bash test #4d which guards iter 108's ${var%$'\r'} strip.
+$crlfState = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-crlf-state-$([guid]::NewGuid())"
+$crlfProj  = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-crlf-proj-$([guid]::NewGuid())"
+$crlfInst  = Join-Path $crlfProj 'crlf-test-instance'
+New-Item -ItemType Directory -Path $crlfInst -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $crlfInst 'DOCTOR.md') -Value '# Pretend Doctor'
+Set-Content -LiteralPath (Join-Path $crlfInst 'CLAUDE.md') -Value @(
+    '- **Doctor type:** CrlfTest'
+    '- **Created:** 2026-05-11T00:00:00Z'
+)
+New-Item -ItemType Directory -Path (Join-Path $crlfState 'thedoc') -Force | Out-Null
+# Write the state file with explicit CRLF bytes so we know the test
+# exercises the cross-OS case even when running on Linux/macOS pwsh
+# (where Set-Content's default newline is LF).
+$crlfBytes = [System.Text.Encoding]::UTF8.GetBytes(
+    "first_run=2026-05-11T00:00:00Z`r`nprojects_dir=$crlfProj`r`nplatform=windows`r`n")
+[System.IO.File]::WriteAllBytes((Join-Path $crlfState 'thedoc/state'), $crlfBytes)
+try {
+    $prevXdg = $env:XDG_STATE_HOME
+    $env:XDG_STATE_HOME = $crlfState
+    $r = Invoke-TheDoc list
+    Assert-Contains  'thedoc list (CRLF state): finds instance' 'crlf-test-instance' $r.Output
+    if ($r.Output -match "state's projects_dir is missing") {
+        Write-Host '  FAIL: thedoc list (CRLF state): false-positive stale warning (CR not stripped)' -ForegroundColor Red
+        $script:failures++
+    } else {
+        Write-Host '  PASS: thedoc list (CRLF state): no false stale warning' -ForegroundColor Green
+    }
+} finally {
+    $env:XDG_STATE_HOME = $prevXdg
+    Remove-Item -LiteralPath $crlfState -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $crlfProj  -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # 5. `thedoc open` with no arg fails with usage hint.
