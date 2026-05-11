@@ -754,7 +754,12 @@ print_structure_explainer() {
     local short
     short=$(short_path "$PROJECTS_DIR")
     echo ""
-    typeit "Got it. Your doctors will live in ${short}/"
+    # Split into sentence + indented path. With long typed paths,
+    # interpolating ${short} on the same line blows past 80 cols and the
+    # awk wrap drops the path on its own flush-left line - the sentence
+    # then looks like it got truncated. Hanging-indent the path explicitly.
+    typeit "Got it. Your doctors will live in:"
+    typeit "${short}/" 0.008 "    "
     echo ""
     typeit "Here's how thedoc works:"
     typeit "- This framework (thedoc) stays where you cloned it"

@@ -544,7 +544,11 @@ function Show-StructureExplainer {
     param([Parameter(Mandatory)][string]$ProjectsDir)
     $short = Get-ShortPath $ProjectsDir
     Write-Host ''
-    Write-Typed "Got it. Your doctors will live in $short/"
+    # Hanging-indent the path on its own line (mirrors setup.sh): long
+    # typed paths otherwise overflow 80 cols and the wrap leaves the
+    # path flush-left, making the sentence look truncated.
+    Write-Typed 'Got it. Your doctors will live in:'
+    Write-Typed "$short/" -Prefix '    '
     Write-Host ''
     Write-Typed "Here's how thedoc works:"
     Write-Typed "- This framework (thedoc) stays where you cloned it"
