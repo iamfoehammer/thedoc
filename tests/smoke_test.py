@@ -924,6 +924,23 @@ def main():
     # don't always trip the regex/error-pattern assertions). Iter 82's
     # hanging-indent fix was found this way.
     argv = sys.argv[1:]
+
+    # --help / -h: print usage and exit. Without this, --help falls through
+    # to the "unknown scenario" branch which is confusing.
+    if any(a in ('--help', '-h', 'help') for a in argv):
+        print('thedoc smoke test driver')
+        print()
+        print('Usage:')
+        print('  python3 tests/smoke_test.py                        Run all scenarios')
+        print('  python3 tests/smoke_test.py <scenario> [<sc2>...]  Run named scenarios')
+        print('  python3 tests/smoke_test.py --list                 List scenario labels')
+        print('  python3 tests/smoke_test.py --keep-logs            Keep PTY logs on PASS (default deletes)')
+        print('  python3 tests/smoke_test.py --clean-logs           Remove all /tmp/thedoc-smoke-*.log and exit')
+        print('  python3 tests/smoke_test.py --help                 Show this help')
+        print()
+        print('Exit codes: 0 = all PASS, 1 = any FAIL, 2 = unknown scenario name')
+        return
+
     keep_logs = '--keep-logs' in argv
     argv = [a for a in argv if a != '--keep-logs']
 
