@@ -40,7 +40,22 @@ def _cleanup_typed_path_fixtures():
     shutil.rmtree(TYPED_PATH_CREATE,  ignore_errors=True)
 
 
+def _cleanup_bootstrap_fixtures():
+    """Defensive cleanup for /tmp/thedoc-smoke-bootstrap-* fixtures from
+    pre_bootstrap / pre_bootstrap_reinstall / pre_bootstrap_rerun_* etc.
+    In the happy path setup.sh's bootstrap branch already moves/rm's
+    them, but a Ctrl+C between pre_setup and the move would leak. Glob
+    by PID so we don't nuke parallel runs."""
+    import glob
+    for p in glob.glob(f'/tmp/thedoc-smoke-bootstrap-*-{os.getpid()}'):
+        shutil.rmtree(p, ignore_errors=True)
+    # Also the PID-suffixed but not -prefixed variant (pre_bootstrap uses
+    # just /tmp/thedoc-smoke-bootstrap-<pid>):
+    shutil.rmtree(f'/tmp/thedoc-smoke-bootstrap-{os.getpid()}', ignore_errors=True)
+
+
 atexit.register(_cleanup_typed_path_fixtures)
+atexit.register(_cleanup_bootstrap_fixtures)
 
 
 # Paths the typed-path scenarios feed to setup.sh. Living outside any
