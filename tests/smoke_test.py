@@ -205,6 +205,71 @@ def pre_bootstrap(project_dir, state_dir):
     return {'THEDOC_BOOTSTRAP_DIR': bootstrap_dir}
 
 
+def pre_bootstrap_rerun_with_state(project_dir, state_dir):
+    """Re-bootstrap scenario: state already exists, bootstrap dir is set.
+    Pre-iter-100 this combination silently skipped the move (the bootstrap
+    branch was gated on is_first_run); iter 100 added an explicit
+    re-bootstrap branch that updates the installed framework in place
+    and exits BEFORE Show-Greeting / the wizard.
+
+    Pre-state setup:
+      - state file pointing at project_dir
+      - project_dir/thedoc/ exists with a 'marker.txt' to verify the
+        bootstrap overlay copied successfully
+      - THEDOC_BOOTSTRAP_DIR points at a fresh clone of the framework
+    """
+    # Pre-existing state file (returning user)
+    thedoc_dir = os.path.join(state_dir, 'thedoc')
+    os.makedirs(thedoc_dir, exist_ok=True)
+    with open(os.path.join(thedoc_dir, 'state'), 'w') as f:
+        f.write('first_run=2026-05-10T00:00:00Z\n')
+        f.write(f'projects_dir={project_dir}\n')
+        f.write('platform=linux\n')
+
+    # Pre-existing installed framework with a stub file
+    installed = os.path.join(project_dir, 'thedoc')
+    os.makedirs(installed, exist_ok=True)
+    with open(os.path.join(installed, 'marker.txt'), 'w') as f:
+        f.write('pre-rerun marker - should survive\n')
+
+    # Fresh clone temp dir with a different marker
+    bootstrap_dir = f'/tmp/thedoc-smoke-bootstrap-rerun-{os.getpid()}'
+    shutil.rmtree(bootstrap_dir, ignore_errors=True)
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    shutil.copytree(
+        repo_root, bootstrap_dir,
+        symlinks=False,
+        ignore=shutil.ignore_patterns('.git', '__pycache__', '*.pyc'),
+    )
+    # Add an only-in-bootstrap file so we can verify it got copied over
+    with open(os.path.join(bootstrap_dir, 'rerun-canary.txt'), 'w') as f:
+        f.write('only in the new clone\n')
+    return {'THEDOC_BOOTSTRAP_DIR': bootstrap_dir}
+
+
+def bootstrap_rerun_assertions(cleaned, ctx):
+    """Re-bootstrap on existing install: setup.sh should print 'Updating
+    thedoc at <path>' and exit before reaching Show-Greeting / Ready to
+    launch. Filesystem assert: the rerun-canary file from the new clone
+    must now be in the installed framework dir (proves the overlay
+    copied)."""
+    failures = []
+    if 'Updating thedoc at' not in cleaned:
+        failures.append("Re-bootstrap branch did not run ('Updating thedoc at' missing)")
+    if 'Updated thedoc' not in cleaned:
+        failures.append("Re-bootstrap did not print final 'Updated thedoc'")
+    if 'Ready to launch' in cleaned:
+        failures.append("Reached 'Ready to launch' - re-bootstrap should exit before the wizard")
+    # Greeting must NOT have fired - re-bootstrap exits before Show-Greeting.
+    if 'Hologram activated' in cleaned:
+        failures.append("Greeting fired - re-bootstrap should exit before Show-Greeting")
+    # Verify the new clone's canary file landed in the installed framework
+    canary = os.path.join(ctx['project_dir'], 'thedoc', 'rerun-canary.txt')
+    if not os.path.exists(canary):
+        failures.append(f"Bootstrap overlay did not copy: {canary} missing")
+    return failures
+
+
 def pre_bootstrap_reinstall(project_dir, state_dir):
     """Like pre_bootstrap, but also pre-populates HOME/.bashrc with the
     exact lines setup.sh's bootstrap branch would add. Simulates a user
@@ -708,6 +773,10 @@ def main():
         ('bootstrap-reinstall', dict(steps=HAPPY_PATH_STEPS,
                                      pre_setup=pre_bootstrap_reinstall,
                                      assertions=bootstrap_reinstall_assertions)),
+        ('bootstrap-rerun',   dict(steps=[],
+                                   pre_setup=pre_bootstrap_rerun_with_state,
+                                   assertions=bootstrap_rerun_assertions,
+                                   timeout=10.0)),
         ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS,
                                    assertions=name_validation_assertions(
                                        "Name can't contain '/'",

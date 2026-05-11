@@ -802,6 +802,29 @@ detect_platform
 # Load saved state (if returning user)
 load_state
 
+# Re-bootstrap shortcut: a user who pastes the bootstrap one-liner again
+# (THEDOC_BOOTSTRAP_DIR set + state file already exists) should get the
+# framework UPDATED in place, not orphaned in $TMPDIR. The pre-iter-100
+# behavior gated the entire bootstrap branch on `is_first_run`, so on
+# re-paste the clone stayed in TMP and nothing visible happened. Now we
+# detect that combination, do the file-level update, and exit before
+# launching another instance wizard (the user re-ran bootstrap to
+# update, not to create a new doctor).
+if [ -n "${THEDOC_BOOTSTRAP_DIR:-}" ] && [ -d "${THEDOC_BOOTSTRAP_DIR:-}" ] && \
+   ! is_first_run && [ -n "${PROJECTS_DIR:-}" ] && [ -d "$PROJECTS_DIR/thedoc" ]; then
+    THEDOC_FINAL="$PROJECTS_DIR/thedoc"
+    echo ""
+    echo "  Updating thedoc at $(short_path "$THEDOC_FINAL")..."
+    cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
+    cp -rf "$THEDOC_BOOTSTRAP_DIR/".[!.]* "$THEDOC_FINAL/" 2>/dev/null || true
+    rm -rf "$THEDOC_BOOTSTRAP_DIR" 2>/dev/null || true
+    echo -e "  ${GREEN}Updated${RESET} thedoc."
+    echo ""
+    echo -e "  ${DIM}Run 'thedoc' to create another instance, or 'thedoc open <name>' to resume.${RESET}"
+    echo ""
+    exit 0
+fi
+
 # Greeting
 print_greeting
 

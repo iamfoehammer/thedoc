@@ -806,6 +806,32 @@ Add new issues and fixes to the Known Issues & Fixes table above.
 }
 
 # ── Main ─────────────────────────────────────────────────────────────
+
+# Re-bootstrap shortcut: if state already exists AND bootstrap set
+# THEDOC_BOOTSTRAP_DIR, just update the installed framework in place
+# and exit. Mirror of the setup.sh re-bootstrap branch - without this,
+# the iex/irm re-paste would leave the new clone orphaned in TEMP.
+if ($env:THEDOC_BOOTSTRAP_DIR -and
+    (Test-Path -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -PathType Container) -and
+    -not (Test-FirstRun)) {
+    $state = Get-State
+    if ($state -and $state.projects_dir) {
+        $thedocFinal = Join-Path $state.projects_dir 'thedoc'
+        if (Test-Path -LiteralPath $thedocFinal -PathType Container) {
+            Write-Host ''
+            Write-Host "  Updating thedoc at $(Get-ShortPath $thedocFinal)..."
+            Copy-Item -Path (Join-Path $env:THEDOC_BOOTSTRAP_DIR '*') `
+                      -Destination $thedocFinal -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host '  Updated thedoc.' -ForegroundColor Green
+            Write-Host ''
+            Write-Host "  Run 'thedoc' to create another instance, or 'thedoc open <name>' to resume." -ForegroundColor DarkGray
+            Write-Host ''
+            exit 0
+        }
+    }
+}
+
 Show-Greeting
 
 if (Test-FirstRun) {

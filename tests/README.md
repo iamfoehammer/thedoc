@@ -7,7 +7,7 @@ Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 |---|---|---|
 | `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface — non-PTY, exit codes + output strings | ~50ms |
 | `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands — same assertions on the PowerShell side | ~1s |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 18 scenarios | ~40s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 19 scenarios | ~42s |
 
 `thedoc test` runs the bash wrapper + smoke (POSIX shells) or
 parse-checks .ps1 + the PowerShell wrapper suite (Windows). Both
@@ -69,6 +69,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `openclaw-doctor` | Picks OpenClaw doctor type (non-default slug) → exercises cp/symlink for a slug ≠ "claude-code" | iter 63 |
 | `bootstrap-install` | Sets THEDOC_BOOTSTRAP_DIR to a fake clone; verifies the install branch moves it + adds to PATH | iter 79 |
 | `bootstrap-reinstall` | Pre-populated .bashrc; verifies the idempotency check skips the append and the file still has exactly one of each line | iter 81 |
+| `bootstrap-rerun` | Existing install + state + new clone: verifies the re-bootstrap branch updates in place, copies new files, and exits before the wizard | iter 100 |
 | `negative-name` | Slash and leading-dot rejection in the instance-name validation loop | `44ab195` |
 | `empty-name` | Whitespace-only input → trim → empty rejection | `7cc8e5e` |
 | `engine-fallback` | Stub engine → "Run with Claude Code instead?" prompt → fallback path | `5fb0980` |
