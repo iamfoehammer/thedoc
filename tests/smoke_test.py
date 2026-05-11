@@ -637,6 +637,47 @@ def default_assertions(cleaned, ctx=None):
     return failures
 
 
+def setup_mode_assertions(expected_mode):
+    """Default + verify the generated CLAUDE.md actually got the expected
+    setup_mode slug. Iter 153 found that the `full-mode` smoke scenario
+    sent '2' at the Setup-mode prompt but never verified setup.sh
+    actually treated it as 'full' downstream - a regression that swapped
+    the SETUP_SLUGS order would have shipped 'quick' under the 'full'
+    label and the test still PASSED (the silent-pass pattern: visible
+    output post-prompt is identical, only the CLAUDE.md byte payload
+    differs). Reading the generated file closes that loophole."""
+    def _check(cleaned, ctx=None):
+        failures = list(default_assertions(cleaned, ctx))
+        # Instance lands at <project_dir>/<slug>-doctor/ - see setup.sh
+        # `INSTANCE_DIR="$PROJECTS_DIR/$instance_name"`. Default slug name
+        # for Claude Code is 'claude-code-doctor'.
+        claude_md = os.path.join(ctx['project_dir'], 'claude-code-doctor', 'CLAUDE.md')
+        if not os.path.exists(claude_md):
+            failures.append(f"Generated CLAUDE.md missing: {claude_md}")
+            return failures
+        with open(claude_md) as f:
+            content = f.read()
+        marker = f"**Setup mode:** {expected_mode}"
+        if marker not in content:
+            failures.append(
+                f"CLAUDE.md should contain {marker!r}; "
+                f"got:\n{_excerpt(content, 'Setup mode')}")
+        return failures
+    return _check
+
+
+def _excerpt(content, needle, ctx_lines=2):
+    """Trim a multi-line string to the lines around the first occurrence
+    of `needle`. Keeps assertion-failure output manageable on big files."""
+    lines = content.splitlines()
+    for i, line in enumerate(lines):
+        if needle in line:
+            lo = max(0, i - ctx_lines)
+            hi = min(len(lines), i + ctx_lines + 1)
+            return '\n'.join(lines[lo:hi])
+    return f"(needle {needle!r} not found)"
+
+
 def space_skip_assertions(cleaned, ctx=None):
     """default + lock in that the space-to-skip keypress was actually
     captured. Iter 151 discovered `read -rsn1 key` silently drops space
@@ -977,7 +1018,8 @@ def main():
                                      pre_setup=pre_typed_path,
                                      assertions=name_validation_assertions(
                                          'Path must be absolute'))),
-        ('full-mode',         dict(steps=_full_mode_steps())),
+        ('full-mode',         dict(steps=_full_mode_steps(),
+                                   assertions=setup_mode_assertions('full'))),
     ]
 
     # Optional argv filter: `python3 smoke_test.py happy-path negative-name`
