@@ -79,7 +79,15 @@ canonical regression rig for these portability rules.
 
 PowerShell code targets PS 7+, not Windows PowerShell 5.1. The preflight
 in `setup.ps1` and `bootstrap.ps1` rejects older versions with a clear
-message.
+message. A few PS gotchas that bit during the port (inline-commented
+at the call sites; flagging here for cross-shell contributors):
+
+| Trap | Symptom | Fix |
+|---|---|---|
+| `Copy-Item -LiteralPath "$dir/*"` | `*` is treated literally, nothing copies | Use `-Path` with `Join-Path $dir '*'` |
+| `[CmdletBinding()] param([string]$Command)` then `script.ps1 --help` | "A parameter cannot be found that matches parameter name 'help'" | Drop param/CmdletBinding, read `$args[0]` instead |
+| `Get-ChildItem ... \| ForEach-Object { ... }` for list output | Filesystem order, not alphabetical | Pipe through `Sort-Object Name` first |
+| `[Console]::ReadKey($true)` directly after typing animation | Stale keypress from animation skip auto-selects menu | Drain with `while ([Console]::KeyAvailable) { [Console]::ReadKey($true) \| Out-Null }` |
 
 ## Adding a new doctor type
 
