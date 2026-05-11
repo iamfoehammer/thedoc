@@ -62,6 +62,15 @@ case "${1:-setup}" in
             echo ""
             exit 1
         fi
+        # Short-circuit when the first extra arg is info-only or
+        # cleanup-only - skip the wrapper-test run and forward straight
+        # to smoke. Running test_wrapper.sh before printing help or
+        # listing scenarios is a waste of the user's time.
+        case "${2:-}" in
+            --help|-h|help|--list|--clean-logs)
+                exec python3 "$SCRIPT_DIR/tests/smoke_test.py" "${@:2}"
+                ;;
+        esac
         bash "$SCRIPT_DIR/tests/test_wrapper.sh" || exit $?
         echo ""
         # Forward extra args (--keep-logs, --clean-logs, scenario names,
