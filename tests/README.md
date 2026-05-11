@@ -7,7 +7,7 @@ Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 |---|---|---|
 | `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface — non-PTY, exit codes + output strings | ~50ms |
 | `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands — same assertions on the PowerShell side | ~1s |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 21 scenarios | ~47s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 22 scenarios | ~49s |
 
 `thedoc test` runs the bash wrapper + smoke (POSIX shells) or
 parse-checks .ps1 + the PowerShell wrapper suite (Windows). Both
@@ -67,6 +67,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | Scenario | What it covers | Reference commit |
 |---|---|---|
 | `happy-path` | Default fresh install, all defaults, reaches `Ready to launch.` | baseline |
+| `voyager-yes` | Answers Y to Voyager prompt → exercises EMH ASCII-art reveal + "Press any key to continue" branch | iter 129 |
 | `openclaw-doctor` | Picks OpenClaw doctor type (non-default slug) → exercises cp/symlink for a slug ≠ "claude-code" | iter 63 |
 | `bootstrap-install` | Sets THEDOC_BOOTSTRAP_DIR to a fake clone; verifies the install branch moves it + adds to PATH | iter 79 |
 | `bootstrap-reinstall` | Pre-populated .bashrc; verifies the idempotency check skips the append and the file still has exactly one of each line | iter 81 |

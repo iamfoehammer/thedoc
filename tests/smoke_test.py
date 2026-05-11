@@ -76,6 +76,25 @@ HAPPY_PATH_STEPS = COMMON_FIRSTRUN_STEPS + [
 ]
 
 
+# Voyager Y branch: user answers 'y' so the EMH ASCII art + "Press any
+# key to continue..." prompt fires before the scan. Every other scenario
+# sends 'n' so this code path went 100+ iterations untested. The ASCII
+# art is in thedoc.txt at the framework root - if a future refactor
+# breaks the file path or content, this scenario catches it.
+VOYAGER_YES_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'y', 'Voyager: y'),
+    (re.compile(r'Press any key to continue\.\.\.'),        b' ', 'Continue from EMH reveal'),
+    (re.compile(r'Press any key to begin the scan'),        b' ', 'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'1', 'Projects: option 1'),
+    (re.compile(r'Press any key to continue \(space'),      b' ', 'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'1', 'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                       b'1', 'Engine: 1 (Claude Code)'),
+    (re.compile(r'Setup mode\?'),                           b'1', 'Mode: 1 (Quick)'),
+    (re.compile(r'Name for your doctor instance folder'),   b'\n', 'Default name'),
+    (re.compile(r'already exists.*\[Y/n\]'),                b'\n', 'Open existing if any'),
+]
+
+
 # Picks OpenClaw as the doctor type (slot 2, has a real DOCTOR.md) with
 # Claude Code as the engine. Exercises a doctor_slug other than
 # "claude-code" through the cp/symlink/CLAUDE.md generation path - which
@@ -844,6 +863,9 @@ def main():
     # Each entry is (label, kwargs-for-run). Order is the run order.
     SCENARIOS = [
         ('happy-path',        dict(steps=HAPPY_PATH_STEPS)),
+        ('voyager-yes',       dict(steps=VOYAGER_YES_STEPS,
+                                   assertions=name_validation_assertions(
+                                       'The Emergency Medical Hologram, reporting for duty'))),
         ('openclaw-doctor',   dict(steps=OPENCLAW_DOCTOR_STEPS)),
         ('bootstrap-install', dict(steps=HAPPY_PATH_STEPS,
                                    pre_setup=pre_bootstrap,
