@@ -131,12 +131,12 @@ function Show-Help {
     Write-Host ""
 }
 
-switch ($Command) {
-    "set"    { Set-Secret }
-    "list"   { Get-SecretList }
-    "remove" { Remove-Secret }
-    "help"   { Show-Help }
-    default  {
+switch -Regex ($Command) {
+    '^set$'                 { Set-Secret }
+    '^list$'                { Get-SecretList }
+    '^remove$'              { Remove-Secret }
+    '^(help|--help|-h)$'    { Show-Help }
+    default {
         Write-Host "Unknown command: $Command"
         Write-Host "Run 'llm-secrets help' for usage."
     }

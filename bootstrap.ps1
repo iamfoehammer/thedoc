@@ -7,13 +7,12 @@
 # This is the Windows-native counterpart to bootstrap.sh. Linux/macOS/WSL/Git
 # Bash users should use the bash one-liner from the README instead.
 
-[CmdletBinding()]
-param([Parameter(Position=0)][string]$Command)
-
 $ErrorActionPreference = 'Stop'
 
 # ── --help short-circuit (mirrors bootstrap.sh) ──────────────────────
-if ($Command -in @('--help', '-h', 'help')) {
+# Uses $args directly to dodge PS parameter-binding of '--help' as a
+# -help parameter name. See setup.ps1 for the longer rationale.
+if ($args.Count -gt 0 -and $args[0] -in @('--help', '-h', 'help', '/?', '-?')) {
     @'
 thedoc bootstrap (PowerShell)
 

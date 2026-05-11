@@ -8,9 +8,6 @@
 # bash version has live E2E tests; this one is verified structurally only
 # until run on a real Windows host.
 
-[CmdletBinding()]
-param([Parameter(Position=0)][string]$Command)
-
 $ErrorActionPreference = 'Stop'
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -19,7 +16,13 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # Mirrors setup.sh's help text so the bash-vs-PS UX matches: a user on
 # Windows native pwsh can run 'setup.ps1 --help' and get usage info
 # before the preflight checks fire.
-if ($Command -in @('--help', '-h', 'help')) {
+#
+# Uses $args directly (not param/CmdletBinding) so PS doesn't try to
+# parse '--help' or '-h' as parameter names. With CmdletBinding,
+# 'script.ps1 --help' fails with "A parameter cannot be found that
+# matches parameter name 'help'" because PS treats the leading -- as
+# the start of a -help parameter.
+if ($args.Count -gt 0 -and $args[0] -in @('--help', '-h', 'help', '/?', '-?')) {
     @'
 thedoc setup wizard (PowerShell)
 
