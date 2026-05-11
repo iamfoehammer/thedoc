@@ -185,6 +185,39 @@ def pre_typed_path_create(project_dir, state_dir):
     shutil.rmtree(TYPED_PATH_CREATE, ignore_errors=True)
 
 
+def pre_bootstrap(project_dir, state_dir):
+    """Mimic what bootstrap.sh does: clone the framework to a temp dir and
+    set THEDOC_BOOTSTRAP_DIR for setup.sh. The bootstrap branch in setup.sh
+    moves that temp dir into PROJECTS_DIR/thedoc and rewrites SCRIPT_DIR,
+    so the bootstrap source needs the full framework tree (DOCTOR.md +
+    engines/ + updates/ etc.). Copies in the repo minus .git/.
+
+    Returns env-extras for the run() so the driver passes
+    THEDOC_BOOTSTRAP_DIR to setup.sh."""
+    bootstrap_dir = f'/tmp/thedoc-smoke-bootstrap-{os.getpid()}'
+    shutil.rmtree(bootstrap_dir, ignore_errors=True)
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    shutil.copytree(
+        repo_root, bootstrap_dir,
+        symlinks=False,
+        ignore=shutil.ignore_patterns('.git', '__pycache__', '*.pyc'),
+    )
+    return {'THEDOC_BOOTSTRAP_DIR': bootstrap_dir}
+
+
+def bootstrap_assertions(cleaned):
+    """Bootstrap-install scenario: setup.sh moved thedoc into projects dir
+    and added it to PATH + secrets sourcing. Verifies the visible markers
+    of those side effects (output strings); .bashrc filesystem inspection
+    would need a bigger driver refactor."""
+    failures = list(default_assertions(cleaned))
+    if 'Installed thedoc to' not in cleaned:
+        failures.append("Bootstrap branch did not run ('Installed thedoc to' missing)")
+    if 'Added thedoc to PATH' not in cleaned:
+        failures.append("PATH append did not run ('Added thedoc to PATH' missing)")
+    return failures
+
+
 def pre_typed_path_decline(project_dir, state_dir):
     """Decline scenario types a non-existent path first (must NOT exist),
     then a real path on re-prompt (must exist). Reset both fixtures - the
@@ -392,9 +425,11 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
     # Optional fixture hook for scenario-specific pre-state (e.g. an
     # already-existing doctor instance, or a saved state file simulating
     # a returning-user run). Receives both directories so callbacks can
-    # populate either side without needing access to internals.
+    # populate either side without needing access to internals. May
+    # return a dict to merge into the child's env (e.g. THEDOC_BOOTSTRAP_DIR).
+    extra_env = None
     if pre_setup:
-        pre_setup(project_dir, state_dir)
+        extra_env = pre_setup(project_dir, state_dir)
 
     env = os.environ.copy()
     env.update({
@@ -406,6 +441,8 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
         'THEDOC_TEST_SKIP_TYPING':  '1',
         'HOME':                     fake_home,
     })
+    if isinstance(extra_env, dict):
+        env.update(extra_env)
     # Suppress WSL drive scanning during the test - it'd drag /mnt/ paths
     # into the candidate list and confuse the menu shortcut. The bash
     # detect_platform reads /proc/version for the WSL signal; pointing it
@@ -563,6 +600,9 @@ def main():
     SCENARIOS = [
         ('happy-path',        dict(steps=HAPPY_PATH_STEPS)),
         ('openclaw-doctor',   dict(steps=OPENCLAW_DOCTOR_STEPS)),
+        ('bootstrap-install', dict(steps=HAPPY_PATH_STEPS,
+                                   pre_setup=pre_bootstrap,
+                                   assertions=bootstrap_assertions)),
         ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS)),
         ('empty-name',        dict(steps=EMPTY_NAME_STEPS)),
         ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS)),

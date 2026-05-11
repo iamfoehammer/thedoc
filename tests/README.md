@@ -7,7 +7,7 @@ Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 |---|---|---|
 | `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface — non-PTY, exit codes + output strings | ~50ms |
 | `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands — same assertions on the PowerShell side | ~1s |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 16 scenarios | ~35s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 17 scenarios | ~37s |
 
 `thedoc test` runs the bash wrapper + smoke (POSIX shells) or
 parse-checks .ps1 + the PowerShell wrapper suite (Windows). Both
@@ -60,6 +60,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 |---|---|---|
 | `happy-path` | Default fresh install, all defaults, reaches `Ready to launch.` | baseline |
 | `openclaw-doctor` | Picks OpenClaw doctor type (non-default slug) → exercises cp/symlink for a slug ≠ "claude-code" | iter 63 |
+| `bootstrap-install` | Sets THEDOC_BOOTSTRAP_DIR to a fake clone; verifies the install branch moves it + adds to PATH | iter 79 |
 | `negative-name` | Slash and leading-dot rejection in the instance-name validation loop | `44ab195` |
 | `empty-name` | Whitespace-only input → trim → empty rejection | `7cc8e5e` |
 | `engine-fallback` | Stub engine → "Run with Claude Code instead?" prompt → fallback path | `5fb0980` |
