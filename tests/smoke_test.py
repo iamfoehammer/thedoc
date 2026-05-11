@@ -205,6 +205,40 @@ def pre_bootstrap(project_dir, state_dir):
     return {'THEDOC_BOOTSTRAP_DIR': bootstrap_dir}
 
 
+def pre_bootstrap_reinstall(project_dir, state_dir):
+    """Like pre_bootstrap, but also pre-populates HOME/.bashrc with the
+    exact lines setup.sh's bootstrap branch would add. Simulates a user
+    re-running the install one-liner: the idempotency check (iter 70's
+    grep -qF "$THEDOC_FINAL" / grep -qF 'source "$HOME/.secrets"') must
+    skip the appends so the file still has exactly one of each.
+
+    bootstrap_assertions's 'exactly 1 line' counts catch any regression
+    where a future refactor loosens the grep matches and starts
+    appending duplicates on every run."""
+    extras = pre_bootstrap(project_dir, state_dir)
+    fake_home = os.path.dirname(project_dir)
+    thedoc_final = os.path.join(project_dir, 'thedoc')
+    bashrc = os.path.join(fake_home, '.bashrc')
+    with open(bashrc, 'w') as f:
+        f.write('# thedoc - Emergency Medical Hologram framework\n')
+        f.write(f'export PATH="{thedoc_final}:$PATH"\n')
+        f.write('[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"\n')
+    return extras
+
+
+def _bashrc_line_counts(ctx):
+    """Returns (path_count, secrets_count) for HOME/.bashrc, or (None, None)
+    if the file is missing. Shared between bootstrap_assertions variants."""
+    bashrc = os.path.join(ctx['fake_home'], '.bashrc')
+    if not os.path.exists(bashrc):
+        return None, None
+    with open(bashrc) as f:
+        rc_content = f.read()
+    path_lines    = rc_content.count('export PATH="') + rc_content.count("export PATH='")
+    secrets_lines = rc_content.count('source "$HOME/.secrets"')
+    return path_lines, secrets_lines
+
+
 def bootstrap_assertions(cleaned, ctx):
     """Bootstrap-install scenario: setup.sh moved thedoc into projects dir
     and added it to PATH + secrets sourcing. Verifies both the visible
@@ -217,18 +251,39 @@ def bootstrap_assertions(cleaned, ctx):
     if 'Added thedoc to PATH' not in cleaned:
         failures.append("PATH append did not run ('Added thedoc to PATH' missing)")
 
-    bashrc = os.path.join(ctx['fake_home'], '.bashrc')
-    if not os.path.exists(bashrc):
-        failures.append(f"Bootstrap branch did not write {bashrc}")
-        return failures
-    with open(bashrc) as f:
-        rc_content = f.read()
-    path_lines    = rc_content.count('export PATH="') + rc_content.count("export PATH='")
-    secrets_lines = rc_content.count('source "$HOME/.secrets"')
-    if path_lines != 1:
-        failures.append(f".bashrc has {path_lines} PATH export lines (expected 1)")
-    if secrets_lines != 1:
-        failures.append(f".bashrc has {secrets_lines} secrets-source lines (expected 1)")
+    path_lines, secrets_lines = _bashrc_line_counts(ctx)
+    if path_lines is None:
+        failures.append("Bootstrap branch did not write .bashrc")
+    else:
+        if path_lines != 1:
+            failures.append(f".bashrc has {path_lines} PATH export lines (expected 1)")
+        if secrets_lines != 1:
+            failures.append(f".bashrc has {secrets_lines} secrets-source lines (expected 1)")
+    return failures
+
+
+def bootstrap_reinstall_assertions(cleaned, ctx):
+    """Bootstrap-reinstall scenario: HOME/.bashrc was pre-populated with
+    the PATH + secrets lines. setup.sh's bootstrap branch must skip the
+    appends (idempotency) so the file STILL has exactly one of each.
+
+    The 'Added thedoc to PATH' message must NOT print, because the
+    idempotency grep finds the path already there and the branch
+    skips the append+message. That's the inverse of the install case."""
+    failures = list(default_assertions(cleaned, ctx))
+    if 'Installed thedoc to' not in cleaned:
+        failures.append("Bootstrap branch did not run ('Installed thedoc to' missing)")
+    if 'Added thedoc to PATH' in cleaned:
+        failures.append("PATH was appended on re-run (idempotency check broken)")
+
+    path_lines, secrets_lines = _bashrc_line_counts(ctx)
+    if path_lines is None:
+        failures.append("Bootstrap branch unexpectedly removed .bashrc")
+    else:
+        if path_lines != 1:
+            failures.append(f".bashrc has {path_lines} PATH lines after re-run (expected 1)")
+        if secrets_lines != 1:
+            failures.append(f".bashrc has {secrets_lines} secrets-source lines after re-run (expected 1)")
     return failures
 
 
@@ -622,6 +677,9 @@ def main():
         ('bootstrap-install', dict(steps=HAPPY_PATH_STEPS,
                                    pre_setup=pre_bootstrap,
                                    assertions=bootstrap_assertions)),
+        ('bootstrap-reinstall', dict(steps=HAPPY_PATH_STEPS,
+                                     pre_setup=pre_bootstrap_reinstall,
+                                     assertions=bootstrap_reinstall_assertions)),
         ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS)),
         ('empty-name',        dict(steps=EMPTY_NAME_STEPS)),
         ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS)),
