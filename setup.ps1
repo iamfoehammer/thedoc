@@ -624,7 +624,7 @@ function Show-StructureExplainer {
     # spaces inside the message get stripped. Use the Prefix arg to get
     # a 4-space hanging indent that survives the wrap (matches bash).
     Write-Typed "and a DOCTOR.md (shared diagnostic instructions)" -Prefix '    '
-    Write-Typed "- You update thedoc with 'git pull' - your configs are never overwritten"
+    Write-Typed "- You update thedoc with 'thedoc update' - your configs are never overwritten"
     Write-Host ''
     Write-Host '  Press any key to continue (space to skip animations)...' -ForegroundColor DarkGray
     $key = [Console]::ReadKey($true)

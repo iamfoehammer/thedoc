@@ -801,7 +801,7 @@ print_structure_explainer() {
     # so leading spaces inside the message get stripped. Use the prefix arg
     # to get a 4-space hanging indent that survives the wrap.
     typeit "and a DOCTOR.md (shared diagnostic instructions)" 0.008 "    "
-    typeit "- You update thedoc with 'git pull' - your configs are never overwritten"
+    typeit "- You update thedoc with 'thedoc update' - your configs are never overwritten"
     echo ""
     echo -e "  ${DIM}Press any key to continue (space to skip animations)...${RESET}"
     read -rsn1 key

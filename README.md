@@ -264,7 +264,7 @@ thedoc/                          # The framework (this repo)
 ~/GitHub/openclaw-doctor/        # Another instance
 ```
 
-The framework and instances are separate. You `git pull` the framework, your instances pick up updates through DOCTOR.md instructions. No conflicts.
+The framework and instances are separate. You `thedoc update` the framework, your instances pick up updates through DOCTOR.md instructions. No conflicts.
 
 ## Why "The Doc"?
 
