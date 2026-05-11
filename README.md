@@ -290,4 +290,4 @@ PRs welcome.
 
 ## License
 
-MIT
+[MIT](LICENSE)
