@@ -109,6 +109,21 @@ at the call sites; flagging here for cross-shell contributors):
 | `Get-ChildItem ... \| ForEach-Object { ... }` for list output | Filesystem order, not alphabetical | Pipe through `Sort-Object Name` first |
 | `[Console]::ReadKey($true)` directly after typing animation | Stale keypress from animation skip auto-selects menu | Drain with `while ([Console]::KeyAvailable) { [Console]::ReadKey($true) \| Out-Null }` |
 
+## Line endings + editor settings
+
+`.editorconfig` pins LF + 4-space indent for shells / PS / Python /
+Markdown / YAML; most modern editors honor this without a plugin.
+
+`.gitattributes` pins LF in git's working-tree normalization, which
+matters more than the editor setting: without it, Windows clones
+with `core.autocrlf=true` (a common default) would convert bash
+scripts to CRLF on checkout and break heredocs / EOL behavior.
+`.cmd` files keep the default (CRLF on Windows is the native batch
+convention).
+
+If you're adding a new file type that needs strict LF preservation,
+add a `*.ext text eol=lf` line to `.gitattributes`.
+
 ## Adding a new doctor type
 
 1. Create `doctors/<slug>/DOCTOR.md` with the doctor's brain. If the
