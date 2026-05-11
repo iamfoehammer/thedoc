@@ -1,11 +1,33 @@
 #!/usr/bin/env bash
 # Engine: Claude Code
 # Launches a Claude Code session in the doctor instance directory.
+#
+# Usage:
+#   engines/claude-code.sh <INSTANCE_DIR> [SETUP_MODE] [DOCTOR_TYPE]
+#
+# Normally invoked by setup.sh, not directly. Setup mode is 'quick' or
+# 'full' (controls the launch prompt). DOCTOR_TYPE is the slug for
+# logging only.
 set -euo pipefail
+
+if [ "$#" -lt 1 ]; then
+    echo "" >&2
+    echo "  Usage: $(basename "$0") <INSTANCE_DIR> [SETUP_MODE] [DOCTOR_TYPE]" >&2
+    echo "  This launcher is normally invoked by setup.sh, not directly." >&2
+    echo "" >&2
+    exit 2
+fi
 
 INSTANCE_DIR="$1"
 SETUP_MODE="${2:-quick}"
 DOCTOR_TYPE="${3:-claude-code}"
+
+if [ ! -d "$INSTANCE_DIR" ]; then
+    echo "" >&2
+    echo "  Instance directory does not exist: $INSTANCE_DIR" >&2
+    echo "" >&2
+    exit 2
+fi
 
 # Check that claude is installed
 if ! command -v claude &>/dev/null; then

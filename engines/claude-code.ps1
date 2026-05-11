@@ -1,6 +1,8 @@
 # Engine: Claude Code (PowerShell)
 # Native counterpart to engines/claude-code.sh. Launches a Claude Code
-# session in the doctor instance directory.
+# session in the doctor instance directory. Normally invoked by
+# setup.ps1, not directly - the [Parameter(Mandatory)] on $InstanceDir
+# triggers an interactive prompt if missing.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$InstanceDir,
@@ -9,6 +11,13 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+if (-not (Test-Path -LiteralPath $InstanceDir -PathType Container)) {
+    Write-Host ''
+    Write-Host "  Instance directory does not exist: $InstanceDir"
+    Write-Host ''
+    exit 2
+}
 
 if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
     Write-Host ''
