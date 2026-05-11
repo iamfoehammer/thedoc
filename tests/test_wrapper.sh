@@ -147,6 +147,16 @@ set -e
 _assert_exit_code   "thedoc update (dirty tree): exit non-zero" 1 "$rc"
 _assert_contains    "thedoc update (dirty tree): explains why"  "Local changes detected" "$out"
 
+# 9. `thedoc test` from a scratch dir without tests/ bails before running
+# anything. Same idiom as the non-git update test: copy only the wrapper,
+# leave the dir empty otherwise.
+set +e
+out=$("$_scratch/thedoc" test 2>&1)
+rc=$?
+set -e
+_assert_exit_code   "thedoc test (no tests/ dir): exit non-zero" 1 "$rc"
+_assert_contains    "thedoc test (no tests/ dir): explains why"  "Tests not found" "$out"
+
 echo ""
 echo "============================================================"
 if [ "$failures" -eq 0 ]; then
