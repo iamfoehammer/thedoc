@@ -88,13 +88,20 @@ _on_interrupt() {
 trap _on_interrupt INT TERM
 
 # ── Colors ──────────────────────────────────────────────────────────
-BOLD='\033[1m'
-DIM='\033[2m'
-CYAN='\033[36m'
-GREEN='\033[32m'
-YELLOW='\033[33m'
-RED='\033[31m'
-RESET='\033[0m'
+# Honor https://no-color.org/ - if NO_COLOR is set (any non-empty value),
+# emit no ANSI escape codes. Useful for accessibility, log capture, and
+# pipelines that don't strip ANSI before consuming output.
+if [ -n "${NO_COLOR:-}" ]; then
+    BOLD='' DIM='' CYAN='' GREEN='' YELLOW='' RED='' RESET=''
+else
+    BOLD='\033[1m'
+    DIM='\033[2m'
+    CYAN='\033[36m'
+    GREEN='\033[32m'
+    YELLOW='\033[33m'
+    RED='\033[31m'
+    RESET='\033[0m'
+fi
 
 # ── EMH title rotation ─────────────────────────────────────────────
 TITLES=(
