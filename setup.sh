@@ -667,6 +667,10 @@ prompt_projects_dir() {
                 read -rp "  That folder doesn't exist. Create it? [Y/n] " create_it
                 if [[ "$create_it" =~ ^[Nn] ]]; then
                     # User said no - re-ask for path rather than aborting outright.
+                    # Ack the decline so the re-prompt below doesn't appear out
+                    # of nowhere (gap-after-action heuristic: every Y/n decision
+                    # gets a visible confirmation line).
+                    echo -e "  ${DIM}OK - type a different path.${RESET}"
                     continue
                 fi
                 if ! mkdir -p "$custom_path" 2>/dev/null; then

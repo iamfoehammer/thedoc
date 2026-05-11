@@ -745,7 +745,8 @@ def main():
         ('typed-path-decline',  dict(steps=TYPED_PATH_DECLINE_STEPS,
                                      pre_setup=pre_typed_path_decline,
                                      assertions=name_validation_assertions(
-                                         "That folder doesn't exist. Create it?"))),
+                                         "That folder doesn't exist. Create it?",
+                                         'OK - type a different path'))),
         ('typed-path-relative', dict(steps=TYPED_PATH_RELATIVE_STEPS,
                                      pre_setup=pre_typed_path,
                                      assertions=name_validation_assertions(

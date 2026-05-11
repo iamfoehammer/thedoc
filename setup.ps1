@@ -518,6 +518,9 @@ function Get-ProjectsDir {
                 Write-Host ''
                 $create = Read-Line "  That folder doesn't exist. Create it? [Y/n] "
                 if ($create -match '^[Nn]') {
+                    # Ack the decline before the re-prompt loop (mirrors
+                    # setup.sh; gap-after-action heuristic).
+                    Write-Host '  OK - type a different path.' -ForegroundColor DarkGray
                     continue
                 }
                 try {
