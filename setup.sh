@@ -825,16 +825,24 @@ if is_first_run; then
             SHELL_RC="$HOME/.zshrc"
         fi
 
+        # Idempotency by signature: match the install path itself (not the
+        # word "thedoc" anywhere in the rc - the substring check used to
+        # false-positive on unrelated lines like 'alias thedocify=...'
+        # or a path containing 'thedoc' from another project).
         THEDOC_PATH_LINE="export PATH=\"$THEDOC_FINAL:\$PATH\""
-        if ! grep -qF "thedoc" "$SHELL_RC" 2>/dev/null; then
+        if ! grep -qF "$THEDOC_FINAL" "$SHELL_RC" 2>/dev/null; then
             echo "" >> "$SHELL_RC"
             echo "# thedoc - Emergency Medical Hologram framework" >> "$SHELL_RC"
             echo "$THEDOC_PATH_LINE" >> "$SHELL_RC"
             echo -e "  ${GREEN}Added${RESET} thedoc to PATH in $(basename "$SHELL_RC")"
         fi
 
-        if ! grep -qF ".secrets" "$SHELL_RC" 2>/dev/null; then
-            echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> "$SHELL_RC"
+        # Match the actual source expression rather than '.secrets' - the
+        # loose substring matched harmless comments like '# my secrets'
+        # or unrelated files like '.secrets.json' in other lines.
+        SECRETS_LINE='[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"'
+        if ! grep -qF 'source "$HOME/.secrets"' "$SHELL_RC" 2>/dev/null; then
+            echo "$SECRETS_LINE" >> "$SHELL_RC"
             echo -e "  ${GREEN}Added${RESET} secrets sourcing to $(basename "$SHELL_RC")"
         fi
 

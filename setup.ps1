@@ -751,7 +751,10 @@ if (Test-FirstRun) {
         $existing = if (Test-Path -LiteralPath $profilePath -PathType Leaf) {
             Get-Content -LiteralPath $profilePath -Raw
         } else { '' }
-        if ($existing -notmatch [regex]::Escape('.secrets.ps1')) {
+        # Match the dot-source expression specifically, not just '.secrets.ps1'
+        # as substring - the looser check would false-positive on a comment
+        # mentioning the file, or an unrelated reference.
+        if ($existing -notmatch [regex]::Escape('. "$HOME/.secrets.ps1"')) {
             if ($existing -and -not $existing.EndsWith("`n")) {
                 Add-Content -LiteralPath $profilePath -Value ''
             }
