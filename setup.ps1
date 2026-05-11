@@ -617,6 +617,9 @@ function New-DoctorInstance {
                 Write-Host '  OK - pick a different name.' -ForegroundColor DarkGray
                 continue
             }
+            # Acknowledge the open so the user sees confirmation between
+            # [Y/n] and "Ready to launch." Mirrors setup.sh.
+            Write-Host '  OK - opening existing instance.' -ForegroundColor DarkGray
         }
         break
     }

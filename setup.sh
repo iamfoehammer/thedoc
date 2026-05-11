@@ -980,6 +980,11 @@ while true; do
             echo -e "  ${DIM}OK - pick a different name.${RESET}"
             continue
         fi
+        # Acknowledge the open so the user sees confirmation between
+        # their [Y/n] answer and "Ready to launch." Without this the
+        # gap looks abrupt and the user can't tell whether their Y
+        # registered. Matches iter 85's engine-fallback acknowledgment.
+        echo -e "  ${DIM}OK - opening existing instance.${RESET}"
     fi
     break
 done

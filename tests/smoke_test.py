@@ -713,7 +713,10 @@ def main():
         ('engine-fallback-decline', dict(steps=ENGINE_FALLBACK_DECLINE_STEPS,
                                          assertions=engine_decline_assertions)),
         ('open-existing',     dict(steps=OPEN_EXISTING_STEPS,
-                                   pre_setup=pre_create_instance)),
+                                   pre_setup=pre_create_instance,
+                                   assertions=name_validation_assertions(
+                                       'already exists as a doctor instance',
+                                       'OK - opening existing instance'))),
         ('open-existing-decline', dict(steps=OPEN_EXISTING_DECLINE_STEPS,
                                        pre_setup=pre_create_instance,
                                        assertions=name_validation_assertions(
