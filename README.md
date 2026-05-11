@@ -255,7 +255,9 @@ thedoc/                          # The framework (this repo)
     openclaw/DOCTOR.md           # OpenClaw doctor brain
     gemini/DOCTOR.md             # Stub
   engines/
-    claude-code.sh               # Launches Claude Code
+    claude-code.{sh,ps1}         # Launches Claude Code (cross-platform)
+    openclaw.{sh,ps1}            # Stub
+    gemini.{sh,ps1}              # Stub
   common/
     templates/                   # Config templates
     skills/                      # Reusable skills
