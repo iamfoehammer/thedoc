@@ -61,7 +61,7 @@ function Invoke-Help {
     Write-Host "    thedoc open     Open an existing instance: thedoc open <name>"
     Write-Host "    thedoc test     Parse-check .ps1 + run wrapper tests (mirrors CI)"
     Write-Host "    thedoc version  Show framework version (git commit)"
-    Write-Host "    thedoc update   git pull the framework to latest"
+    Write-Host "    thedoc update   Pull the latest framework (git pull --ff-only)"
     Write-Host "    thedoc help     Show this help"
     Write-Host ""
 }

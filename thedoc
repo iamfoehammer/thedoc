@@ -219,7 +219,7 @@ case "${1:-setup}" in
         echo "    thedoc open     Open an existing instance: thedoc open <name>"
         echo "    thedoc test     Run the wrapper + setup.sh test suites (mirrors CI)"
         echo "    thedoc version  Show framework version (git commit)"
-        echo "    thedoc update   git pull the framework to latest"
+        echo "    thedoc update   Pull the latest framework (git pull --ff-only)"
         echo "    thedoc help     Show this help"
         echo ""
         ;;

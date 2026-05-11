@@ -38,7 +38,7 @@ For most users the friendlier entry point is the 'thedoc' wrapper:
   thedoc list       list existing doctor instances
   thedoc open NAME  open an existing instance directly
   thedoc test       run the wrapper + setup.sh test suites (mirrors CI)
-  thedoc update     git pull the framework to latest
+  thedoc update     pull the latest framework (git pull --ff-only)
   thedoc help       show wrapper help
 EOF
         exit 0

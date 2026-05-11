@@ -97,7 +97,7 @@ thedoc list         # List existing doctor instances
 thedoc open <name>  # Open an existing instance directly
 thedoc test         # Run wrapper + smoke test suites (mirrors CI)
 thedoc version      # Show framework version (git commit)
-thedoc update       # git pull the framework to latest
+thedoc update       # pull the latest framework (git pull --ff-only)
 thedoc help         # Show help
 ```
 
