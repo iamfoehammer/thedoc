@@ -954,7 +954,10 @@ echo ""
 # folder. Re-prompt on bad input rather than aborting.
 default_instance="${doctor_slug}-doctor"
 echo -e "  ${BOLD}Name for your doctor instance folder?${RESET}"
-echo -e "  ${DIM}This will be created in $(short_path "$PROJECTS_DIR")/. Press Enter for default.${RESET}"
+# Drop the inline path here - the structure-explainer two screens up
+# already showed it on its own indented line. Inlining $(short_path) blew
+# past 80 cols on long typed paths and the terminal wrapped mid-word.
+echo -e "  ${DIM}Press Enter for default.${RESET}"
 while true; do
     echo ""
     # IFS= prevents 'read' from stripping leading/trailing whitespace, which

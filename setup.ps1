@@ -588,7 +588,10 @@ function New-DoctorInstance {
 
     $defaultInstance = "$DoctorSlug-doctor"
     Write-Host "  Name for your doctor instance folder?"
-    Write-Host "  This will be created in $(Get-ShortPath $ProjectsDir)/. Press Enter for default." -ForegroundColor DarkGray
+    # Drop the inline path here (mirrors setup.sh): the structure-
+    # explainer already showed it on its own indented line, and inlining
+    # blew past 80 cols on long typed paths.
+    Write-Host '  Press Enter for default.' -ForegroundColor DarkGray
 
     while ($true) {
         Write-Host ''
