@@ -83,6 +83,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `coming-soon` | Stub doctor type (Gemini) → "templates are coming soon" early exit | `5a93d35` |
 | `typed-path` | Custom projects-folder path, target already exists | baseline |
 | `typed-path-create` | Custom projects-folder path, target doesn't exist → mkdir branch | baseline |
+| `typed-path-decline` | Typed path doesn't exist, user declines "Create it?", re-prompts and accepts a different existing path | iter 42 |
 | `typed-path-relative` | Relative path (`.`) rejected with "Path must be absolute"; absolute path then accepted | iter 59 |
 | `full-mode` | Setup mode 2 (Full audit) reaches `Ready to launch.` | baseline |
 

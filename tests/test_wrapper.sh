@@ -241,6 +241,24 @@ _assert_exit_code   "thedoc test (no tests/ dir): exit non-zero" 1 "$rc"
 _assert_contains    "thedoc test (no tests/ dir): explains why"  "Tests not found" "$out"
 
 echo ""
+
+# 11. tests/README.md scenario table stays in sync with smoke_test.py.
+# Catches the kind of doc drift where someone adds a scenario but
+# forgets to row it in the README - found iter 111 (typed-path-decline
+# was missing).
+_readme_count=$(grep -cE '^\| `[a-z-]+` \|' "$REPO_ROOT/tests/README.md")
+_code_count=$(python3 "$REPO_ROOT/tests/smoke_test.py" --list 2>/dev/null | wc -l | tr -d ' ')
+if [ "$_readme_count" -eq "$_code_count" ]; then
+    echo -e "  ${GREEN}PASS${RESET}: tests/README.md scenario table matches smoke_test.py ($_code_count rows)"
+else
+    echo -e "  ${RED}FAIL${RESET}: tests/README.md has $_readme_count scenario rows, smoke_test.py has $_code_count"
+    echo "        Diff between sets:"
+    diff <(python3 "$REPO_ROOT/tests/smoke_test.py" --list | sort) \
+         <(grep -E '^\| `[a-z-]+`' "$REPO_ROOT/tests/README.md" | awk -F'`' '{print $2}' | sort) | sed 's/^/          /'
+    failures=$((failures + 1))
+fi
+
+echo ""
 echo "============================================================"
 if [ "$failures" -eq 0 ]; then
     echo -e "  overall: ${GREEN}PASS${RESET}"
