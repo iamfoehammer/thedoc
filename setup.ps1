@@ -653,7 +653,13 @@ function New-DoctorInstance {
                     elseif ($IsLinux)                            { 'linux' }
                     else                                         { 'unknown' }
 
-        $created = (Get-Date).ToString('o')
+        # UTC Zulu format to match bash setup.sh's
+        # `date -u +"%Y-%m-%dT%H:%M:%SZ"` exactly. Both 'thedoc list'
+        # parsers strip at first T anyway, but writing the same format
+        # keeps CLAUDE.md files diffable across ports and prevents a
+        # future stricter parser from being confused by .NET's
+        # round-trip 'o' format (trailing fractional seconds + offset).
+        $created = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
         $claudeMd = @"
 # $DoctorName Doctor
 
@@ -670,8 +676,10 @@ Everything below is this instance's personal configuration.
 
 ## System
 
+- **OS:** $($PSVersionTable.OS)
 - **Platform:** $platform
 - **Shell:** PowerShell $($PSVersionTable.PSVersion)
+- **WSL:** no
 - **Home:** $HOME
 - **Projects dir:** $ProjectsDir
 
