@@ -116,7 +116,7 @@ _assert_contains    "thedoc open <missing>: tells user it's missing" "Not a doct
 # (no `git pull` attempted). Copy the wrapper to a scratch dir so SCRIPT_DIR
 # resolves there and skips the .git probe with the framed error.
 _scratch="$(mktemp -d)"
-trap 'rm -rf "$_scratch"' EXIT
+trap 'rm -rf "$_scratch" "$_scratch_dirty"' EXIT
 cp "$THEDOC" "$_scratch/thedoc"
 set +e
 out=$("$_scratch/thedoc" update 2>&1)
@@ -124,6 +124,28 @@ rc=$?
 set -e
 _assert_exit_code   "thedoc update (non-git dir): exit non-zero" 1 "$rc"
 _assert_contains    "thedoc update (non-git dir): explains why"  "not a git checkout" "$out"
+
+# 8. `thedoc update` with a dirty working tree bails BEFORE attempting
+# git pull. Scaffolds a git repo with one commit, then modifies a tracked
+# file, then runs update. Guards iter 58's friendly-preflight branch.
+_scratch_dirty="$(mktemp -d)"
+(
+    cd "$_scratch_dirty"
+    git init -q
+    git -c user.email=t@t -c user.name=T config user.email t@t
+    git -c user.email=t@t -c user.name=T config user.name T
+    echo "original" > tracked-file
+    git add tracked-file
+    git -c user.email=t@t -c user.name=T commit -qm init
+    echo "modified" >> tracked-file
+)
+cp "$THEDOC" "$_scratch_dirty/thedoc"
+set +e
+out=$("$_scratch_dirty/thedoc" update 2>&1)
+rc=$?
+set -e
+_assert_exit_code   "thedoc update (dirty tree): exit non-zero" 1 "$rc"
+_assert_contains    "thedoc update (dirty tree): explains why"  "Local changes detected" "$out"
 
 echo ""
 echo "============================================================"

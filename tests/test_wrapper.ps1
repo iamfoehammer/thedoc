@@ -141,6 +141,32 @@ try {
     Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# 8. `thedoc update` with a dirty working tree bails BEFORE attempting
+# git pull. Scaffolds a git repo with one commit + a tracked-file edit,
+# then runs update. Guards the iter 58 preflight branch on the PS side.
+$scratchDirty = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-wrapper-dirty-$([guid]::NewGuid())"
+New-Item -ItemType Directory -Path $scratchDirty -Force | Out-Null
+try {
+    Push-Location $scratchDirty
+    git init -q
+    git config user.email 't@t' | Out-Null
+    git config user.name  'T'   | Out-Null
+    Set-Content -LiteralPath 'tracked-file' -Value 'original'
+    git add tracked-file
+    git commit -qm init
+    Add-Content -LiteralPath 'tracked-file' -Value 'modified'
+    Pop-Location
+
+    Copy-Item -LiteralPath $TheDoc -Destination (Join-Path $scratchDirty 'thedoc.ps1')
+    $scratchTheDoc = Join-Path $scratchDirty 'thedoc.ps1'
+    $output = & $scratchTheDoc update 2>&1 | Out-String
+    $rc = $LASTEXITCODE
+    Assert-ExitCode  'thedoc update (dirty tree): exit non-zero' 1 $rc
+    Assert-Contains  'thedoc update (dirty tree): explains why'  'Local changes detected' $output
+} finally {
+    Remove-Item -LiteralPath $scratchDirty -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 Write-Host ''
 Write-Host '============================================================'
 if ($failures -eq 0) {
