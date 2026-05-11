@@ -59,6 +59,7 @@ _assert_exit_code   "thedoc help: exit 0"     0 "$rc"
 _assert_contains    "thedoc help: shows 'Commands:'"  "Commands:"     "$out"
 _assert_contains    "thedoc help: lists 'thedoc setup'" "thedoc setup" "$out"
 _assert_contains    "thedoc help: lists 'thedoc test'"  "thedoc test"  "$out"
+_assert_contains    "thedoc help: lists 'thedoc version'" "thedoc version" "$out"
 _assert_contains    "thedoc help: lists 'thedoc update'" "thedoc update" "$out"
 
 # 1b. `thedoc version` shows framework dir + git info

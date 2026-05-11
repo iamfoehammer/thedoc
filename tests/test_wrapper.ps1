@@ -65,9 +65,10 @@ Write-Host "============================================================"
 $r = Invoke-TheDoc help
 Assert-ExitCode  'thedoc help: exit 0'                0 $r.ExitCode
 Assert-Contains  "thedoc help: shows 'Commands:'"     'Commands:'     $r.Output
-Assert-Contains  "thedoc help: lists 'thedoc setup'"  'thedoc setup'  $r.Output
-Assert-Contains  "thedoc help: lists 'thedoc test'"   'thedoc test'   $r.Output
-Assert-Contains  "thedoc help: lists 'thedoc update'" 'thedoc update' $r.Output
+Assert-Contains  "thedoc help: lists 'thedoc setup'"    'thedoc setup'    $r.Output
+Assert-Contains  "thedoc help: lists 'thedoc test'"     'thedoc test'     $r.Output
+Assert-Contains  "thedoc help: lists 'thedoc version'"  'thedoc version'  $r.Output
+Assert-Contains  "thedoc help: lists 'thedoc update'"   'thedoc update'   $r.Output
 
 # 1b. `thedoc version` shows framework dir + git info.
 $r = Invoke-TheDoc version
