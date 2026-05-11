@@ -111,6 +111,16 @@ else
 fi
 rm -rf "$_list_state" "$_list_proj"
 
+# 4c. `thedoc list` warns when state's projects_dir is gone. Pre-iter-102
+# the fallback to dirname-of-script was silent, so the user got
+# "(none found)" with no clue why.
+_stale_state="$(mktemp -d)"
+mkdir -p "$_stale_state/thedoc"
+printf 'projects_dir=/nonexistent/never/existed-%s\n' "$$" > "$_stale_state/thedoc/state"
+out=$(XDG_STATE_HOME="$_stale_state" "$THEDOC" list 2>&1)
+_assert_contains    "thedoc list (stale state): warns about missing projects_dir" "state's projects_dir is missing" "$out"
+rm -rf "$_stale_state"
+
 # 5. `thedoc open` with no arg fails with usage hint
 set +e
 out=$("$THEDOC" open 2>&1)

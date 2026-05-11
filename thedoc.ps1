@@ -34,14 +34,22 @@ $stateFile = if ($env:XDG_STATE_HOME) {
     Join-Path $HOME '.local/state/thedoc/state'
 }
 $GithubDir = $null
+$stateProjects = $null
 if (Test-Path -LiteralPath $stateFile -PathType Leaf) {
     $line = (Select-String -LiteralPath $stateFile -Pattern '^projects_dir=' -SimpleMatch:$false |
              Select-Object -First 1).Line
-    if ($line) { $GithubDir = $line -replace '^projects_dir=', '' }
+    if ($line) {
+        $stateProjects = $line -replace '^projects_dir=', ''
+        $GithubDir = $stateProjects
+    }
 }
 if (-not $GithubDir -or -not (Test-Path -LiteralPath $GithubDir -PathType Container)) {
     $GithubDir = Split-Path -Parent $ScriptDir
 }
+# Track whether state's projects_dir is stale (existed but missing now)
+# so `list` can warn instead of silently showing nothing. Avoids the
+# "where did all my instances go?" confusion.
+$StateStale = ($stateProjects -and -not (Test-Path -LiteralPath $stateProjects -PathType Container))
 
 function Invoke-Help {
     Write-Host ""
@@ -153,6 +161,11 @@ switch ($Command) {
 
     'list' {
         Write-Host ""
+        if ($StateStale) {
+            Write-Host "  Note: state's projects_dir is missing; falling back to $GithubDir/"
+            Write-Host "  (run 'thedoc setup' to point state at the right place)"
+            Write-Host ""
+        }
         Write-Host "  Doctor instances in $GithubDir/:"
         Write-Host ""
         $found = $false

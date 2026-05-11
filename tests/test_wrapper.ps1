@@ -129,6 +129,19 @@ try {
     Remove-Item -LiteralPath $listProj  -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+$staleState = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-stale-state-$([guid]::NewGuid())"
+New-Item -ItemType Directory -Path (Join-Path $staleState 'thedoc') -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $staleState 'thedoc/state') -Value "projects_dir=/nonexistent/never/existed-$PID"
+try {
+    $prevXdg = $env:XDG_STATE_HOME
+    $env:XDG_STATE_HOME = $staleState
+    $r = Invoke-TheDoc list
+    Assert-Contains  'thedoc list (stale state): warns about missing projects_dir' "state's projects_dir is missing" $r.Output
+} finally {
+    $env:XDG_STATE_HOME = $prevXdg
+    Remove-Item -LiteralPath $staleState -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # 5. `thedoc open` with no arg fails with usage hint.
 $r = Invoke-TheDoc open
 Assert-ExitCode  'thedoc open (no arg): exit non-zero' 1 $r.ExitCode
