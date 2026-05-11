@@ -241,20 +241,24 @@ switch ($Command) {
     { $_ -in 'version', '--version', '-V' } {
         # Useful for bug reports / "what version are you on?" questions.
         # Show git describe (or fallback) so the user has something
-        # reproducible to share.
+        # reproducible to share. Distinguishes "not a git checkout"
+        # from "git missing from PATH" - the latter is a recoverable
+        # install problem, not a framework-shape issue.
+        $isGitDir = Test-Path -LiteralPath (Join-Path $ScriptDir '.git')
+        $hasGit   = [bool](Get-Command git -ErrorAction SilentlyContinue)
         Write-Host ''
         Write-Host '  thedoc - Emergency Medical Hologram framework'
-        if ((Test-Path -LiteralPath (Join-Path $ScriptDir '.git')) -and
-            (Get-Command git -ErrorAction SilentlyContinue)) {
+        Write-Host "  Framework dir: $ScriptDir"
+        if ($isGitDir -and $hasGit) {
             $ver    = (git -C $ScriptDir describe --always --dirty 2>$null) -join ''
             if (-not $ver) { $ver = 'unknown' }
             $branch = (git -C $ScriptDir rev-parse --abbrev-ref HEAD 2>$null) -join ''
             if (-not $branch) { $branch = 'unknown' }
-            Write-Host "  Framework dir: $ScriptDir"
             Write-Host "  Branch:        $branch"
             Write-Host "  Commit:        $ver"
+        } elseif ($isGitDir -and -not $hasGit) {
+            Write-Host '  Commit:        (git binary not on PATH - install git to see)'
         } else {
-            Write-Host "  Framework dir: $ScriptDir"
             Write-Host '  Commit:        (not a git checkout)'
         }
         Write-Host ''

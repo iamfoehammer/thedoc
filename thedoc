@@ -189,16 +189,19 @@ case "${1:-setup}" in
         # Useful for bug reports / "what version are you on?" questions.
         # No semver here yet; show git describe (or fallback to short
         # commit sha) so the user has SOMETHING reproducible to share.
+        # Distinguish "not a git checkout" from "git missing from PATH"
+        # so the user knows which problem they have.
         echo ""
         echo "  thedoc - Emergency Medical Hologram framework"
+        echo "  Framework dir: $SCRIPT_DIR"
         if [ -d "$SCRIPT_DIR/.git" ] && command -v git >/dev/null 2>&1; then
             _ver=$(git -C "$SCRIPT_DIR" describe --always --dirty 2>/dev/null || echo unknown)
             _branch=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
-            echo "  Framework dir: $SCRIPT_DIR"
             echo "  Branch:        $_branch"
             echo "  Commit:        $_ver"
+        elif [ -d "$SCRIPT_DIR/.git" ]; then
+            echo "  Commit:        (git binary not on PATH - install git to see)"
         else
-            echo "  Framework dir: $SCRIPT_DIR"
             echo "  Commit:        (not a git checkout)"
         fi
         echo ""
