@@ -73,6 +73,11 @@ _assert_contains    "thedoc --version: same as version" "Framework dir" "$out"
 out=$("$THEDOC" -V 2>&1)
 _assert_contains    "thedoc -V: same as version"        "Framework dir" "$out"
 
+# 1d. `thedoc setup --help` forwards to setup.sh --help (iter 120).
+# Without forwarding the user would get the wizard, not the help text.
+out=$("$THEDOC" setup --help 2>&1)
+_assert_contains    "thedoc setup --help: shows setup.sh help" "thedoc setup wizard" "$out"
+
 # 2. `thedoc --help` and `thedoc -h` are aliases for help
 out=$("$THEDOC" --help 2>&1)
 _assert_contains    "thedoc --help: same as help"  "Commands:"  "$out"

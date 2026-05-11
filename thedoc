@@ -38,7 +38,10 @@ unset _state_file _state_projects
 
 case "${1:-setup}" in
     setup)
-        exec "$SCRIPT_DIR/setup.sh"
+        # Forward extra args so 'thedoc setup --help' shows setup.sh's
+        # detailed help (more comprehensive than `thedoc help` which only
+        # lists wrapper subcommands). Iter 118 did the same for test.
+        exec "$SCRIPT_DIR/setup.sh" "${@:2}"
         ;;
     test)
         # Run the framework's full test suite: wrapper tests (fast, non-PTY)

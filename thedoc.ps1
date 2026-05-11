@@ -68,7 +68,13 @@ function Invoke-Help {
 
 switch ($Command) {
     { $_ -in 'setup', '' } {
-        & (Join-Path $ScriptDir 'setup.ps1')
+        # Forward extra args so 'thedoc setup --help' shows setup.ps1's
+        # detailed help (mirrors the bash setup branch). $Arg1 is the
+        # positional that caught the next token; $args has anything past.
+        $forward = @()
+        if ($Arg1) { $forward += $Arg1 }
+        if ($args) { $forward += $args }
+        & (Join-Path $ScriptDir 'setup.ps1') @forward
         exit $LASTEXITCODE
     }
 
