@@ -83,6 +83,38 @@ Assert-ExitCode  'thedoc bogus-command: exit non-zero' 1 $r.ExitCode
 $r = Invoke-TheDoc list
 Assert-ExitCode  'thedoc list: exit 0' 0 $r.ExitCode
 
+# 4b. `thedoc list` finds an instance via the state file. Mirrors the
+# bash test - writes a fake state file pointing at a synthetic projects
+# dir with one valid instance, asserts the instance name appears in the
+# output. Catches regressions in state-file path / format (iter 73
+# unified PS and bash here).
+$listState = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-list-state-$([guid]::NewGuid())"
+$listProj  = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-list-proj-$([guid]::NewGuid())"
+$instance  = Join-Path $listProj 'fake-doctor-instance'
+New-Item -ItemType Directory -Path $instance -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $instance 'DOCTOR.md') -Value '# Pretend Doctor'
+Set-Content -LiteralPath (Join-Path $instance 'CLAUDE.md') -Value @(
+    '- **Doctor type:** Pretend'
+    '- **Created:** 2026-05-10T00:00:00Z'
+)
+New-Item -ItemType Directory -Path (Join-Path $listState 'thedoc') -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $listState 'thedoc/state') -Value @(
+    'first_run=2026-05-10T00:00:00Z'
+    "projects_dir=$listProj"
+    'platform=windows'
+)
+try {
+    $prevXdg = $env:XDG_STATE_HOME
+    $env:XDG_STATE_HOME = $listState
+    $r = Invoke-TheDoc list
+    Assert-Contains  'thedoc list: shows instance from state-pointed dir' 'fake-doctor-instance' $r.Output
+    Assert-Contains  'thedoc list: shows doctor type from CLAUDE.md'      'Pretend'              $r.Output
+} finally {
+    $env:XDG_STATE_HOME = $prevXdg
+    Remove-Item -LiteralPath $listState -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $listProj  -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # 5. `thedoc open` with no arg fails with usage hint.
 $r = Invoke-TheDoc open
 Assert-ExitCode  'thedoc open (no arg): exit non-zero' 1 $r.ExitCode

@@ -79,6 +79,23 @@ _assert_exit_code   "thedoc bogus-command: exit non-zero"  1  "$rc"
 rc=$?
 _assert_exit_code   "thedoc list: exit 0" 0 "$rc"
 
+# 4b. `thedoc list` finds an instance via state file. Writes a fake state
+# file pointing at a synthetic projects dir with one valid instance, then
+# asserts the instance name appears in the output. Catches regressions in
+# state-file parsing or path resolution.
+_list_state="$(mktemp -d)"
+_list_proj="$(mktemp -d)"
+mkdir -p "$_list_proj/fake-doctor-instance"
+echo '# Pretend Doctor' > "$_list_proj/fake-doctor-instance/DOCTOR.md"
+echo '- **Doctor type:** Pretend' > "$_list_proj/fake-doctor-instance/CLAUDE.md"
+echo '- **Created:** 2026-05-10T00:00:00Z' >> "$_list_proj/fake-doctor-instance/CLAUDE.md"
+mkdir -p "$_list_state/thedoc"
+printf 'first_run=2026-05-10T00:00:00Z\nprojects_dir=%s\nplatform=linux\n' "$_list_proj" > "$_list_state/thedoc/state"
+out=$(XDG_STATE_HOME="$_list_state" "$THEDOC" list 2>&1)
+_assert_contains    "thedoc list: shows instance from state-pointed dir" "fake-doctor-instance" "$out"
+_assert_contains    "thedoc list: shows doctor type from CLAUDE.md" "Pretend" "$out"
+rm -rf "$_list_state" "$_list_proj"
+
 # 5. `thedoc open` with no arg fails with usage hint
 set +e
 out=$("$THEDOC" open 2>&1)
