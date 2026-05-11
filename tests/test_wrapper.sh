@@ -187,6 +187,8 @@ rc=$?
 set -e
 _assert_exit_code   "thedoc open (no arg): exit non-zero" 1 "$rc"
 _assert_contains    "thedoc open (no arg): suggests usage" "Usage" "$out"
+# iter 149: indent matches the rest of the wrapper's error output
+_assert_contains    "thedoc open (no arg): indented usage line" "  Usage: thedoc open" "$out"
 
 # 6. `thedoc open NONEXISTENT` fails with friendly error
 set +e
@@ -195,6 +197,8 @@ rc=$?
 set -e
 _assert_exit_code   "thedoc open <missing>: exit non-zero" 1 "$rc"
 _assert_contains    "thedoc open <missing>: tells user it's missing" "Not a doctor instance" "$out"
+# iter 149: indented to match the rest of the wrapper's error format
+_assert_contains    "thedoc open <missing>: indented error" "  Not a doctor instance:" "$out"
 
 # 6c. `thedoc open <missing>` with stale state also tells the user the
 # state is stale (so they realize their instance might still exist at

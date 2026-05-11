@@ -226,20 +226,24 @@ switch ($Command) {
 
     'open' {
         if (-not $Arg1) {
-            Write-Host "Usage: thedoc open <instance-name>"
-            Write-Host "Run 'thedoc list' to see available instances."
+            Write-Host ''
+            Write-Host '  Usage: thedoc open <instance-name>'
+            Write-Host "  Run 'thedoc list' to see available instances."
+            Write-Host ''
             exit 1
         }
         $instanceDir = Join-Path $GithubDir $Arg1
         $doctorMd = Join-Path $instanceDir 'DOCTOR.md'
         if (-not (Test-Path -LiteralPath $instanceDir -PathType Container) -or
             -not (Test-Path -LiteralPath $doctorMd -PathType Leaf)) {
-            Write-Host "Not a doctor instance: $instanceDir"
+            Write-Host ''
+            Write-Host "  Not a doctor instance: $instanceDir"
             if ($StateStale) {
-                Write-Host "(state's projects_dir is missing; using fallback $GithubDir/."
-                Write-Host " your instance may live at the old location instead.)"
+                Write-Host "  (state's projects_dir is missing; using fallback $GithubDir/."
+                Write-Host '   your instance may live at the old location instead.)'
             }
-            Write-Host "Run 'thedoc list' to see available instances."
+            Write-Host "  Run 'thedoc list' to see available instances."
+            Write-Host ''
             exit 1
         }
         if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {

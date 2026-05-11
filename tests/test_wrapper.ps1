@@ -184,11 +184,15 @@ try {
 $r = Invoke-TheDoc open
 Assert-ExitCode  'thedoc open (no arg): exit non-zero' 1 $r.ExitCode
 Assert-Contains  'thedoc open (no arg): suggests usage' 'Usage' $r.Output
+# iter 149: indent matches the rest of the wrapper's error output
+Assert-Contains  'thedoc open (no arg): indented usage line' '  Usage: thedoc open' $r.Output
 
 # 6. `thedoc open NONEXISTENT` fails with friendly error.
 $r = Invoke-TheDoc open this-instance-does-not-exist-anywhere-zzz
 Assert-ExitCode  'thedoc open <missing>: exit non-zero' 1 $r.ExitCode
 Assert-Contains  "thedoc open <missing>: tells user it's missing" 'Not a doctor instance' $r.Output
+# iter 149: indented to match the rest of the wrapper's error format
+Assert-Contains  'thedoc open <missing>: indented error' '  Not a doctor instance:' $r.Output
 
 # 6c. `thedoc open <missing>` with stale state mentions the stale state.
 $staleOpenState = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-stale-open-state-$([guid]::NewGuid())"

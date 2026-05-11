@@ -173,18 +173,22 @@ case "${1:-setup}" in
     open)
         instance="${2:-}"
         if [ -z "$instance" ]; then
-            echo "Usage: thedoc open <instance-name>"
-            echo "Run 'thedoc list' to see available instances."
+            echo ""
+            echo "  Usage: thedoc open <instance-name>"
+            echo "  Run 'thedoc list' to see available instances."
+            echo ""
             exit 1
         fi
         instance_dir="$GITHUB_DIR/$instance"
         if [ ! -d "$instance_dir" ] || [ ! -f "$instance_dir/DOCTOR.md" ]; then
-            echo "Not a doctor instance: $instance_dir"
+            echo ""
+            echo "  Not a doctor instance: $instance_dir"
             if [ "$_state_stale" = "yes" ]; then
-                echo "(state's projects_dir is missing; using fallback $GITHUB_DIR/."
-                echo " your instance may live at the old location instead.)"
+                echo "  (state's projects_dir is missing; using fallback $GITHUB_DIR/."
+                echo "   your instance may live at the old location instead.)"
             fi
-            echo "Run 'thedoc list' to see available instances."
+            echo "  Run 'thedoc list' to see available instances."
+            echo ""
             exit 1
         fi
         # Pass a re-entry prompt so the doctor picks up its role from
