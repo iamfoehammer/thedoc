@@ -136,7 +136,7 @@ $ thedoc
 Running setup creates a new **instance folder** in your projects directory:
 
 ```
-~/GitHub/claude-doctor/        # Your doctor instance
+~/GitHub/claude-code-doctor/   # Your doctor instance (default name)
   CLAUDE.md                    # Personal config (your OS, known issues, etc.)
   DOCTOR.md                    # Shared brain (diagnostic logic, personality)
   .framework-updates           # Link to thedoc framework for updates
@@ -260,7 +260,7 @@ thedoc/                          # The framework (this repo)
     templates/                   # Config templates
     skills/                      # Reusable skills
 
-~/GitHub/claude-doctor/          # An instance (created by setup)
+~/GitHub/claude-code-doctor/     # An instance (created by setup)
 ~/GitHub/openclaw-doctor/        # Another instance
 ```
 
