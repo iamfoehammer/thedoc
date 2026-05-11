@@ -111,6 +111,30 @@ else
 fi
 rm -rf "$_list_state" "$_list_proj"
 
+# 4d. `thedoc list` handles CRLF-format state files. PS Save-State on
+# Windows can write CRLF line endings; bash `sed -n s/^projects_dir=//p`
+# captures the trailing \r in the value, breaking [ -d ] - state's
+# projects_dir would silently look invalid even when valid. Iter 108
+# added the %$'\r' strip; this test pins it.
+_crlf_state="$(mktemp -d)"
+_crlf_proj="$(mktemp -d)"
+mkdir -p "$_crlf_proj/crlf-test-instance"
+echo '# Pretend Doctor' > "$_crlf_proj/crlf-test-instance/DOCTOR.md"
+printf -- '- **Doctor type:** CrlfTest\r\n- **Created:** 2026-05-11T00:00:00Z\r\n' > "$_crlf_proj/crlf-test-instance/CLAUDE.md"
+mkdir -p "$_crlf_state/thedoc"
+# Deliberately CRLF line endings:
+printf 'first_run=2026-05-11T00:00:00Z\r\nprojects_dir=%s\r\nplatform=windows\r\n' "$_crlf_proj" > "$_crlf_state/thedoc/state"
+out=$(XDG_STATE_HOME="$_crlf_state" "$THEDOC" list 2>&1)
+_assert_contains    "thedoc list (CRLF state): finds instance" "crlf-test-instance" "$out"
+# Negative: stale-state warning must NOT appear (would mean we mis-read the path)
+if echo "$out" | grep -qF "state's projects_dir is missing"; then
+    echo -e "  ${RED}FAIL${RESET}: thedoc list (CRLF state): false-positive stale warning (CR not stripped)"
+    failures=$((failures + 1))
+else
+    echo -e "  ${GREEN}PASS${RESET}: thedoc list (CRLF state): no false stale warning"
+fi
+rm -rf "$_crlf_state" "$_crlf_proj"
+
 # 4c. `thedoc list` warns when state's projects_dir is gone. Pre-iter-102
 # the fallback to dirname-of-script was silent, so the user got
 # "(none found)" with no clue why.

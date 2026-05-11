@@ -153,6 +153,13 @@ load_state() {
         FIRST_RUN_DATE=$(sed -n 's/^first_run=//p' "$STATE_FILE" 2>/dev/null || echo "")
         PROJECTS_DIR=$(sed -n 's/^projects_dir=//p' "$STATE_FILE" 2>/dev/null || echo "")
         PLATFORM=$(sed -n 's/^platform=//p' "$STATE_FILE" 2>/dev/null || echo "")
+        # Strip trailing CR. PS Save-State on Windows may write CRLF; sed
+        # preserves the \r in the captured value, which breaks [ -d ] tests
+        # on what looks like a valid path. iter 108: don't trust the LF
+        # contract across ports.
+        FIRST_RUN_DATE="${FIRST_RUN_DATE%$'\r'}"
+        PROJECTS_DIR="${PROJECTS_DIR%$'\r'}"
+        PLATFORM="${PLATFORM%$'\r'}"
     fi
 }
 

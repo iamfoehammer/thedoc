@@ -19,6 +19,9 @@ GITHUB_DIR=""
 _state_projects=""
 if [ -f "$_state_file" ]; then
     _state_projects=$(sed -n 's/^projects_dir=//p' "$_state_file" 2>/dev/null || true)
+    # Strip trailing CR in case state was written by PS on Windows (CRLF);
+    # sed otherwise preserves the \r and the [ -d ] check below fails.
+    _state_projects="${_state_projects%$'\r'}"
     GITHUB_DIR="$_state_projects"
 fi
 if [ -z "$GITHUB_DIR" ] || [ ! -d "$GITHUB_DIR" ]; then
