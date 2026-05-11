@@ -706,7 +706,10 @@ def main():
         ('empty-name',        dict(steps=EMPTY_NAME_STEPS,
                                    assertions=name_validation_assertions(
                                        "Name can't be empty or whitespace"))),
-        ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS)),
+        ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS,
+                                   assertions=name_validation_assertions(
+                                       'OpenClaw engine support is coming soon',
+                                       'OK - using Claude Code instead'))),
         ('engine-fallback-decline', dict(steps=ENGINE_FALLBACK_DECLINE_STEPS,
                                          assertions=engine_decline_assertions)),
         ('open-existing',     dict(steps=OPEN_EXISTING_STEPS,
@@ -728,9 +731,13 @@ def main():
         ('typed-path-create',   dict(steps=TYPED_PATH_CREATE_STEPS,
                                      pre_setup=pre_typed_path_create)),
         ('typed-path-decline',  dict(steps=TYPED_PATH_DECLINE_STEPS,
-                                     pre_setup=pre_typed_path_decline)),
+                                     pre_setup=pre_typed_path_decline,
+                                     assertions=name_validation_assertions(
+                                         "That folder doesn't exist. Create it?"))),
         ('typed-path-relative', dict(steps=TYPED_PATH_RELATIVE_STEPS,
-                                     pre_setup=pre_typed_path)),
+                                     pre_setup=pre_typed_path,
+                                     assertions=name_validation_assertions(
+                                         'Path must be absolute'))),
         ('full-mode',         dict(steps=_full_mode_steps())),
     ]
 
