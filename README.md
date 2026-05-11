@@ -55,12 +55,13 @@ git clone https://github.com/iamfoehammer/thedoc.git $HOME\GitHub\thedoc
 $env:PATH = "$HOME\GitHub\thedoc;$env:PATH"
 # Persist across sessions:
 [Environment]::SetEnvironmentVariable('PATH', "$HOME\GitHub\thedoc;$([Environment]::GetEnvironmentVariable('PATH', 'User'))", 'User')
-.\thedoc.ps1
+thedoc
 ```
 
-> PowerShell does not resolve `thedoc` → `thedoc.ps1` automatically (unlike
-> bash, which finds extensionless scripts on PATH). Run `thedoc.ps1 list`
-> or set up an alias. A `thedoc.cmd` shim is on the roadmap.
+> A `thedoc.cmd` shim ships next to `thedoc.ps1` so the bare command
+> `thedoc` works from cmd.exe and PowerShell (PATHEXT doesn't include
+> `.PS1` by default on Windows). The shim prefers pwsh and falls back
+> to Windows PowerShell 5.1 if pwsh isn't installed.
 
 ## The Doctor Framework
 
@@ -240,6 +241,7 @@ The framework ships with battle-tested templates in `common/templates/`:
 thedoc/                          # The framework (this repo)
   thedoc                         # Main command (bash)
   thedoc.ps1                     # Main command (PowerShell)
+  thedoc.cmd                     # cmd.exe shim for thedoc.ps1
   setup.sh                       # Interactive setup wizard (bash)
   setup.ps1                      # Interactive setup wizard (PowerShell)
   llm-secrets                    # Secret storage (bash)
