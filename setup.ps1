@@ -888,6 +888,9 @@ if (Test-IsStub (Join-Path $ScriptDir "engines/$engineSlug.ps1")) {
     }
     $engineSlug = 'claude-code'
     $engineName = 'Claude Code'
+    # Acknowledge the swap so the next prompt ("Setup mode?") doesn't
+    # come out of nowhere - mirrors setup.sh's confirmation line.
+    Write-Host '  OK - using Claude Code instead.' -ForegroundColor DarkGray
 }
 
 Write-Host ''

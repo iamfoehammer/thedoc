@@ -913,6 +913,10 @@ if is_stub "$SCRIPT_DIR/engines/${engine_slug}.sh"; then
     fi
     engine_slug="claude-code"
     engine_name="Claude Code"
+    # Acknowledge the swap so the next prompt ("Setup mode?") doesn't
+    # come out of nowhere - the previous flow silently jumped after
+    # the [Y/n] without confirming which engine got selected.
+    echo -e "  ${DIM}OK - using Claude Code instead.${RESET}"
 fi
 
 echo ""
