@@ -464,6 +464,25 @@ def coming_soon_assertions(cleaned, ctx=None):
     return failures
 
 
+def name_validation_assertions(*required_messages):
+    """Builds an assertions function that requires Ready to launch AND
+    each of the given validation messages to appear in cleaned output.
+    Guards iter 87's class of bug: a test that drove "rejection then
+    recovery" steps could silently fall through to the happy-path if the
+    rejection branch was unreachable - the smoke driver would just never
+    match the rejection regex, and default_assertions's "Ready to launch
+    reached" was satisfied by the wizard accepting the default instead.
+
+    Asserting on the rejection text directly closes that loophole."""
+    def _check(cleaned, ctx=None):
+        failures = list(default_assertions(cleaned, ctx))
+        for msg in required_messages:
+            if msg not in cleaned:
+                failures.append(f"Validation message missing: {msg!r}")
+        return failures
+    return _check
+
+
 def engine_decline_assertions(cleaned, ctx=None):
     """User declined the 'Run with Claude Code instead?' fallback - setup
     should print the 'Check back later' line and exit without creating any
@@ -680,17 +699,26 @@ def main():
         ('bootstrap-reinstall', dict(steps=HAPPY_PATH_STEPS,
                                      pre_setup=pre_bootstrap_reinstall,
                                      assertions=bootstrap_reinstall_assertions)),
-        ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS)),
-        ('empty-name',        dict(steps=EMPTY_NAME_STEPS)),
+        ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS,
+                                   assertions=name_validation_assertions(
+                                       "Name can't contain '/'",
+                                       "Name can't start with '.'"))),
+        ('empty-name',        dict(steps=EMPTY_NAME_STEPS,
+                                   assertions=name_validation_assertions(
+                                       "Name can't be empty or whitespace"))),
         ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS)),
         ('engine-fallback-decline', dict(steps=ENGINE_FALLBACK_DECLINE_STEPS,
                                          assertions=engine_decline_assertions)),
         ('open-existing',     dict(steps=OPEN_EXISTING_STEPS,
                                    pre_setup=pre_create_instance)),
         ('open-existing-decline', dict(steps=OPEN_EXISTING_DECLINE_STEPS,
-                                       pre_setup=pre_create_instance)),
+                                       pre_setup=pre_create_instance,
+                                       assertions=name_validation_assertions(
+                                           'OK - pick a different name'))),
         ('non-thedoc-folder', dict(steps=NON_THEDOC_FOLDER_STEPS,
-                                   pre_setup=pre_create_non_thedoc_folder)),
+                                   pre_setup=pre_create_non_thedoc_folder,
+                                   assertions=name_validation_assertions(
+                                       "isn't a thedoc instance"))),
         ('returning-user',    dict(steps=RETURNING_USER_STEPS,
                                    pre_setup=pre_write_state)),
         ('coming-soon',       dict(steps=COMING_SOON_STEPS,
