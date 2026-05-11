@@ -151,6 +151,13 @@ case "${1:-setup}" in
         # DOCTOR.md immediately rather than waiting for the user to ask.
         # Mirrors what engines/claude-code.sh does on first launch, just
         # adapted for "I've worked with you before" continuity.
+        if ! command -v claude >/dev/null 2>&1; then
+            echo ""
+            echo "  Claude Code is not installed or not in PATH."
+            echo "  Install it: npm install -g @anthropic-ai/claude-code"
+            echo ""
+            exit 1
+        fi
         cd "$instance_dir"
         exec claude "Re-entering this doctor instance. Start by reading DOCTOR.md for your role and CLAUDE.md for the personal config of this instance. Then ask what I'd like to work on this session."
         ;;

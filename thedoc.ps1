@@ -204,6 +204,13 @@ switch ($Command) {
             Write-Host "Run 'thedoc list' to see available instances."
             exit 1
         }
+        if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
+            Write-Host ''
+            Write-Host '  Claude Code is not installed or not in PATH.'
+            Write-Host '  Install it: npm install -g @anthropic-ai/claude-code'
+            Write-Host ''
+            exit 1
+        }
         Push-Location $instanceDir
         try {
             $prompt = 'Re-entering this doctor instance. Start by reading DOCTOR.md for your role and CLAUDE.md for the personal config of this instance. Then ask what I''d like to work on this session.'

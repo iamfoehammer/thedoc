@@ -139,6 +139,37 @@ $r = Invoke-TheDoc open this-instance-does-not-exist-anywhere-zzz
 Assert-ExitCode  'thedoc open <missing>: exit non-zero' 1 $r.ExitCode
 Assert-Contains  "thedoc open <missing>: tells user it's missing" 'Not a doctor instance' $r.Output
 
+# 6b. `thedoc open <valid>` when 'claude' is missing from PATH bails
+# with a friendly install hint. Pre-iter-99 the & invocation would
+# surface a "term 'claude' is not recognized" error.
+$noClaudeState = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-noclaude-state-$([guid]::NewGuid())"
+$noClaudeProj  = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-noclaude-proj-$([guid]::NewGuid())"
+$noClaudeInstance = Join-Path $noClaudeProj 'check-instance'
+New-Item -ItemType Directory -Path $noClaudeInstance -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $noClaudeInstance 'DOCTOR.md') -Value '# Pretend Doctor'
+New-Item -ItemType Directory -Path (Join-Path $noClaudeState 'thedoc') -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $noClaudeState 'thedoc/state') -Value "projects_dir=$noClaudeProj"
+try {
+    $prevXdg  = $env:XDG_STATE_HOME
+    $prevPath = $env:PATH
+    $env:XDG_STATE_HOME = $noClaudeState
+    # Strip any directory containing 'claude' from PATH (typical install
+    # locations: ~/.npm-global/bin, /usr/local/bin). The remaining PATH
+    # still lets pwsh find git, sed, etc.
+    $env:PATH = ($env:PATH -split [System.IO.Path]::PathSeparator |
+                 Where-Object { -not (Test-Path -LiteralPath (Join-Path $_ 'claude') -ErrorAction SilentlyContinue) -and
+                                -not (Test-Path -LiteralPath (Join-Path $_ 'claude.exe') -ErrorAction SilentlyContinue) -and
+                                -not (Test-Path -LiteralPath (Join-Path $_ 'claude.cmd') -ErrorAction SilentlyContinue) }) -join [System.IO.Path]::PathSeparator
+    $r = Invoke-TheDoc open check-instance
+    Assert-ExitCode  'thedoc open (no claude): exit non-zero' 1 $r.ExitCode
+    Assert-Contains  'thedoc open (no claude): tells user to install' 'npm install -g @anthropic-ai/claude-code' $r.Output
+} finally {
+    $env:XDG_STATE_HOME = $prevXdg
+    $env:PATH = $prevPath
+    Remove-Item -LiteralPath $noClaudeState -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $noClaudeProj  -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # 7. `thedoc update` from a non-git directory bails with a friendly message.
 # Copy the wrapper to a scratch dir so $ScriptDir resolves there and skips
 # the .git probe with the framed error. Mirrors the bash test exactly.

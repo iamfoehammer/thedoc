@@ -127,6 +127,26 @@ set -e
 _assert_exit_code   "thedoc open <missing>: exit non-zero" 1 "$rc"
 _assert_contains    "thedoc open <missing>: tells user it's missing" "Not a doctor instance" "$out"
 
+# 6b. `thedoc open <valid>` when 'claude' is missing from PATH bails with
+# a friendly install hint rather than the cryptic 'bash: exec: claude:
+# not found' that the bare exec would produce. Pre-iter-99 the exec
+# error would surface; now we check command availability first.
+_noclaude_state="$(mktemp -d)"
+_noclaude_proj="$(mktemp -d)"
+mkdir -p "$_noclaude_proj/check-instance"
+echo '# Pretend Doctor' > "$_noclaude_proj/check-instance/DOCTOR.md"
+mkdir -p "$_noclaude_state/thedoc"
+printf 'projects_dir=%s\n' "$_noclaude_proj" > "$_noclaude_state/thedoc/state"
+set +e
+# Sanitize PATH so 'claude' isn't found. Keep /usr/bin + /bin so the
+# script can still use sed/awk/printf/etc.
+out=$(PATH=/usr/bin:/bin XDG_STATE_HOME="$_noclaude_state" "$THEDOC" open check-instance 2>&1)
+rc=$?
+set -e
+_assert_exit_code   "thedoc open (no claude): exit non-zero" 1 "$rc"
+_assert_contains    "thedoc open (no claude): tells user to install" "npm install -g @anthropic-ai/claude-code" "$out"
+rm -rf "$_noclaude_state" "$_noclaude_proj"
+
 # 7. `thedoc update` from a non-git directory bails with a friendly message
 # (no `git pull` attempted). Copy the wrapper to a scratch dir so SCRIPT_DIR
 # resolves there and skips the .git probe with the framed error.
