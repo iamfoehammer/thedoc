@@ -49,7 +49,9 @@ fi
 # access' from git stderr with no context on what bootstrap was doing.
 # mktemp the stderr capture so two concurrent bootstraps don't clobber
 # each other's error log.
-CLONE_ERR=$(mktemp -t thedoc-bootstrap-clone.XXXXXX.err 2>/dev/null || mktemp)
+# Bare mktemp is portable across GNU and BSD (macOS). The -t flag has
+# different semantics on each (GNU: template; BSD: prefix), so dodge it.
+CLONE_ERR=$(mktemp)
 echo ""
 echo "  Downloading thedoc..."
 if ! git clone --quiet "$REPO" "$TMP_DIR" 2>"$CLONE_ERR"; then
