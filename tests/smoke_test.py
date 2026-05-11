@@ -666,6 +666,53 @@ def setup_mode_assertions(expected_mode):
     return _check
 
 
+def doctor_type_assertions(expected_slug, expected_display_name):
+    """Default + verify the right doctor template actually got installed.
+    Same silent-pass closing as setup_mode_assertions (iter 153): the
+    openclaw-doctor scenario sends '2' at the doctor-type prompt but
+    only checking 'Ready to launch' would PASS even if DOCTOR_SLUGS got
+    reordered and Claude Code's template shipped under the openclaw
+    slug. Three artifacts pin the choice:
+      1. instance dir named '<slug>-doctor' must exist (proves
+         INSTANCE_DIR computed from the right DOCTOR_SLUGS[idx])
+      2. CLAUDE.md must contain '**Doctor type:** <display_name>'
+         (proves the right doctor_name flowed through generation)
+      3. DOCTOR.md must contain the per-doctor H1 ('Emergency Medical
+         Hologram - <display_name>') so we know the right template
+         file got copied, not just renamed cosmetically
+    """
+    def _check(cleaned, ctx=None):
+        failures = list(default_assertions(cleaned, ctx))
+        instance_dir = os.path.join(ctx['project_dir'], f'{expected_slug}-doctor')
+        if not os.path.isdir(instance_dir):
+            failures.append(f"Instance dir missing: {instance_dir}")
+            return failures
+        claude_md = os.path.join(instance_dir, 'CLAUDE.md')
+        doctor_md = os.path.join(instance_dir, 'DOCTOR.md')
+        if not os.path.exists(claude_md):
+            failures.append(f"CLAUDE.md missing: {claude_md}")
+        else:
+            with open(claude_md) as f:
+                content = f.read()
+            marker = f"**Doctor type:** {expected_display_name}"
+            if marker not in content:
+                failures.append(
+                    f"CLAUDE.md should contain {marker!r}; "
+                    f"got:\n{_excerpt(content, 'Doctor type')}")
+        if not os.path.exists(doctor_md):
+            failures.append(f"DOCTOR.md missing: {doctor_md}")
+        else:
+            with open(doctor_md) as f:
+                content = f.read()
+            h1_marker = f"Emergency Medical Hologram - {expected_display_name}"
+            if h1_marker not in content:
+                failures.append(
+                    f"DOCTOR.md should contain {h1_marker!r}; "
+                    f"first 200 chars:\n{content[:200]!r}")
+        return failures
+    return _check
+
+
 def _excerpt(content, needle, ctx_lines=2):
     """Trim a multi-line string to the lines around the first occurrence
     of `needle`. Keeps assertion-failure output manageable on big files."""
@@ -948,7 +995,9 @@ def main():
                                    assertions=name_validation_assertions(
                                        'The Emergency Medical Hologram, reporting for duty',
                                        '@@@@@@@@@@@@@@@@@@@@'))),
-        ('openclaw-doctor',   dict(steps=OPENCLAW_DOCTOR_STEPS)),
+        ('openclaw-doctor',   dict(steps=OPENCLAW_DOCTOR_STEPS,
+                                   assertions=doctor_type_assertions(
+                                       'openclaw', 'OpenClaw'))),
         ('bootstrap-install', dict(steps=HAPPY_PATH_STEPS,
                                    pre_setup=pre_bootstrap,
                                    assertions=bootstrap_assertions)),
