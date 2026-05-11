@@ -73,6 +73,15 @@ Bash 3.2 also has a couple of footguns worth knowing:
   `[ "${#arr[@]}" -gt 0 ]` before iterating.
 - Per-character loops with `printf '%s' "${var:$i:1}"` are slow. If you
   need speed, batch.
+- `read` (default IFS) silently strips leading/trailing whitespace.
+  Combined with `${var:-default}`, whitespace-only input substitutes
+  the default and bypasses validation. Prefix with `IFS=` when you
+  want the validator to see what the user actually typed.
+- Reading a file that crossed OSes (state file written by Windows PS
+  Set-Content, anything that might come from Notepad, etc.) via
+  `sed -n 's/^k=//p'` preserves the trailing `\r` in the captured
+  value. The result fails `[ -d ]` / `[ -f ]` even when the path is
+  valid. Strip with `${var%$'\r'}` after every such capture.
 
 The CI macOS job (`smoke-macos` in `.github/workflows/test.yml`) is the
 canonical regression rig for these portability rules.
