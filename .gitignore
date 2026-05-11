@@ -28,3 +28,8 @@ Thumbs.db
 *~
 .vscode/
 .idea/
+
+# Python bytecode cache (importing tests/smoke_test or any test helper
+# from a tool generates these; never ship them).
+__pycache__/
+*.pyc
