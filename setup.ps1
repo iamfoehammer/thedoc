@@ -272,10 +272,19 @@ function Show-Greeting {
     $title    = $Titles[$idx]
     $greeting = $Greetings[$idx]
 
+    # Box-drawing chars match bash print_box: U+2554 U+2550 U+2557 (top
+    # row), U+2551 (sides), U+255A U+2550 U+255D (bottom). Modern Windows
+    # Terminal + PS7 default to UTF-8 output and render these correctly;
+    # for older powershell.exe sessions the [Console]::OutputEncoding
+    # below ensures the bytes go out as UTF-8 rather than the host codepage.
+    if ([Console]::OutputEncoding.WebName -ne 'utf-8') {
+        try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+    }
+    $border = [string]::new([char]0x2550, $title.Length + 4)
     Write-Host ''
-    Write-Host "  +$([string]::new('=', $title.Length + 4))+"
-    Write-Host "  |  $title  |"
-    Write-Host "  +$([string]::new('=', $title.Length + 4))+"
+    Write-Host "  $([char]0x2554)$border$([char]0x2557)" -ForegroundColor Cyan
+    Write-Host "  $([char]0x2551)  $title  $([char]0x2551)" -ForegroundColor Cyan
+    Write-Host "  $([char]0x255A)$border$([char]0x255D)" -ForegroundColor Cyan
     Write-Host ''
 
     if (Test-FirstRun) {
