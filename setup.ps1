@@ -334,8 +334,14 @@ function Show-Greeting {
 function Invoke-TricorderScan {
     Write-Host '  Press any key to begin the scan (space to skip animations)...' -ForegroundColor DarkGray
     $key = [Console]::ReadKey($true)
-    if ($key.KeyChar -eq ' ') { $Script:SkipTyping = $true }
     Write-Host ''
+    # Gap-after-action ack - space-to-skip needs visible confirmation,
+    # otherwise the user can't tell whether their keystroke registered.
+    if ($key.KeyChar -eq ' ') {
+        $Script:SkipTyping = $true
+        Write-Host '  Animations disabled.' -ForegroundColor DarkGray
+        Write-Host ''
+    }
 
     $platform = if ($IsWindows -or $env:OS -eq 'Windows_NT') { 'Windows' }
                 elseif ($IsMacOS) { 'macOS' }
@@ -632,8 +638,13 @@ function Show-StructureExplainer {
     Write-Host ''
     Write-Host '  Press any key to continue (space to skip animations)...' -ForegroundColor DarkGray
     $key = [Console]::ReadKey($true)
-    if ($key.KeyChar -eq ' ') { $Script:SkipTyping = $true }
     Write-Host ''
+    # Gap-after-action ack (mirrors bash structure-explainer + tricorder).
+    if ($key.KeyChar -eq ' ') {
+        $Script:SkipTyping = $true
+        Write-Host '  Animations disabled.' -ForegroundColor DarkGray
+        Write-Host ''
+    }
 }
 
 # ── New-DoctorInstance ───────────────────────────────────────────────

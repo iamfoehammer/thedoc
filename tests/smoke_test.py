@@ -637,6 +637,28 @@ def default_assertions(cleaned, ctx=None):
     return failures
 
 
+def space_skip_assertions(cleaned, ctx=None):
+    """default + lock in that the space-to-skip keypress was actually
+    captured. Iter 151 discovered `read -rsn1 key` silently drops space
+    under default IFS, so SKIP_TYPING never flipped from a real user's
+    keystroke - the bug was masked in tests by THEDOC_TEST_SKIP_TYPING=1.
+    The fix uses `IFS= read -rsn1 key` plus a visible 'Animations
+    disabled.' ack. Requiring 2 occurrences of the ack proves BOTH:
+    (a) the tricorder-scan space-keypress path executed, AND
+    (b) the structure-explainer space-keypress path executed.
+
+    Without this assertion, the test would silently revert to relying on
+    the env var if the IFS= fix got reverted - exactly the failure mode
+    iter 87/iter 148 documented for assertions on AFTER-the-gate text."""
+    failures = list(default_assertions(cleaned, ctx))
+    ack_count = cleaned.count('Animations disabled.')
+    if ack_count < 2:
+        failures.append(
+            f"Expected 2x 'Animations disabled.' acks, got {ack_count} - "
+            "space-keypress may not be reaching read -rsn1")
+    return failures
+
+
 def coming_soon_assertions(cleaned, ctx=None):
     """For scenarios that pick an unsupported doctor type and bail early."""
     failures = []
@@ -874,7 +896,8 @@ def _full_mode_steps():
 def main():
     # Each entry is (label, kwargs-for-run). Order is the run order.
     SCENARIOS = [
-        ('happy-path',        dict(steps=HAPPY_PATH_STEPS)),
+        ('happy-path',        dict(steps=HAPPY_PATH_STEPS,
+                                   assertions=space_skip_assertions)),
         # Assert BOTH the tagline AND a chunk of the ASCII art rendered.
         # Tagline-only would silently pass if a future refactor broke the
         # `cat "$SCRIPT_DIR/thedoc.txt"` call (wrong path, empty file,

@@ -89,6 +89,14 @@ Bash 3.2 also has a couple of footguns worth knowing:
   Combined with `${var:-default}`, whitespace-only input substitutes
   the default and bypasses validation. Prefix with `IFS=` when you
   want the validator to see what the user actually typed.
+- The same IFS-stripping silently breaks `read -rsn1 key` for the
+  space character: a single-byte space IS leading/trailing whitespace,
+  so it gets stripped and `key` ends up empty. Means a UX prompt of
+  "Press space to skip" sees the user's space as nothing and the
+  branch never fires. Use `IFS= read -rsn1 key` whenever the captured
+  byte matters - except in menu loops that USE empty as a sentinel
+  for Enter (see `prompt_choice` in setup.sh), where stripping is
+  load-bearing.
 - Reading a file that crossed OSes (state file written by Windows PS
   Set-Content, anything that might come from Notepad, etc.) via
   `sed -n 's/^k=//p'` preserves the trailing `\r` in the captured

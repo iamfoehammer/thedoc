@@ -478,9 +478,20 @@ detect_platform() {
 
 tricorder_scan() {
     echo -e "  ${DIM}Press any key to begin the scan (space to skip animations)...${RESET}"
-    read -rsn1 key
-    [[ "$key" == " " ]] && SKIP_TYPING=1
+    # IFS= is critical: default IFS strips space so `read -rsn1 key` puts
+    # an empty string in $key when the user presses space - the space-to-
+    # skip branch then never fires. This was silently broken for ~150
+    # iterations because THEDOC_TEST_SKIP_TYPING=1 masked it in smoke
+    # tests; real users mashing space saw nothing happen.
+    IFS= read -rsn1 key
     echo ""
+    # Gap-after-action ack so space-to-skip is visibly confirmed (mirrors
+    # the structure-explainer prompt below).
+    if [[ "$key" == " " ]]; then
+        SKIP_TYPING=1
+        echo -e "  ${DIM}Animations disabled.${RESET}"
+        echo ""
+    fi
 
     # Platform name
     local platform_display
@@ -809,9 +820,18 @@ print_structure_explainer() {
     typeit "- You update thedoc with 'thedoc update' - your configs are never overwritten"
     echo ""
     echo -e "  ${DIM}Press any key to continue (space to skip animations)...${RESET}"
-    read -rsn1 key
-    [[ "$key" == " " ]] && SKIP_TYPING=1
+    # IFS= so space is captured (see tricorder_scan note).
+    IFS= read -rsn1 key
     echo ""
+    # Gap-after-action heuristic: a deliberate space-to-skip needs visible
+    # ack, otherwise the user can't tell whether their keystroke registered
+    # as "skip" or just "continue" - and might mash space again at the next
+    # prompt thinking it didn't work.
+    if [[ "$key" == " " ]]; then
+        SKIP_TYPING=1
+        echo -e "  ${DIM}Animations disabled.${RESET}"
+        echo ""
+    fi
 }
 
 # ── Doctor types ────────────────────────────────────────────────────
