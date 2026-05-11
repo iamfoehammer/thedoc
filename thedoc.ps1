@@ -235,6 +235,16 @@ switch ($Command) {
             Write-Host ''
             exit 1
         }
+        # Load ~/.secrets.ps1 before invoking claude. thedoc.cmd uses
+        # `pwsh -NoProfile` for fast startup, which skips the profile
+        # where iter 69 wires secret sourcing. Without this, claude
+        # invoked via cmd.exe-shimmed `thedoc open` would miss
+        # OPENAI_API_KEY / ANTHROPIC_API_KEY / etc. that the user set
+        # with llm-secrets.ps1.
+        $secretsFile = Join-Path $HOME '.secrets.ps1'
+        if (Test-Path -LiteralPath $secretsFile -PathType Leaf) {
+            . $secretsFile
+        }
         Push-Location $instanceDir
         try {
             $prompt = 'Re-entering this doctor instance. Start by reading DOCTOR.md for your role and CLAUDE.md for the personal config of this instance. Then ask what I''d like to work on this session.'

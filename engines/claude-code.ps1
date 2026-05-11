@@ -34,5 +34,15 @@ else {
     $launchPrompt = 'Start by reading DOCTOR.md in this directory - it has your personality, instructions, and setup checklist. Then read CLAUDE.md to get the framework path and system info. Follow the Quick Setup instructions in DOCTOR.md - scan everything and show me a summary, then ask what I want to configure first.'
 }
 
+# Load ~/.secrets.ps1 before invoking claude. When thedoc.cmd runs
+# `pwsh -NoProfile`, iter 69's profile-wired secret sourcing is
+# skipped - claude would then miss API keys etc. that the user set
+# via llm-secrets.ps1. Source explicitly so we work regardless of
+# how setup.ps1 got invoked. Mirrors thedoc.ps1's open subcommand.
+$secretsFile = Join-Path $HOME '.secrets.ps1'
+if (Test-Path -LiteralPath $secretsFile -PathType Leaf) {
+    . $secretsFile
+}
+
 Set-Location -LiteralPath $InstanceDir
 & claude $launchPrompt
