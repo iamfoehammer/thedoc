@@ -269,12 +269,21 @@ def bootstrap_reinstall_assertions(cleaned, ctx):
 
     The 'Added thedoc to PATH' message must NOT print, because the
     idempotency grep finds the path already there and the branch
-    skips the append+message. That's the inverse of the install case."""
+    skips the append+message. That's the inverse of the install case.
+
+    Iter 91 added 'already on PATH' / 'already wired' confirmation lines
+    on the skip branches so the user sees ack of the idempotent state
+    instead of an abrupt jump from 'Installed thedoc to...' to 'Got it.'.
+    Requiring those messages locks iter 91 in place."""
     failures = list(default_assertions(cleaned, ctx))
     if 'Installed thedoc to' not in cleaned:
         failures.append("Bootstrap branch did not run ('Installed thedoc to' missing)")
     if 'Added thedoc to PATH' in cleaned:
         failures.append("PATH was appended on re-run (idempotency check broken)")
+    if 'already on PATH' not in cleaned:
+        failures.append("Idempotency skip did not acknowledge ('already on PATH' missing)")
+    if 'secrets sourcing already wired' not in cleaned:
+        failures.append("Secrets idempotency did not acknowledge")
 
     path_lines, secrets_lines = _bashrc_line_counts(ctx)
     if path_lines is None:

@@ -843,6 +843,12 @@ if is_first_run; then
             echo "# thedoc - Emergency Medical Hologram framework" >> "$SHELL_RC"
             echo "$THEDOC_PATH_LINE" >> "$SHELL_RC"
             echo -e "  ${GREEN}Added${RESET} thedoc to PATH in $(basename "$SHELL_RC")"
+        else
+            # On re-bootstrap, tell the user the PATH is fine. Otherwise the
+            # bootstrap branch ends abruptly after "Installed thedoc to ..."
+            # and they can't tell if shell-rc wiring already worked or got
+            # silently skipped.
+            echo -e "  ${DIM}thedoc already on PATH in $(basename "$SHELL_RC")${RESET}"
         fi
 
         # Match the actual source expression rather than '.secrets' - the
@@ -852,6 +858,8 @@ if is_first_run; then
         if ! grep -qF 'source "$HOME/.secrets"' "$SHELL_RC" 2>/dev/null; then
             echo "$SECRETS_LINE" >> "$SHELL_RC"
             echo -e "  ${GREEN}Added${RESET} secrets sourcing to $(basename "$SHELL_RC")"
+        else
+            echo -e "  ${DIM}secrets sourcing already wired in $(basename "$SHELL_RC")${RESET}"
         fi
 
         export PATH="$THEDOC_FINAL:$PATH"

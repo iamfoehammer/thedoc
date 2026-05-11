@@ -799,6 +799,11 @@ if (Test-FirstRun) {
             [Environment]::SetEnvironmentVariable('PATH', $newPath, 'User')
             $env:PATH = "$thedocFinal;$env:PATH"
             Write-Host "  Added thedoc to User PATH" -ForegroundColor Green
+        } else {
+            # On re-bootstrap, confirm the PATH is already wired - otherwise
+            # the bootstrap branch ends abruptly after "Installed thedoc to..."
+            # and the user can't tell if PATH was silently skipped.
+            Write-Host '  thedoc already on User PATH' -ForegroundColor DarkGray
         }
 
         # Wire ~/.secrets.ps1 into the user's PowerShell profile so
@@ -825,6 +830,8 @@ if (Test-FirstRun) {
             Add-Content -LiteralPath $profilePath -Value '# thedoc - load llm-secrets'
             Add-Content -LiteralPath $profilePath -Value $secretsLine
             Write-Host "  Added secrets sourcing to $(Split-Path -Leaf $profilePath)" -ForegroundColor Green
+        } else {
+            Write-Host "  secrets sourcing already wired in $(Split-Path -Leaf $profilePath)" -ForegroundColor DarkGray
         }
         Write-Host ''
     }
