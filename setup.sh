@@ -600,7 +600,11 @@ detect_projects_dirs() {
             CANDIDATE_COUNTS+=("$count")
             local short
             short=$(short_path "$dir")
-            echo -e "${scan_prefix}Found ${BOLD}${short}/${RESET} (${count} folders)"
+            # Singular/plural for grammar nit; menu render below already
+            # does this, the scan-output line lagged.
+            local word="folders"
+            [ "$count" -eq 1 ] && word="folder"
+            echo -e "${scan_prefix}Found ${BOLD}${short}/${RESET} (${count} ${word})"
             _dramatic_sleep 0.15
         fi
     done

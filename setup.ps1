@@ -525,7 +525,10 @@ function Get-ProjectsDir {
     $candidates = Get-CandidateProjectDirs
     foreach ($c in $candidates) {
         $short = Get-ShortPath $c.Path
-        Write-Host "  [scan] Found $short/  ($($c.Count) folders)"
+        # Singular/plural for grammar nit - matches bash detect_projects_dirs
+        # output. PS menu rendering already does this; the scan line lagged.
+        $word  = if ($c.Count -eq 1) { 'folder' } else { 'folders' }
+        Write-Host "  [scan] Found $short/  ($($c.Count) $word)"
         Wait-Dramatic -Milliseconds 150
     }
     if ($candidates.Count -eq 0) {
