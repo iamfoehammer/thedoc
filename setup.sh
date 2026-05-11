@@ -270,9 +270,15 @@ typeit() {
     echo ""
 }
 
-# Short path display
+# Short path display - regex-free prefix strip so $HOME values with
+# sed-meta chars (., |, &, \) don't break the substitution. Mirrors
+# PS Get-ShortPath's StartsWith approach.
 short_path() {
-    echo "$1" | sed "s|^$HOME|~|"
+    if [[ "$1" == "$HOME"* ]]; then
+        echo "~${1#$HOME}"
+    else
+        echo "$1"
+    fi
 }
 
 print_box() {

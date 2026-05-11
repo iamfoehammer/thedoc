@@ -59,7 +59,7 @@ function Invoke-Help {
     Write-Host "    thedoc setup    Create or open a doctor instance (default)"
     Write-Host "    thedoc list     List existing doctor instances"
     Write-Host "    thedoc open     Open an existing instance: thedoc open <name>"
-    Write-Host "    thedoc test     Parse-check setup.ps1 (PowerShell-side coverage)"
+    Write-Host "    thedoc test     Parse-check .ps1 + run wrapper tests (mirrors CI)"
     Write-Host "    thedoc update   git pull the framework to latest"
     Write-Host "    thedoc help     Show this help"
     Write-Host ""
