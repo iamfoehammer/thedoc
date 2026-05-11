@@ -72,12 +72,39 @@ function Set-Secret {
     # Append new entry
     Add-Content $SecretsFile "`$env:${VarName} = `"${value}`""
 
-    # Copy variable reference to clipboard
+    # Copy variable reference to clipboard. Set-Clipboard is Windows-only
+    # in PS <7.4 and may throw on Linux pwsh (Wayland/headless sessions).
+    # Catch + fall back to the platform's clipboard tool so the user still
+    # gets the secret saved even when clipboard isn't available.
     $varRef = "`$env:${VarName}"
-    Set-Clipboard -Value $varRef
+    $clipboardOk = $false
+    try {
+        Set-Clipboard -Value $varRef -ErrorAction Stop
+        $clipboardOk = $true
+    } catch {
+        foreach ($tool in @(
+            @{Cmd='clip.exe';  Args=@()},
+            @{Cmd='pbcopy';    Args=@()},
+            @{Cmd='wl-copy';   Args=@()},
+            @{Cmd='xclip';     Args=@('-selection', 'clipboard')},
+            @{Cmd='xsel';      Args=@('--clipboard', '--input')}
+        )) {
+            if (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
+                try {
+                    $varRef | & $tool.Cmd @($tool.Args)
+                    $clipboardOk = $true
+                    break
+                } catch { continue }
+            }
+        }
+    }
 
     Write-Host "Saved $VarName to $SecretsFile"
-    Write-Host "Copied $varRef to clipboard."
+    if ($clipboardOk) {
+        Write-Host "Copied $varRef to clipboard."
+    } else {
+        Write-Host "($varRef saved but clipboard not available; copy manually if needed.)"
+    }
     Write-Host "Run '. ~/.secrets.ps1' or open a new shell to load it."
 }
 
