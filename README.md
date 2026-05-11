@@ -145,8 +145,11 @@ Running setup creates a new **instance folder** in your projects directory:
 ### Staying Up To Date
 
 ```bash
-cd ~/GitHub/thedoc && git pull
+thedoc update                # git pull the framework, with friendly preflight
 ```
+
+Or re-paste the install one-liner — the bootstrap will update an existing
+install in place instead of orphaning a new clone in `$TMPDIR`.
 
 Next time you open your doctor instance, it checks for new updates and walks you through each one:
 
