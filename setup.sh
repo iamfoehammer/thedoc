@@ -874,8 +874,12 @@ doctor_name="${DOCTOR_TYPES[$doctor_idx]}"
 # is_stub() looks for - otherwise the user would be dropped into Claude
 # with a useless "this doctor isn't supported yet" brain.
 if is_stub "$SCRIPT_DIR/doctors/${doctor_slug}/DOCTOR.md"; then
+    # Strip the "(not yet supported)" suffix from the menu name when used
+    # in the status message - otherwise it reads redundantly as
+    # "Gemini CLI (not yet supported) doctor templates are coming soon."
+    display_name="${doctor_name% (not yet supported)}"
     echo ""
-    echo -e "  ${YELLOW}${doctor_name} doctor templates are coming soon.${RESET}"
+    echo -e "  ${YELLOW}${display_name} doctor templates are coming soon.${RESET}"
     echo -e "  The framework is here - contributions welcome!"
     echo -e "  See ${DIM}doctors/${doctor_slug}/${RESET} to help build it."
     echo ""
@@ -895,8 +899,12 @@ engine_name="${ENGINE_TYPES[$engine_idx]}"
 # get created) avoids orphan half-instances if the user picks "no" on the
 # fallback.
 if is_stub "$SCRIPT_DIR/engines/${engine_slug}.sh"; then
+    # Strip the "(not yet supported)" suffix - same reason as the doctor-
+    # type stub branch above. "OpenClaw engine support is coming soon" reads
+    # cleaner than "OpenClaw (not yet supported) engine support...".
+    display_engine_name="${engine_name% (not yet supported)}"
     echo ""
-    echo -e "  ${YELLOW}${engine_name} engine support is coming soon.${RESET}"
+    echo -e "  ${YELLOW}${display_engine_name} engine support is coming soon.${RESET}"
     echo ""
     read -rp "  Run with Claude Code instead? [Y/n] " fallback
     if [[ "$fallback" =~ ^[Nn] ]]; then

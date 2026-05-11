@@ -851,8 +851,12 @@ $doctorName = $DoctorTypes[$doctorIdx]
 # Doctor type supported? Stub DOCTOR.md files trigger the same coming-soon
 # exit as missing files (see Test-IsStub above).
 if (Test-IsStub (Join-Path $ScriptDir "doctors/$doctorSlug/DOCTOR.md")) {
+    # Strip the "(not yet supported)" suffix from the menu name when used
+    # in the status message - otherwise it reads redundantly as
+    # "Gemini CLI (not yet supported) doctor templates are coming soon."
+    $displayName = $doctorName -replace ' \(not yet supported\)$', ''
     Write-Host ''
-    Write-Host "  $doctorName doctor templates are coming soon." -ForegroundColor Yellow
+    Write-Host "  $displayName doctor templates are coming soon." -ForegroundColor Yellow
     Write-Host '  The framework is here - contributions welcome!'
     Write-Host "  See doctors/$doctorSlug/ to help build it." -ForegroundColor DarkGray
     Write-Host ''
@@ -870,8 +874,12 @@ $engineName = $EngineTypes[$engineIdx]
 # PowerShell user should still see "coming soon" rather than crashing
 # later. Test-IsStub returns true for both missing and stub-marked files.
 if (Test-IsStub (Join-Path $ScriptDir "engines/$engineSlug.ps1")) {
+    # Strip the "(not yet supported)" suffix - same reason as the doctor-
+    # type stub branch above. "OpenClaw engine support is coming soon" reads
+    # cleaner than "OpenClaw (not yet supported) engine support...".
+    $displayEngineName = $engineName -replace ' \(not yet supported\)$', ''
     Write-Host ''
-    Write-Host "  $engineName engine support is coming soon." -ForegroundColor Yellow
+    Write-Host "  $displayEngineName engine support is coming soon." -ForegroundColor Yellow
     Write-Host ''
     $fallback = Read-Line '  Run with Claude Code instead? [Y/n] '
     if ($fallback -match '^[Nn]') {
