@@ -940,7 +940,13 @@ echo -e "  ${BOLD}Name for your doctor instance folder?${RESET}"
 echo -e "  ${DIM}This will be created in $(short_path "$PROJECTS_DIR")/. Press Enter for default.${RESET}"
 while true; do
     echo ""
-    read -rp "  [$default_instance] > " instance_name
+    # IFS= prevents 'read' from stripping leading/trailing whitespace, which
+    # would otherwise turn "   " input into "" - and then the ${:-default}
+    # below would silently substitute the default, bypassing the empty-name
+    # rejection entirely. Caught via --keep-logs on the empty-name smoke
+    # scenario showing "claude-code-doctor" got created when the test
+    # thought it sent whitespace and expected re-prompt.
+    IFS= read -rp "  [$default_instance] > " instance_name
     instance_name="${instance_name:-$default_instance}"
     instance_name="$(echo "$instance_name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
     if [ -z "$instance_name" ]; then
