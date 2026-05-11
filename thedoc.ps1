@@ -6,8 +6,9 @@
 #   thedoc setup          Same as above
 #   thedoc list           List existing doctor instances
 #   thedoc open <name>    Open an existing instance directly
-#   thedoc test           Run wrapper + smoke tests (mirrors CI)
-#   thedoc update         git pull the framework to latest
+#   thedoc test           Parse-check .ps1 + run wrapper tests (mirrors CI)
+#   thedoc version        Show framework version (git commit)
+#   thedoc update         Pull the latest framework (git pull --ff-only)
 #   thedoc help           Show this help
 
 [CmdletBinding()]

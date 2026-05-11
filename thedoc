@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # thedoc - Entry point for the Emergency Medical Hologram framework
 # Usage:
-#   thedoc          - Run setup (create or open a doctor instance)
-#   thedoc setup    - Same as above
-#   thedoc list     - List existing doctor instances
-#   thedoc open     - Open an existing instance directly
+#   thedoc                Run setup (create or open a doctor instance)
+#   thedoc setup          Same as above
+#   thedoc list           List existing doctor instances
+#   thedoc open <name>    Open an existing instance directly
+#   thedoc test           Run wrapper + smoke test suites (mirrors CI)
+#   thedoc version        Show framework version (git commit)
+#   thedoc update         Pull the latest framework (git pull --ff-only)
+#   thedoc help           Show wrapper help
 
 set -euo pipefail
 
