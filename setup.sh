@@ -775,7 +775,9 @@ browse_for_folder() {
                 local name="$(basename "$d")"
                 local subcount
                 subcount=$(find "$d" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-                if [ "$subcount" -gt 0 ]; then
+                if [ "$subcount" -eq 1 ]; then
+                    options+=("${name}/  (1 folder)")
+                elif [ "$subcount" -gt 0 ]; then
                     options+=("${name}/  (${subcount} folders)")
                 else
                     options+=("${name}/")
