@@ -862,6 +862,32 @@ def open_existing_assertions(cleaned, ctx=None):
     return failures
 
 
+def negative_name_assertions(cleaned, ctx=None):
+    """User typed 'foo/bar' (rejected: slash), then '.hidden' (rejected:
+    leading dot), then 'good-instance' (accepted).
+
+    Transcript checks verify both rejection messages fire. Artifact pin
+    (iter 175 add, same pattern as iters 172-174): the rejected names
+    must NOT have created any partial directories - if the validation
+    branch fell through to `mkdir -p $PROJECTS_DIR/$instance_name`
+    before tripping the slash check, `foo/` would exist on disk even
+    though setup.sh rejected the name. Only good-instance/ should be
+    present."""
+    failures = list(default_assertions(cleaned, ctx))
+    for msg in ("Name can't contain '/'", "Name can't start with '.'"):
+        if msg not in cleaned:
+            failures.append(f"Rejection message missing: {msg!r}")
+    pd = ctx['project_dir']
+    if not os.path.exists(os.path.join(pd, 'good-instance', 'DOCTOR.md')):
+        failures.append(f"Recovery instance missing at {pd}/good-instance/")
+    # Rejected names must NOT have produced anything on disk.
+    for stub in ('foo', '.hidden'):
+        if os.path.exists(os.path.join(pd, stub)):
+            failures.append(
+                f"Rejected name leaked to disk: {pd}/{stub} exists")
+    return failures
+
+
 def open_existing_decline_assertions(cleaned, ctx=None):
     """User typed default → collided with existing instance → DECLINED
     "Open existing? [Y/n]" with 'n' → wizard re-prompts and creates
@@ -1222,9 +1248,7 @@ def main():
                                    assertions=bootstrap_reinstall_branch_assertions,
                                    timeout=10.0)),
         ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS,
-                                   assertions=name_validation_assertions(
-                                       "Name can't contain '/'",
-                                       "Name can't start with '.'"))),
+                                   assertions=negative_name_assertions)),
         ('empty-name',        dict(steps=EMPTY_NAME_STEPS,
                                    assertions=name_validation_assertions(
                                        "Name can't be empty or whitespace"))),
