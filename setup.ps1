@@ -161,7 +161,19 @@ function Test-FirstRun { -not (Test-Path $StateFile) }
 function Save-State {
     param([string]$ProjectsDir, [string]$Platform)
     if (-not (Test-Path $StateDir)) { New-Item -Type Directory -Path $StateDir | Out-Null }
-    $firstRun = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+    # Preserve first_run across saves. Bash setup.sh loads FIRST_RUN_DATE
+    # from the existing state file (lines 161-168) and re-writes the same
+    # value via `${FIRST_RUN_DATE:-current-time}`. PS Save-State was
+    # unconditionally writing current time, so every returning run
+    # clobbered the original "first ever" timestamp. Iter 199 parity fix.
+    # Get-State is defined further down the file; PS function resolution
+    # happens at invocation time, so forward reference is fine here.
+    $existing = Get-State
+    $firstRun = if ($existing -and $existing.first_run) {
+        $existing.first_run
+    } else {
+        (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+    }
     $lines = @(
         "first_run=$firstRun"
         "projects_dir=$ProjectsDir"
