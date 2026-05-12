@@ -651,6 +651,31 @@ TYPED_PATH_RELATIVE_STEPS = [
 ]
 
 
+# User types ~user/foo (the ~user form, requesting a different user's
+# home). Iter 246 made setup.sh expand ~ ONLY when it's the entire
+# path or followed by '/'. Before iter 246, the regex stripped the
+# leading ~ blindly, turning ~user/foo into $HOMEuser/foo - which
+# happens to be absolute, so the wizard sailed past the
+# "Path must be absolute" guard and either landed at an inventive
+# path or prompted "doesn't exist. Create it?". After iter 246,
+# ~user/foo is left as-is and the absolute-path check rejects it.
+# Lock in by sending the form and asserting we hit the re-prompt
+# (same shape as TYPED_PATH_RELATIVE_STEPS).
+TYPED_PATH_TILDE_USER_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                                 'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ',                                 'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'3',                                 'Projects: option 3 (Type a path)'),
+    (re.compile(r'Enter the full path:'),                   b'~someusername/foo\n',               'Type ~user/foo form'),
+    (re.compile(r'Path must be absolute'),                  (TYPED_PATH_FIXTURE + '\n').encode(), 'Type absolute on re-prompt'),
+    (re.compile(r'Press any key to continue \(space'),      b' ',                                 'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'1',                                 'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                       b'1',                                 'Engine: 1'),
+    (re.compile(r'Setup mode\?'),                           b'1',                                 'Mode: 1'),
+    (re.compile(r'Name for your doctor instance folder'),   b'\n',                                'Default name'),
+    (re.compile(r'already exists.*\[Y/n\]'),                b'\n',                                'Open existing if any'),
+]
+
+
 # Like TYPED_PATH_STEPS, but the typed path contains a literal space in
 # a directory name ("typed projects with spaces"). Verifies the wizard
 # correctly preserves embedded whitespace from the prompt through to
@@ -1051,6 +1076,38 @@ def typed_path_relative_assertions(cleaned, ctx=None):
         failures.append(
             f"Relative-path input '.' silently resolved to cwd; instance "
             f"leaked to {relative_leak}")
+    return failures
+
+
+def typed_path_tilde_user_assertions(cleaned, ctx=None):
+    """User typed '~someusername/foo' (the ~user form). Iter 246 ensures
+    setup.sh / setup.ps1 expand ~ ONLY when alone or followed by '/' -
+    ~user/foo passes through unchanged, fails the absolute-path check,
+    and the user gets re-prompted. Before iter 246, the regex blindly
+    stripped the leading ~ and silently turned ~user/foo into
+    $HOMEuser/foo (concatenation), which IS absolute, so the wizard
+    sailed past the guard.
+
+    Lock: 'Path must be absolute' rejection appears, AND the instance
+    lands at the typed absolute path (TYPED_PATH_FIXTURE) the user
+    typed on the re-prompt. Negative-assert that no instance leaked
+    to $HOME${form-without-leading-tilde} (the concatenation path the
+    old code would have produced)."""
+    failures = list(default_assertions(cleaned, ctx))
+    if 'Path must be absolute' not in cleaned:
+        failures.append("Did not see 'Path must be absolute' rejection")
+    landed = os.path.join(TYPED_PATH_FIXTURE, 'claude-code-doctor', 'DOCTOR.md')
+    if not os.path.exists(landed):
+        failures.append(f"Instance not at typed absolute path: {landed}")
+    # Negative: the pre-iter-246 regression path was $HOMEsomeusername/foo
+    # (concatenation). If that directory exists, the wizard silently
+    # accepted the mangled form before reaching the absolute-path check.
+    concat_leak = os.path.join(
+        os.path.expanduser('~') + 'someusername', 'foo')
+    if os.path.exists(concat_leak):
+        failures.append(
+            f"~user input leaked through tilde expansion; "
+            f"created {concat_leak}")
     return failures
 
 
@@ -1500,6 +1557,9 @@ def main():
         ('typed-path-relative', dict(steps=TYPED_PATH_RELATIVE_STEPS,
                                      pre_setup=pre_typed_path,
                                      assertions=typed_path_relative_assertions)),
+        ('typed-path-tilde-user', dict(steps=TYPED_PATH_TILDE_USER_STEPS,
+                                       pre_setup=pre_typed_path,
+                                       assertions=typed_path_tilde_user_assertions)),
         ('full-mode',         dict(steps=_full_mode_steps(),
                                    assertions=setup_mode_assertions('full'))),
     ]

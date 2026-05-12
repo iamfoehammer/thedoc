@@ -90,6 +90,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `typed-path-spaces` | Typed path contains a literal space in a directory name; verifies the path survives intact through prompt, save, and on-disk creation | iter 245 |
 | `typed-path-decline` | Typed path doesn't exist, user declines "Create it?", re-prompts and accepts a different existing path | iter 42 |
 | `typed-path-relative` | Relative path (`.`) rejected with "Path must be absolute"; absolute path then accepted | iter 59 |
+| `typed-path-tilde-user` | `~user/foo` form (other-user's home) left unexpanded; absolute-path check rejects it instead of letting an old `${var/#~/$HOME}` style replacement silently concatenate into `$HOMEuser/foo` | iter 247 |
 | `full-mode` | Setup mode 2 (Full audit) reaches `Ready to launch.` | baseline |
 
 Each scenario has a custom step list and (where the assertion logic
