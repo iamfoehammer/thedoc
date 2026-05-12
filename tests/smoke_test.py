@@ -889,6 +889,66 @@ def typed_path_decline_assertions(cleaned, ctx=None):
     return failures
 
 
+def empty_name_assertions(cleaned, ctx=None):
+    """Whitespace-only instance name ('   ') was rejected, then
+    'fresh-instance' accepted. Same iter 172-176 safety-contract
+    pattern: a silent IFS-strip regression (see iter 87) could turn
+    "   " into "" → ${var:-default} substitutes 'claude-code-doctor'
+    → mkdir succeeds → rejection branch never fires.
+
+    The full regression trips via timeout (driver waits for the
+    rejection regex which never matches), but a PARTIAL regression
+    where the rejection still fires AND the default also gets
+    created would silent-pass.
+
+    Pin: instance is at <project_dir>/fresh-instance/DOCTOR.md, AND
+    no instance at <project_dir>/claude-code-doctor/."""
+    failures = list(default_assertions(cleaned, ctx))
+    if "Name can't be empty or whitespace" not in cleaned:
+        failures.append("Did not see whitespace-name rejection")
+    pd = ctx['project_dir']
+    if not os.path.exists(os.path.join(pd, 'fresh-instance', 'DOCTOR.md')):
+        failures.append(f"Recovery instance missing at {pd}/fresh-instance/")
+    # Default-name dir must NOT exist - the whitespace input should NEVER
+    # have substituted to claude-code-doctor under any failure mode.
+    if os.path.exists(os.path.join(pd, 'claude-code-doctor', 'DOCTOR.md')):
+        failures.append(
+            f"Whitespace input silently created default instance at "
+            f"{pd}/claude-code-doctor/")
+    return failures
+
+
+def typed_path_relative_assertions(cleaned, ctx=None):
+    """User typed '.' (relative) → rejected → typed absolute path → instance
+    created there. The 'Path must be absolute' rejection branch is the
+    transcript signal; safety contract: a partial regression where the
+    rejection prints but '.' ALSO got accepted would resolve PROJECTS_DIR
+    against the wizard's cwd at exec time, then save state pointing at a
+    cwd-relative path that breaks the moment 'thedoc list' / 'thedoc open'
+    runs from a different cwd.
+
+    Pin: instance landed under TYPED_PATH_FIXTURE (the absolute path the
+    user typed second), AND no instance at './claude-code-doctor/'
+    relative to anywhere we can inspect (cwd at the smoke driver's
+    invocation time)."""
+    failures = list(default_assertions(cleaned, ctx))
+    if 'Path must be absolute' not in cleaned:
+        failures.append("Did not see 'Path must be absolute' rejection")
+    landed = os.path.join(TYPED_PATH_FIXTURE, 'claude-code-doctor', 'DOCTOR.md')
+    if not os.path.exists(landed):
+        failures.append(f"Instance not at typed absolute path: {landed}")
+    # cwd at this point is the directory smoke_test.py was invoked from.
+    # If '.' silently resolved to PROJECTS_DIR, an instance would have
+    # landed at ./claude-code-doctor/ relative to the wizard's cwd
+    # (which inherits from the smoke driver's cwd). Negative-check it.
+    relative_leak = os.path.join(os.getcwd(), 'claude-code-doctor')
+    if os.path.exists(os.path.join(relative_leak, 'DOCTOR.md')):
+        failures.append(
+            f"Relative-path input '.' silently resolved to cwd; instance "
+            f"leaked to {relative_leak}")
+    return failures
+
+
 def negative_name_assertions(cleaned, ctx=None):
     """User typed 'foo/bar' (rejected: slash), then '.hidden' (rejected:
     leading dot), then 'good-instance' (accepted).
@@ -1277,8 +1337,7 @@ def main():
         ('negative-name',     dict(steps=NEGATIVE_NAME_STEPS,
                                    assertions=negative_name_assertions)),
         ('empty-name',        dict(steps=EMPTY_NAME_STEPS,
-                                   assertions=name_validation_assertions(
-                                       "Name can't be empty or whitespace"))),
+                                   assertions=empty_name_assertions)),
         ('engine-fallback',   dict(steps=ENGINE_FALLBACK_STEPS,
                                    assertions=engine_fallback_assertions)),
         ('engine-fallback-decline', dict(steps=ENGINE_FALLBACK_DECLINE_STEPS,
@@ -1321,8 +1380,7 @@ def main():
                                      assertions=typed_path_decline_assertions)),
         ('typed-path-relative', dict(steps=TYPED_PATH_RELATIVE_STEPS,
                                      pre_setup=pre_typed_path,
-                                     assertions=name_validation_assertions(
-                                         'Path must be absolute'))),
+                                     assertions=typed_path_relative_assertions)),
         ('full-mode',         dict(steps=_full_mode_steps(),
                                    assertions=setup_mode_assertions('full'))),
     ]
