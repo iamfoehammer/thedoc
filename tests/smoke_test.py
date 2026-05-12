@@ -1263,12 +1263,15 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
         if re.search(pat, cleaned):
             failures.append(f'{msg}  (matched {pat!r})')
 
-    # Cleanup
-    for d in (state_dir, fake_home):
-        shutil.rmtree(d, ignore_errors=True)
-    # Leave project_dir for inspection if the test failed; otherwise nuke it
+    # Cleanup. The "leave project_dir for inspection on FAIL" intent
+    # used to be broken: project_dir is inside fake_home, and fake_home
+    # was being rmtree'd unconditionally, so the post-FAIL state was
+    # always wiped before the developer could look at it. Iter 181: gate
+    # fake_home's removal on no-failures too. state_dir is small and
+    # rarely interesting, so it always gets cleaned.
+    shutil.rmtree(state_dir, ignore_errors=True)
     if not failures:
-        shutil.rmtree(project_dir, ignore_errors=True)
+        shutil.rmtree(fake_home, ignore_errors=True)
 
     elapsed = time.time() - started
     print()
