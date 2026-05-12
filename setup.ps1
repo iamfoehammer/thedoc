@@ -854,7 +854,16 @@ Add new issues and fixes to the Known Issues & Fixes table above.
     Write-Host '  Ready to launch.'
     Write-Host ''
 
-    Save-State -ProjectsDir $ProjectsDir -Platform 'windows'
+    # Compute the platform string the same way Invoke-TricorderScan
+    # and the CLAUDE.md template do. Iter 200 fix: previously hardcoded
+    # 'windows' regardless of where pwsh actually runs - if a user
+    # invokes setup.ps1 from macOS or Linux pwsh, the state file would
+    # mis-record the platform.
+    $platformForState = if ($IsWindows -or $env:OS -eq 'Windows_NT') { 'windows' }
+                        elseif ($IsMacOS)                            { 'macos' }
+                        elseif ($IsLinux)                            { 'linux' }
+                        else                                         { 'unknown' }
+    Save-State -ProjectsDir $ProjectsDir -Platform $platformForState
 
     if ($env:THEDOC_NO_LAUNCH) {
         Write-Host '  THEDOC_NO_LAUNCH set - skipping engine launch (test mode).' -ForegroundColor DarkGray
