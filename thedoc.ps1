@@ -278,6 +278,11 @@ switch ($Command) {
         } finally {
             Pop-Location
         }
+        # Propagate claude's exit code. Bash thedoc's open branch ends
+        # with `exec claude "$prompt"` which inherits exit code via process
+        # replacement; PS's `&` doesn't (iter 162 - PS gotcha #5). Pop-Location
+        # is a cmdlet (not a native command) so it doesn't touch $LASTEXITCODE.
+        exit $LASTEXITCODE
     }
 
     { $_ -in 'version', '--version', '-V' } {
