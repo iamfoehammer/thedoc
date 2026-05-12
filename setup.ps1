@@ -741,6 +741,17 @@ function New-DoctorInstance {
         [Parameter(Mandatory)][string]$SetupMode
     )
 
+    # Compute the canonical lowercase platform string ONCE up front.
+    # Used both in the CLAUDE.md template (when a new instance is being
+    # created) and in the Save-State call further down (which runs on
+    # both new-instance and open-existing paths). Pre-iter-260 there
+    # were two copies of this if-elseif chain; consolidating prevents
+    # drift if the detection logic ever needs to change.
+    $platform = if ($IsWindows -or $env:OS -eq 'Windows_NT') { 'windows' }
+                elseif ($IsMacOS)                            { 'macos' }
+                elseif ($IsLinux)                            { 'linux' }
+                else                                         { 'unknown' }
+
     $defaultInstance = "$DoctorSlug-doctor"
     Write-Host "  Name for your doctor instance folder?"
     # Drop the inline path here (mirrors setup.sh): the structure-
@@ -837,10 +848,8 @@ function New-DoctorInstance {
             Write-Host '  Linked framework updates (text fallback)' -ForegroundColor Green
         }
 
-        $platform = if ($IsWindows -or $env:OS -eq 'Windows_NT') { 'windows' }
-                    elseif ($IsMacOS)                            { 'macos' }
-                    elseif ($IsLinux)                            { 'linux' }
-                    else                                         { 'unknown' }
+        # $platform was set at the top of this function so it's the
+        # same canonical value used for Save-State below.
 
         # UTC Zulu format to match bash setup.sh's
         # `date -u +"%Y-%m-%dT%H:%M:%SZ"` exactly. Both 'thedoc list'
@@ -904,16 +913,11 @@ Add new issues and fixes to the Known Issues & Fixes table above.
     Write-Host '  Ready to launch.' -ForegroundColor White
     Write-Host ''
 
-    # Compute the platform string the same way Invoke-TricorderScan
-    # and the CLAUDE.md template do. Iter 200 fix: previously hardcoded
-    # 'windows' regardless of where pwsh actually runs - if a user
-    # invokes setup.ps1 from macOS or Linux pwsh, the state file would
-    # mis-record the platform.
-    $platformForState = if ($IsWindows -or $env:OS -eq 'Windows_NT') { 'windows' }
-                        elseif ($IsMacOS)                            { 'macos' }
-                        elseif ($IsLinux)                            { 'linux' }
-                        else                                         { 'unknown' }
-    Save-State -ProjectsDir $ProjectsDir -Platform $platformForState
+    # $platform was computed once at the top of this function (iter 260
+    # consolidated the previous two copies). Iter 200's fix is preserved:
+    # we use the freshly-detected runtime value, not whatever the state
+    # file might have on disk from a different shell/OS.
+    Save-State -ProjectsDir $ProjectsDir -Platform $platform
 
     if ($env:THEDOC_NO_LAUNCH) {
         Write-Host '  THEDOC_NO_LAUNCH set - skipping engine launch (test mode).' -ForegroundColor DarkGray
