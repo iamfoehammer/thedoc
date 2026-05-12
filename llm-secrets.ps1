@@ -137,7 +137,17 @@ function Remove-Secret {
     }
 
     $lines = Get-Content $SecretsFile | Where-Object { $_ -notmatch "^\`$env:${VarName}\s*=" }
-    $lines | Set-Content $SecretsFile
+    # If that was the last remaining secret, explicitly truncate to
+    # 0 bytes rather than relying on `$null | Set-Content` behavior
+    # (varies by PS version - some leave the file unchanged, some
+    # write a stray newline). Get-SecretList's
+    # `(Get-Item).Length -eq 0` is the byte-size check; matching
+    # bash's iter-249 fix to llm-secrets's cmd_remove.
+    if (-not $lines) {
+        Clear-Content -LiteralPath $SecretsFile
+    } else {
+        $lines | Set-Content -LiteralPath $SecretsFile
+    }
 
     Write-Host "Removed $VarName"
     Write-Host "Run '. ~/.secrets.ps1' or open a new shell to unload it."
