@@ -47,6 +47,19 @@ jobs:
       - name: Run smoke tests
         run: python3 tests/smoke_test.py
 
+      - name: Upload PTY logs on failure
+        # Smoke driver keeps /tmp/thedoc-smoke-*.log on any FAIL (iter 161+
+        # behavior). Without this upload step, a CI failure shows only the
+        # per-scenario stdout summary; the actual rendered PTY transcripts
+        # that catch rendering bugs (mid-bullet wrap, indent loss, etc.)
+        # would be lost when the runner terminates.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-logs-ubuntu
+          path: /tmp/thedoc-smoke-*.log
+          if-no-files-found: ignore
+
   smoke-macos:
     name: setup.sh end-to-end (macOS)
     runs-on: macos-latest
@@ -88,6 +101,14 @@ jobs:
 
       - name: Run smoke tests
         run: python3 tests/smoke_test.py
+
+      - name: Upload PTY logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-logs-macos
+          path: /tmp/thedoc-smoke-*.log
+          if-no-files-found: ignore
 
   parse-powershell:
     # PowerShell-only parse check. The smoke test driver uses pty.fork()
