@@ -105,6 +105,29 @@ trap [System.Management.Automation.PipelineStoppedException] {
     exit 130
 }
 
+# Catch-all for unhandled exceptions so the user sees a friendly line
+# instead of a stack trace. Canonical trigger: [Console]::ReadKey()
+# throws InvalidOperationException when stdin has been redirected
+# (e.g. `setup.ps1 < script.txt`, piped invocation in CI). Bash's
+# `read -rsn1` returns 1 on EOF and setup.sh's _on_exit EXIT trap
+# (iter 241) catches that; PS doesn't have an EXIT-trap equivalent
+# but a typed [System.Exception] catch-all serves the same purpose.
+#
+# PipelineStoppedException is a subtype of Exception, but PS's trap
+# resolution picks the most-specific matching type, so Ctrl+C still
+# routes to the trap above. Try/catch blocks inside functions take
+# precedence over either trap, so intentional error handling is
+# unaffected. Mirrors setup.sh's _on_exit for consistent UX across
+# ports.
+trap [System.Exception] {
+    Write-Host ''
+    Write-Host '  Setup did not complete. No instance was created.' -ForegroundColor Red
+    Write-Host "  Error: $($_.Exception.Message)" -ForegroundColor DarkGray
+    Write-Host '  If stdin was piped/closed, run setup.ps1 interactively.' -ForegroundColor DarkGray
+    Write-Host ''
+    exit 1
+}
+
 # ── Constants ────────────────────────────────────────────────────────
 $Titles = @(
     'Emergency LLM Hologram',
