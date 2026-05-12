@@ -56,6 +56,8 @@ git clone https://github.com/iamfoehammer/thedoc.git $HOME\GitHub\thedoc
 $env:PATH = "$HOME\GitHub\thedoc;$env:PATH"
 # Persist across sessions:
 [Environment]::SetEnvironmentVariable('PATH', "$HOME\GitHub\thedoc;$([Environment]::GetEnvironmentVariable('PATH', 'User'))", 'User')
+# Wire llm-secrets into your PowerShell profile (loads env vars on new shells):
+Add-Content $PROFILE.CurrentUserAllHosts 'if (Test-Path "$HOME/.secrets.ps1") { . "$HOME/.secrets.ps1" }'
 thedoc
 ```
 
