@@ -307,7 +307,13 @@ function Show-Greeting {
             $artPath = Join-Path $ScriptDir 'thedoc.txt'
             if (Test-Path $artPath) {
                 Write-Host ''
-                Get-Content $artPath
+                # Cyan wrap matches bash's `echo -e "  ${CYAN}"; cat ...;
+                # echo -e "${RESET}"`. Streaming via ForEach-Object is the
+                # cmdlet equivalent of cat-with-color (Get-Content alone
+                # streams to default Foreground).
+                Get-Content $artPath | ForEach-Object {
+                    Write-Host $_ -ForegroundColor Cyan
+                }
                 Write-Host ''
                 Write-Host '  The Emergency Medical Hologram, reporting for duty.'
                 Write-Host ''
