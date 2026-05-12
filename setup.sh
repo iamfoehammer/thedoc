@@ -608,7 +608,12 @@ detect_projects_dirs() {
     CANDIDATE_DIRS=()
     CANDIDATE_COUNTS=()
 
-    # Home directory paths
+    # Home directory paths. Matches setup.ps1's Get-CandidateProjectDirs
+    # list (line 564) minus `source/repos` - that's Visual Studio Windows's
+    # default and doesn't apply to native Linux/macOS bash. macOS users
+    # keeping repos under ~/Documents/GitHub were previously missed by
+    # the scan; iter 268 closes that gap. The WSL drive-scan branch
+    # below already includes Documents/ paths for its own reasons.
     local search_paths=(
         "$HOME/GitHub"
         "$HOME/projects"
@@ -617,6 +622,8 @@ detect_projects_dirs() {
         "$HOME/code"
         "$HOME/workspace"
         "$HOME/dev"
+        "$HOME/Documents/GitHub"
+        "$HOME/Documents/projects"
     )
 
     # On WSL, also scan Windows drives
