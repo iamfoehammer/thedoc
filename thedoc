@@ -93,7 +93,10 @@ case "${1:-setup}" in
             echo ""
             exit 1
         fi
-        if [ ! -d "$SCRIPT_DIR/.git" ]; then
+        # `-e` (not `-d`) so git worktrees work too: the worktree's $SCRIPT_DIR/.git
+        # is a regular file containing `gitdir: <path>` rather than a directory.
+        # Iter 195 fix - thedoc was incorrectly rejecting worktree setups.
+        if [ ! -e "$SCRIPT_DIR/.git" ]; then
             echo ""
             echo "  $SCRIPT_DIR is not a git checkout - can't pull."
             echo "  If you installed via the bootstrap one-liner, this is a bug."
@@ -214,12 +217,13 @@ case "${1:-setup}" in
         echo ""
         echo "  thedoc - Emergency Medical Hologram framework"
         echo "  Framework dir: $SCRIPT_DIR"
-        if [ -d "$SCRIPT_DIR/.git" ] && command -v git >/dev/null 2>&1; then
+        # `-e` (not `-d`) so worktrees work - see update subcommand above.
+        if [ -e "$SCRIPT_DIR/.git" ] && command -v git >/dev/null 2>&1; then
             _ver=$(git -C "$SCRIPT_DIR" describe --always --dirty 2>/dev/null || echo unknown)
             _branch=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)
             echo "  Branch:        $_branch"
             echo "  Commit:        $_ver"
-        elif [ -d "$SCRIPT_DIR/.git" ]; then
+        elif [ -e "$SCRIPT_DIR/.git" ]; then
             echo "  Commit:        (git binary not on PATH - install git to see)"
         else
             echo "  Commit:        (not a git checkout)"

@@ -147,7 +147,11 @@ switch ($Command) {
             Write-Host ""
             exit 1
         }
-        if (-not (Test-Path -LiteralPath (Join-Path $ScriptDir '.git') -PathType Container)) {
+        # Drop -PathType Container so git worktrees work too - in a worktree
+        # $ScriptDir/.git is a regular file containing `gitdir: <path>` rather
+        # than a directory. The version subcommand below (line 294) already
+        # uses the right form; iter 195 brought update into parity.
+        if (-not (Test-Path -LiteralPath (Join-Path $ScriptDir '.git'))) {
             Write-Host ""
             Write-Host "  $ScriptDir is not a git checkout - can't pull."
             Write-Host "  If you installed via the bootstrap one-liner, this is a bug."
