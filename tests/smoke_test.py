@@ -862,6 +862,33 @@ def open_existing_assertions(cleaned, ctx=None):
     return failures
 
 
+def typed_path_decline_assertions(cleaned, ctx=None):
+    """User typed a non-existent path → declined "Create it?" with 'n'
+    → re-prompted → typed a real existing path → instance created there.
+
+    name_validation_assertions covered the two transcript markers
+    ("That folder doesn't exist. Create it?" + "OK - type a different
+    path"). Safety contract pin: the declined path must NOT have been
+    created on disk - a regression where the decline branch fell
+    through to mkdir anyway would silently produce the orphan dir
+    while still printing the decline ack."""
+    failures = list(default_assertions(cleaned, ctx))
+    for msg in ("That folder doesn't exist. Create it?",
+                'OK - type a different path'):
+        if msg not in cleaned:
+            failures.append(f"Transcript missing: {msg!r}")
+    # The declined fixture path must NOT exist after the run.
+    if os.path.exists(TYPED_PATH_CREATE):
+        failures.append(
+            f"Declined path leaked to disk: {TYPED_PATH_CREATE} exists; "
+            f"the user said 'n' to Create it - mkdir should not have run.")
+    # The real fixture path must hold the new instance.
+    landed = os.path.join(TYPED_PATH_FIXTURE, 'claude-code-doctor', 'DOCTOR.md')
+    if not os.path.exists(landed):
+        failures.append(f"Re-prompted instance not at {landed}")
+    return failures
+
+
 def negative_name_assertions(cleaned, ctx=None):
     """User typed 'foo/bar' (rejected: slash), then '.hidden' (rejected:
     leading dot), then 'good-instance' (accepted).
@@ -1291,9 +1318,7 @@ def main():
                                          TYPED_PATH_CREATE))),
         ('typed-path-decline',  dict(steps=TYPED_PATH_DECLINE_STEPS,
                                      pre_setup=pre_typed_path_decline,
-                                     assertions=name_validation_assertions(
-                                         "That folder doesn't exist. Create it?",
-                                         'OK - type a different path'))),
+                                     assertions=typed_path_decline_assertions)),
         ('typed-path-relative', dict(steps=TYPED_PATH_RELATIVE_STEPS,
                                      pre_setup=pre_typed_path,
                                      assertions=name_validation_assertions(
