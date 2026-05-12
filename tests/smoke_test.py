@@ -862,6 +862,40 @@ def open_existing_assertions(cleaned, ctx=None):
     return failures
 
 
+def open_existing_decline_assertions(cleaned, ctx=None):
+    """User typed default → collided with existing instance → DECLINED
+    "Open existing? [Y/n]" with 'n' → wizard re-prompts and creates
+    instance under the fresh name.
+
+    Safety contract pin (iter 174 add, same shape as iters 172/173):
+      1. 'OK - pick a different name' transcript ack appeared
+      2. Pre-existing 'Pretend' DOCTOR.md/CLAUDE.md content NOT
+         overwritten - the decline meant the wizard left the user's
+         existing instance alone
+      3. Fresh instance landed at <project_dir>/fresh-instance/ with
+         real DOCTOR.md generated
+    """
+    failures = list(default_assertions(cleaned, ctx))
+    if 'OK - pick a different name' not in cleaned:
+        failures.append("Did not see 'OK - pick a different name' on decline")
+    inst = os.path.join(ctx['project_dir'], 'claude-code-doctor')
+    for fname in ('DOCTOR.md', 'CLAUDE.md'):
+        path = os.path.join(inst, fname)
+        if not os.path.exists(path):
+            failures.append(f"Pre-existing file disappeared: {path}")
+            continue
+        with open(path) as f:
+            content = f.read()
+        if 'Pretend' not in content:
+            failures.append(
+                f"Decline branch overwrote {fname} anyway; 'Pretend' "
+                f"marker gone. Head:\n{content[:120]!r}")
+    fresh = os.path.join(ctx['project_dir'], 'fresh-instance', 'DOCTOR.md')
+    if not os.path.exists(fresh):
+        failures.append(f"Re-prompted instance not created at {fresh}")
+    return failures
+
+
 def non_thedoc_folder_assertions(cleaned, ctx=None):
     """User's projects dir had an unrelated folder at the default-name
     path (claude-code-doctor/ with README.md + main.py but NO DOCTOR.md).
@@ -1203,8 +1237,7 @@ def main():
                                    assertions=open_existing_assertions)),
         ('open-existing-decline', dict(steps=OPEN_EXISTING_DECLINE_STEPS,
                                        pre_setup=pre_create_instance,
-                                       assertions=name_validation_assertions(
-                                           'OK - pick a different name'))),
+                                       assertions=open_existing_decline_assertions)),
         ('non-thedoc-folder', dict(steps=NON_THEDOC_FOLDER_STEPS,
                                    pre_setup=pre_create_non_thedoc_folder,
                                    assertions=non_thedoc_folder_assertions)),
