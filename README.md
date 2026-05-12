@@ -121,17 +121,24 @@ $ thedoc
   Contrary to my name, I handle everything from routine
   configuration to catastrophic meltdowns.
 
-  What is this doctor for?
-  [1] Claude Code
-  [2] OpenClaw
-  [3] Gemini CLI (not yet supported)
+  What is this doctor for? (which LLM harness are you looking to configure or fix?)
+
+  > Claude Code
+    OpenClaw
+    Gemini CLI (not yet supported)
+
+  Arrow keys to move, Enter to select
 
   Which LLM engine will power this doctor?
-  [1] Claude Code
+
+  > Claude Code
+    OpenClaw (not yet supported)
+    Gemini CLI (not yet supported)
 
   Setup mode?
-  [1] Quick - generate a starter config, refine later
-  [2] Full  - interactive audit of your current setup
+
+  > Quick - generate a starter config, refine later
+    Full - interactive audit of your current setup
 ```
 
 ### What Gets Created
