@@ -683,7 +683,22 @@ function New-DoctorInstance {
     while ($true) {
         Write-Host ''
         $entered = Read-Line "  [$defaultInstance] > "
-        $instanceName = if ([string]::IsNullOrWhiteSpace($entered)) { $defaultInstance } else { $entered.Trim() }
+        # Iter 178: distinguish empty input (Enter alone → use default) from
+        # whitespace-only input (reject). Bash iter 87 makes this distinction
+        # via `IFS= read` + trim + -z check; PS used to collapse both cases
+        # to "use default", which was friendlier but inconsistent with bash
+        # and hid an actual typo (user meaning to type a name but only
+        # hitting spaces) behind a silent substitution.
+        if ($entered.Length -eq 0) {
+            $instanceName = $defaultInstance
+        }
+        elseif ([string]::IsNullOrWhiteSpace($entered)) {
+            Write-Host "  Name can't be empty or whitespace." -ForegroundColor Yellow
+            continue
+        }
+        else {
+            $instanceName = $entered.Trim()
+        }
 
         if ([string]::IsNullOrWhiteSpace($instanceName)) {
             Write-Host "  Name can't be empty or whitespace." -ForegroundColor Yellow
