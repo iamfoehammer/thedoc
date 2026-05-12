@@ -334,6 +334,21 @@ _assert_exit_code   "setup.sh </dev/null: exit non-zero" 1 "$rc"
 _assert_contains    "setup.sh </dev/null: friendly message"  "Setup did not complete" "$out"
 _assert_contains    "setup.sh </dev/null: hint about stdin"  "stdin was piped" "$out"
 
+# 10b. llm-secrets remove of the LAST remaining secret truncates the
+# file to 0 bytes so cmd_list's `[ -s ]` check correctly says
+# "No secrets stored." Before iter 249, the file was left at 1 byte
+# (a stray "\n" from `echo "$tmp" > file` where $tmp was empty), so
+# the user saw "Stored secrets (~/.secrets):" header with nothing
+# under it - implying secrets exist but can't be listed.
+_secrets=$(mktemp)
+SECRETS_FILE="$_secrets" "$REPO_ROOT/llm-secrets" set FOOTEST <<< "x" >/dev/null 2>&1
+SECRETS_FILE="$_secrets" "$REPO_ROOT/llm-secrets" remove FOOTEST >/dev/null
+_size=$(wc -c <"$_secrets" | tr -d ' ')
+_list_out=$(SECRETS_FILE="$_secrets" "$REPO_ROOT/llm-secrets" list 2>&1)
+rm -f "$_secrets"
+_assert_exit_code  "llm-secrets remove (last): file is 0 bytes" 0 "$_size"
+_assert_contains   "llm-secrets list (post-remove): says No secrets stored"  "No secrets stored" "$_list_out"
+
 echo ""
 
 # 11. tests/README.md scenario table stays in sync with smoke_test.py.
