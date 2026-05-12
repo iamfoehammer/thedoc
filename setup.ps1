@@ -329,7 +329,7 @@ function Show-Greeting {
                 Write-Host ''
                 Write-Host '  The Emergency Medical Hologram, reporting for duty.'
                 Write-Host ''
-                Write-Host '  Press any key to continue...'
+                Write-Host '  Press any key to continue...' -ForegroundColor DarkGray
                 [System.Console]::ReadKey($true) | Out-Null
                 Write-Host ''
             }
