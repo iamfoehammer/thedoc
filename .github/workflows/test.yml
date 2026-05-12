@@ -40,6 +40,9 @@ jobs:
         run: |
           ./setup.sh --help    | grep -q "thedoc setup wizard"
           ./bootstrap.sh -h    | grep -q "thedoc bootstrap"
+          ./llm-secrets --help | grep -q "llm-secrets - Store environment variable secrets"
+          ./llm-secrets -h     | grep -q "llm-secrets - Store environment variable secrets"
+          ./llm-secrets help   | grep -q "llm-secrets - Store environment variable secrets"
 
       - name: Run wrapper tests
         run: bash tests/test_wrapper.sh
@@ -92,6 +95,9 @@ jobs:
         run: |
           ./setup.sh --help    | grep -q "thedoc setup wizard"
           ./bootstrap.sh -h    | grep -q "thedoc bootstrap"
+          ./llm-secrets --help | grep -q "llm-secrets - Store environment variable secrets"
+          ./llm-secrets -h     | grep -q "llm-secrets - Store environment variable secrets"
+          ./llm-secrets help   | grep -q "llm-secrets - Store environment variable secrets"
 
       # macOS ships bash 3.2; this is the canonical test rig for the
       # BSD/coreutils portability work (no grep -P, no find -readable,
