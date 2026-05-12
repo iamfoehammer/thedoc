@@ -827,6 +827,41 @@ def name_validation_assertions(*required_messages):
     return _check
 
 
+def open_existing_assertions(cleaned, ctx=None):
+    """User typed default name → collided with the pre-existing instance
+    → said Y to "Open existing? [Y/n]" → wizard reached Ready-to-launch
+    using the EXISTING instance dir (not a fresh one).
+
+    The transcript checks 'already exists as a doctor instance' and
+    'OK - opening existing instance' confirm the right branch fired,
+    but a regression where the wizard still re-created the instance
+    files would silent-pass: the messages would print, then the
+    create-instance block would overwrite DOCTOR.md/CLAUDE.md with
+    fresh generated content.
+
+    Pin the safety contract: the 'Pretend' marker from pre_create_instance
+    must still be in DOCTOR.md and CLAUDE.md - proves the existing
+    files weren't clobbered."""
+    failures = list(default_assertions(cleaned, ctx))
+    for msg in ('already exists as a doctor instance',
+                'OK - opening existing instance'):
+        if msg not in cleaned:
+            failures.append(f"Transcript missing: {msg!r}")
+    inst = os.path.join(ctx['project_dir'], 'claude-code-doctor')
+    for fname in ('DOCTOR.md', 'CLAUDE.md'):
+        path = os.path.join(inst, fname)
+        if not os.path.exists(path):
+            failures.append(f"Pre-existing file missing: {path}")
+            continue
+        with open(path) as f:
+            content = f.read()
+        if 'Pretend' not in content:
+            failures.append(
+                f"Open-existing overwrote {fname}; "
+                f"'Pretend' marker gone. Content head:\n{content[:120]!r}")
+    return failures
+
+
 def non_thedoc_folder_assertions(cleaned, ctx=None):
     """User's projects dir had an unrelated folder at the default-name
     path (claude-code-doctor/ with README.md + main.py but NO DOCTOR.md).
@@ -1165,9 +1200,7 @@ def main():
                                          assertions=engine_decline_assertions)),
         ('open-existing',     dict(steps=OPEN_EXISTING_STEPS,
                                    pre_setup=pre_create_instance,
-                                   assertions=name_validation_assertions(
-                                       'already exists as a doctor instance',
-                                       'OK - opening existing instance'))),
+                                   assertions=open_existing_assertions)),
         ('open-existing-decline', dict(steps=OPEN_EXISTING_DECLINE_STEPS,
                                        pre_setup=pre_create_instance,
                                        assertions=name_validation_assertions(
