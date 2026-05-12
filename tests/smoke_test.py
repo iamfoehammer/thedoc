@@ -69,7 +69,7 @@ TYPED_PATH_CREATE  = f'/tmp/thedoc-smoke-typed-projects-to-create-{os.getpid()}'
 ANSI_RE = re.compile(rb'\x1b\[[0-9;]*[A-Za-z]')
 
 
-# (regex, bytes_to_send, label) — driver waits for the regex to appear in
+# (regex, bytes_to_send, label) - driver waits for the regex to appear in
 # the cumulative cleaned output (starting from the previous match's end),
 # then sends. Most scenarios share the same first 7 steps - greeting flow,
 # scan, projects-folder pick (option 1), explainer, doctor-type pick,

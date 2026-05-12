@@ -10,7 +10,7 @@
 1. **Scaffold the Compose + Room + Navigation skeleton** with the standard `gradle/libs.versions.toml` block (see "Standard dependencies").
 2. **Use `applicationVariants.all { outputs }`** in `app/build.gradle.kts` to rename APK output to `<app-slug>-${versionName}-${buildType}.apk`. Required so `dist/serve_<app>.py` can pick "newest APK" by mtime and serve it.
 3. **Create a `dist/` folder** with:
-   - `serve_<app>.py` — the per-app local HTTP server. See "`dist/serve_<app>.py` requirements" below.
+   - `serve_<app>.py` - the per-app local HTTP server. See "`dist/serve_<app>.py` requirements" below.
    - `sprint.md` seeded with `## Next Version (0/5 implemented)` plus 5 numbered slots.
    - `crashes/` (gitignored).
    - `.gitignore`: `crashes/` and `*.apk`.
@@ -18,8 +18,8 @@
 5. **Wire `CrashReporter.install(this)` as the FIRST line in `Application.onCreate()`**, before the DI container, before Room, before any other init. The crash handler must capture init crashes that happen before the rest of the app boots.
 6. **Create three notification channels** in `Application.onCreate()` (or whichever subset you use): regular reminders (HIGH), full-screen alarms (MAX, bypass DND), app updates (DEFAULT). Use stable IDs as `companion object` constants on the `Application` class.
 7. **Add an in-app feedback / debug-log FAB or menu item** that calls `CrashReporter.sendLogManually(context, userMessage) { ... }`. This is the channel through which sprint items get collected.
-8. **Show the version number in the top app bar of the home screen.** Tappable. Tap → changelog dialog. If a newer version is available, replace it with "v{current} — tap to update to v{next}" linking to the APK download URL.
-9. **Configure `network_security_config.xml`** to allow cleartext to your Tailscale IP (or set `usesCleartextTraffic="true"` for the whole app — the former is stricter).
+8. **Show the version number in the top app bar of the home screen.** Tappable. Tap → changelog dialog. If a newer version is available, replace it with "v{current} - tap to update to v{next}" linking to the APK download URL.
+9. **Configure `network_security_config.xml`** to allow cleartext to your Tailscale IP (or set `usesCleartextTraffic="true"` for the whole app - the former is stricter).
 10. **Add a CLAUDE.md** to the repo root with project overview + tech stack + key impl notes (see "README/docs conventions" below).
 11. **For any app that's more than a glorified one-screen demo**, add a `SPEC.md` (vision/scope) and a `REFACTOR.md` (anti-patterns / lessons learned).
 12. **Launch the sprint server under `Monitor` inside the active Claude Code session** (not in a separate terminal). See § "Running the sprint server in-session" below. This is what wires the in-app debug-log FAB to Claude Code's chat in real time.
@@ -32,15 +32,15 @@
 |---|---|---|
 | 1 | **Show app version in UI** (typically TopAppBar subtitle on home screen) | Sideload distribution: nobody knows which build a phone has |
 | 2 | **Read version from `PackageManager`, not `BuildConfig` directly** | `BuildConfig` caches across debug builds and lies to you |
-| 3 | **In-app debug log / feedback channel** that POSTs to a sideload server, **reachable from every screen** (not just Home). Convention: global debug FAB at `BottomStart`, per-screen FABs (add buttons, etc.) at `BottomEnd` — no overlap, no stacking. Hoist into a `DebugFabHost` composable that wraps the NavHost so a single instance overlays all routes. | Bugs surface anywhere in the UI, so the FAB must be everywhere too. This is how sprint items get collected — type the feedback into the app, server stores it. |
+| 3 | **In-app debug log / feedback channel** that POSTs to a sideload server, **reachable from every screen** (not just Home). Convention: global debug FAB at `BottomStart`, per-screen FABs (add buttons, etc.) at `BottomEnd` - no overlap, no stacking. Hoist into a `DebugFabHost` composable that wraps the NavHost so a single instance overlays all routes. | Bugs surface anywhere in the UI, so the FAB must be everywhere too. This is how sprint items get collected - type the feedback into the app, server stores it. |
 | 4 | **Auto-installed `Thread.setDefaultUncaughtExceptionHandler`** that writes to disk and POSTs on next launch | Crashes during init never reach you otherwise. `CrashReporter.install()` should be line 1 of `Application.onCreate`. |
 | 5 | **Offline crash queue** (base64-line file, drained on next launch) | Tailscale server is sometimes asleep; reports must not be lost |
 | 6 | **Update banner** polling `/version` every 30 s, replacing version subtitle when newer build is available | Sideload distro means there's no Play Store autoupdate |
-| 7 | **Sprint indicator** ("v0.10.8 — sprint 3/5"), tappable for the planned-items list | The UI itself is the sprint dashboard |
+| 7 | **Sprint indicator** ("v0.10.8 - sprint 3/5"), tappable for the planned-items list | The UI itself is the sprint dashboard |
 | 8 | **Notification when sprint hits X/X and a newer APK is on the server** | Pushes the "ready to test" signal without app being open |
 | 9 | **Consistent renamed APK output** (`<app>-<version>-<buildType>.apk`) | The dist server picks newest by mtime/glob |
 | 10 | **Same Tailscale IP** as `serverUrl` default across all apps | One Tailscale net, predictable across apps |
-| 11 | **Ship a `CHANGELOG.md` asset** at `app/src/main/assets/CHANGELOG.md`. The Home screen's "tap version" affordance loads it via `context.assets.open("CHANGELOG.md")` and renders it in a scrollable monospace dialog. **Update the file in the same diff that bumps `versionName`** — every sprint ship adds a new top-level section. | Without this the user has no way to find out what changed between two installed builds. `sprint.md` is dev-server-only; `CHANGELOG.md` ships with the APK. |
+| 11 | **Ship a `CHANGELOG.md` asset** at `app/src/main/assets/CHANGELOG.md`. The Home screen's "tap version" affordance loads it via `context.assets.open("CHANGELOG.md")` and renders it in a scrollable monospace dialog. **Update the file in the same diff that bumps `versionName`** - every sprint ship adds a new top-level section. | Without this the user has no way to find out what changed between two installed builds. `sprint.md` is dev-server-only; `CHANGELOG.md` ships with the APK. |
 
 ---
 
@@ -50,16 +50,16 @@ The signature workflow every iterating app should adopt.
 
 ### Files involved
 
-- `app/src/main/java/.../util/CrashReporter.kt` — crash capture + offline queue + manual log send + `/version` poll + `/sprint` poll + `/sprint/items` fetch
-- `app/src/main/java/.../util/UpdateNotifier.kt` — notification at sprint-complete + APK-ready
-- `app/src/main/java/.../ui/screen/HomeScreen.kt` — TopAppBar subtitle, sprint dialog, debug-log FAB/menu item
-- `dist/serve_<app>.py` — local Python HTTP server (stdlib only, no deps)
-- `dist/sprint.md` — markdown of current sprint items
-- `dist/crashes/` — incoming crash reports
+- `app/src/main/java/.../util/CrashReporter.kt` - crash capture + offline queue + manual log send + `/version` poll + `/sprint` poll + `/sprint/items` fetch
+- `app/src/main/java/.../util/UpdateNotifier.kt` - notification at sprint-complete + APK-ready
+- `app/src/main/java/.../ui/screen/HomeScreen.kt` - TopAppBar subtitle, sprint dialog, debug-log FAB/menu item
+- `dist/serve_<app>.py` - local Python HTTP server (stdlib only, no deps)
+- `dist/sprint.md` - markdown of current sprint items
+- `dist/crashes/` - incoming crash reports
 
 ### Running the sprint server in-session
 
-The server **must run inside the active Claude Code session** (the one driving the sprint), not in some other terminal. Launch it with the `Monitor` tool, `persistent: true`, so each `[CRASH …]` block the server prints arrives in chat as a notification the moment it lands. That is the entire point of the loop — without it the FAB → server → Claude Code feedback path becomes a "remember to look at the crashes directory" chore.
+The server **must run inside the active Claude Code session** (the one driving the sprint), not in some other terminal. Launch it with the `Monitor` tool, `persistent: true`, so each `[CRASH …]` block the server prints arrives in chat as a notification the moment it lands. That is the entire point of the loop - without it the FAB → server → Claude Code feedback path becomes a "remember to look at the crashes directory" chore.
 
 Invocation pattern:
 
@@ -73,14 +73,14 @@ Monitor(
 ```
 
 Why `Monitor` and not `Bash run_in_background`:
-- The server's `print(..., flush=True)` calls are **already** line-oriented events — no `tail -f`, no `grep` filter is needed. Each crash POST emits a single block ending in a flush. Each line becomes one chat notification.
+- The server's `print(..., flush=True)` calls are **already** line-oriented events - no `tail -f`, no `grep` filter is needed. Each crash POST emits a single block ending in a flush. Each line becomes one chat notification.
 - Background Bash buffers stdout to a file. You'd have to poll it; events don't surface in real time.
 - The Monitor tool's "silence is not success" rule is satisfied because the server prints the startup banner (`<app> server on http://0.0.0.0:<port>`) on launch, prints each crash, and exits noisily on port-conflict / IO errors. Any failure mode produces output.
 
 Lifecycle:
 - Start the monitor at the beginning of a sprint (or whenever resuming work).
-- Leave it running for the lifetime of the session — the `persistent: true` flag means it won't time out at 5 minutes.
-- Use `TaskStop` to kill it when bumping versionCode/versionName so the rebuilt APK gets picked up cleanly by `find_newest_apk()`. (`find_newest_apk` reads from disk, not the running server, so technically a restart isn't required — but stopping + restarting is the cleanest signal that "we're now on the next sprint.")
+- Leave it running for the lifetime of the session - the `persistent: true` flag means it won't time out at 5 minutes.
+- Use `TaskStop` to kill it when bumping versionCode/versionName so the rebuilt APK gets picked up cleanly by `find_newest_apk()`. (`find_newest_apk` reads from disk, not the running server, so technically a restart isn't required - but stopping + restarting is the cleanest signal that "we're now on the next sprint.")
 - If the session ends or compacts, restart the monitor on the next turn. Do **not** keep multiple servers running on the same port across sessions.
 
 Avoid:
@@ -91,18 +91,18 @@ Avoid:
 ### How it loops
 
 1. **User notices something while using the app** → taps debug-log icon (FAB or menu item) → types one-line message → `CrashReporter.sendLogManually` POSTs the message + recent logs + crash log + queued reports to `http://<tailscale-ip>:<port>/crash`.
-2. **Sideload server writes the report** to `dist/crashes/crash_YYYYMMDD_HHMMSS.log` AND prints it to stdout. Because the server is running under `Monitor` inside this Claude Code session (see § "Running the sprint server in-session"), the printed block arrives as a chat notification the moment it lands — Claude Code reads it and triages without you having to point at the file.
+2. **Sideload server writes the report** to `dist/crashes/crash_YYYYMMDD_HHMMSS.log` AND prints it to stdout. Because the server is running under `Monitor` inside this Claude Code session (see § "Running the sprint server in-session"), the printed block arrives as a chat notification the moment it lands - Claude Code reads it and triages without you having to point at the file.
 3. **Claude Code session triages the report**:
    - Bug → fix immediately and ship as a single-item sprint.
    - Feature request → add a numbered item to `dist/sprint.md` under `## Next Version` AND **start implementing it right away.** The cadence is "implement as items arrive," not "queue 5 then build all 5." The line format is the user's verbatim quote first, then a one-paragraph implementation summary; once the work lands in code, prefix the title with `✅ **Title**` so the item is visually marked done.
-4. **App polls `/sprint`** every 30 s; when `X/Y` increments (because a new item just got its `✅`), the home-screen subtitle updates: `v0.10.8 — sprint 3/5`. The X count grows incrementally during the sprint as work lands.
-5. **At 5/5 — DO NOT push yet.** First do two passes:
-   1. **Code review pass** — look for unused imports, orphaned dead code from earlier items, hard-coded strings that should be resources, missing null-checks, accidentally-broken existing tests. Treat it as a self-review of the sprint's combined diff.
-   2. **Conflict review pass** — items implemented in isolation often break each other (classic example: two items both writing to the same store and ghosting each other). Walk every implemented item against every other; resolve any cross-talk before building.
+4. **App polls `/sprint`** every 30 s; when `X/Y` increments (because a new item just got its `✅`), the home-screen subtitle updates: `v0.10.8 - sprint 3/5`. The X count grows incrementally during the sprint as work lands.
+5. **At 5/5 - DO NOT push yet.** First do two passes:
+   1. **Code review pass** - look for unused imports, orphaned dead code from earlier items, hard-coded strings that should be resources, missing null-checks, accidentally-broken existing tests. Treat it as a self-review of the sprint's combined diff.
+   2. **Conflict review pass** - items implemented in isolation often break each other (classic example: two items both writing to the same store and ghosting each other). Walk every implemented item against every other; resolve any cross-talk before building.
 
    Only after both passes pass: bump `versionCode`+`versionName`, build with `./gradlew assembleDebug`, and the renamed APK lands in `app/build/outputs/apk/debug/`.
 6. **Server's `find_newest_apk()` picks it up by mtime.** `/version` now returns `0.10.9|<app>-0.10.9-debug.apk`.
-7. **App's update poller sees the new version** → `UpdateNotifier.maybeNotifySprintComplete` fires a notification: "Sprint 5/5 complete — v0.10.9 ready to install. Tap to download." Tap → opens download URL in browser → user installs.
+7. **App's update poller sees the new version** → `UpdateNotifier.maybeNotifySprintComplete` fires a notification: "Sprint 5/5 complete - v0.10.9 ready to install. Tap to download." Tap → opens download URL in browser → user installs.
 8. **`sprint.md` rotates**: `## Next Version` becomes `## Previous Sprint (v0.10.9)`, a new empty `## Next Version (0/5 implemented)` is added.
 
 ### Server endpoints (all stdlib HTTP, no deps)
@@ -120,7 +120,7 @@ Avoid:
 ### Critical sprint-loop conventions
 
 - **Every sprint item starts with the user's verbatim quote and a timestamp.** Format: `User (May 1 16:24): "..."` then a one-paragraph fix description. Never paraphrase the complaint.
-- **Implement items as they arrive, not in a batch at the end.** The 5/5 trigger is for the *build/push* step, not the implementation work. By the time the 5th item lands the previous four should already be in `✅` state — so the only fresh work at 5/5 is finishing the last item, then the two review passes, then the build.
+- **Implement items as they arrive, not in a batch at the end.** The 5/5 trigger is for the *build/push* step, not the implementation work. By the time the 5th item lands the previous four should already be in `✅` state - so the only fresh work at 5/5 is finishing the last item, then the two review passes, then the build.
 - **Mark done items with `✅ **Title**`** prefix so the file's progress is visible at a glance and the `/sprint` count parser stays accurate (it counts ✅).
 - **At 5/5, do code review THEN conflict review BEFORE building.** Two distinct passes, in that order. Code review looks at the diff per-item; conflict review walks pairs of items for cross-talk. Items often break each other when implemented in isolation.
 - **Critical bugs ship immediately as a single-item sprint.** Treat them as one-line hotfixes shipped same-day.
@@ -156,12 +156,12 @@ Avoid:
 │       │   │   └── theme/                  # Theme.kt + Color.kt + Type.kt (Material 3)
 │       │   ├── viewmodel/                  # AndroidViewModel + StateFlow
 │       │   └── util/
-│       │       ├── CrashReporter.kt        # Mandatory — see template
+│       │       ├── CrashReporter.kt        # Mandatory - see template
 │       │       ├── UpdateNotifier.kt       # Mandatory if sprint loop is active
-│       │       ├── DebugLogger.kt          # Optional — periodic state dump POSTed to server
-│       │       └── AppSettings.kt          # Optional — small SharedPreferences wrapper + CompositionLocal
+│       │       ├── DebugLogger.kt          # Optional - periodic state dump POSTed to server
+│       │       └── AppSettings.kt          # Optional - small SharedPreferences wrapper + CompositionLocal
 │       └── res/
-│           ├── drawable/ic_notification.xml  # MUST exist — used as smallIcon for ALL notifications
+│           ├── drawable/ic_notification.xml  # MUST exist - used as smallIcon for ALL notifications
 │           ├── values/{strings,colors,themes}.xml
 │           └── xml/network_security_config.xml  # Tailscale IP cleartext exception
 ├── gradle/
@@ -302,7 +302,7 @@ android {
 
 - **Versioning:** `versionCode` is a monotonic integer; `versionName` is `MAJOR.MINOR.PATCH` with PATCH bumped per sprint, MINOR bumped at major feature gates. Bumped manually in `app/build.gradle.kts` at the end of each sprint. No fastlane / no semantic-release / no CI bumping.
 - **Always `clean` for sprint ships.** Use `./gradlew clean assembleDebug`, not `./gradlew assembleDebug`. Gradle's `generateDebugBuildConfig` task reports UP-TO-DATE even when `defaultConfig.versionName` changes, so the BuildConfig.java carries over from the previous build and crash reports show the wrong `app version` line. The user-facing version banner reads from `PackageManager` so it's correct either way, but diagnostic logs become misleading.
-- **Update `CHANGELOG.md` in the same diff as the version bump.** Every sprint ship adds a new top-level `## vX.Y.Z — YYYY-MM-DD` section to `app/src/main/assets/CHANGELOG.md`. The Home screen's "tap version" affordance loads it from assets, so without an update the user sees stale content for the new build.
+- **Update `CHANGELOG.md` in the same diff as the version bump.** Every sprint ship adds a new top-level `## vX.Y.Z - YYYY-MM-DD` section to `app/src/main/assets/CHANGELOG.md`. The Home screen's "tap version" affordance loads it from assets, so without an update the user sees stale content for the new build.
 - **Build channel:** Debug only. No signed release builds. APK lands in `app/build/outputs/apk/debug/<slug>-<version>-debug.apk` and gets symlinked or `find_newest_apk()`-discovered by the dist server.
 - **No CI/CD by default.** All builds are local `./gradlew assembleDebug` or via Claude Code.
 - **Distribution:** Tailscale + sideload. The local Python server at `<tailscale-ip>:<port>` exposes the APK. Browse to it from your phone, tap download, tap install. No Play Store, no internal testing track.
@@ -324,7 +324,7 @@ android {
 - `sendLogManually(context, userMessage, onResult)` is the API that the in-app feedback FAB calls.
 - Compares versions with naive `split(".").mapNotNull { it.toIntOrNull() }`-style comparator. Good enough.
 
-### Two valid implementations — pick one per app
+### Two valid implementations - pick one per app
 
 | | Style A (no-deps) | Style B (OkHttp app) |
 |---|---|---|
@@ -344,8 +344,8 @@ For apps with non-trivial scheduled / async behaviour, ship a `DebugLogger` that
 
 Two valid choices:
 
-- **DataStore preferences** — preferred for typed, observed, suspend-edited config like `serverUrl + token`.
-- **SharedPreferences** — fine for small bag-of-flags state, especially when you also want a `compositionLocalOf<Boolean>` so any composable can read it without prop-drilling.
+- **DataStore preferences** - preferred for typed, observed, suspend-edited config like `serverUrl + token`.
+- **SharedPreferences** - fine for small bag-of-flags state, especially when you also want a `compositionLocalOf<Boolean>` so any composable can read it without prop-drilling.
 
 **Settings screen UI conventions:**
 - Always a separate screen (not a dialog) for connection-type settings; an `AlertDialog` is fine for app-internal toggles.
@@ -370,11 +370,11 @@ Two valid choices:
 
 - **Channels are created in `Application.onCreate`**, not lazily. IDs as `companion object` constants.
 - **Channel taxonomy:**
-  - `<feature>_reminders` — `IMPORTANCE_HIGH`, regular reminders
-  - `<feature>_alarms` — `IMPORTANCE_MAX`, vibrate, alarm sound, `setBypassDnd(true)` for full-screen alarm experiences
-  - `app_updates` — `IMPORTANCE_DEFAULT`, fired by `UpdateNotifier` when a sprint completes and a new APK is available
-  - `<feature>_connection` — `IMPORTANCE_LOW`, `setShowBadge(false)` for foreground-service status notifications
-- **`POST_NOTIFICATIONS` permission** is requested in `MainActivity.onCreate` only when `SDK_INT >= TIRAMISU` (33). Result is intentionally ignored — users can grant later. Or use a permission banner.
+  - `<feature>_reminders` - `IMPORTANCE_HIGH`, regular reminders
+  - `<feature>_alarms` - `IMPORTANCE_MAX`, vibrate, alarm sound, `setBypassDnd(true)` for full-screen alarm experiences
+  - `app_updates` - `IMPORTANCE_DEFAULT`, fired by `UpdateNotifier` when a sprint completes and a new APK is available
+  - `<feature>_connection` - `IMPORTANCE_LOW`, `setShowBadge(false)` for foreground-service status notifications
+- **`POST_NOTIFICATIONS` permission** is requested in `MainActivity.onCreate` only when `SDK_INT >= TIRAMISU` (33). Result is intentionally ignored - users can grant later. Or use a permission banner.
 - **`smallIcon` always references `R.drawable.ic_notification`** (vector). Always present.
 - **`PendingIntent.FLAG_IMMUTABLE` is mandatory** on Android 12+.
 - **If you bump a channel's importance**, you MUST rename the channel ID. Android won't raise importance on existing channels.
@@ -407,7 +407,7 @@ Two valid choices:
 ## Permissions UX
 
 - **Recheck on resume** with a `LifecycleEventObserver` so the user sees the banner clear immediately after they return from system settings.
-- **Single "Setup required" card** linking to a permission screen — not stacking three banners.
+- **Single "Setup required" card** linking to a permission screen - not stacking three banners.
 - **Standard runtime permissions to plan for:** `POST_NOTIFICATIONS` (Tiramisu+), `RECORD_AUDIO`, `USE_EXACT_ALARM` (33+) / `SCHEDULE_EXACT_ALARM` (31+), `SYSTEM_ALERT_WINDOW`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`.
 - **`MainActivity.onCreate` requests `POST_NOTIFICATIONS` once**, ignores answer; users can grant later from settings.
 
@@ -431,13 +431,13 @@ Tone: terse, technical, second-person occasional.
 New Android apps following this template should treat these as gospel:
 
 1. `AlarmReceiver.onReceive()` must be synchronous: wake lock → `startForegroundService()` → `startActivity()`. Async work goes in `goAsync()` AFTER.
-2. Never call `startForegroundService()` from a coroutine — loses the exact-alarm exemption.
-3. Don't use `setRepeating()` — use `setExactAndAllowWhileIdle()` and reschedule in the receiver.
+2. Never call `startForegroundService()` from a coroutine - loses the exact-alarm exemption.
+3. Don't use `setRepeating()` - use `setExactAndAllowWhileIdle()` and reschedule in the receiver.
 4. Don't advance the deadline date until the DEADLINE has passed, not the start time.
-5. Don't use nested nav graphs for ViewModel sharing — use a repository singleton on the `Application`.
+5. Don't use nested nav graphs for ViewModel sharing - use a repository singleton on the `Application`.
 6. Show version from `PackageManager`, not `BuildConfig` (caches across debug builds).
-7. Timer tick interval 250 ms, not 50 ms — 50 ms causes visible flickering on foldables.
-8. `DatePicker` returns UTC midnight — parse with UTC `Calendar`, not local.
+7. Timer tick interval 250 ms, not 50 ms - 50 ms causes visible flickering on foldables.
+8. `DatePicker` returns UTC midnight - parse with UTC `Calendar`, not local.
 
 ---
 
