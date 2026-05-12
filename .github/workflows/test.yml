@@ -201,6 +201,33 @@ jobs:
           }
           Write-Host "All $($expected.Count) expected functions present in setup.ps1"
 
+      - name: Verify llm-secrets.ps1 exits non-zero on bad input
+        shell: pwsh
+        run: |
+          # Iter 255 made the PS port match bash's exit-code contract:
+          # error paths use `exit 1` rather than function-level `return`.
+          # These two cases hit the bad-input branches BEFORE any
+          # interactive Read-Host, so they're safe to run in CI.
+
+          # Bad variable name -> Set-Secret line 49 regex rejects.
+          & .\llm-secrets.ps1 set '!@#$' 2>&1 | Out-Null
+          if ($LASTEXITCODE -ne 1) {
+              Write-Error "llm-secrets set '!@#$': expected exit 1, got $LASTEXITCODE"
+              exit 1
+          }
+          Write-Host "OK: llm-secrets set with invalid name exits 1"
+
+          # Remove non-existent variable -> Remove-Secret line 148 not-found.
+          $env:SECRETS_FILE = Join-Path $env:RUNNER_TEMP "ci-empty-secrets.ps1"
+          New-Item -ItemType File -Path $env:SECRETS_FILE -Force | Out-Null
+          & .\llm-secrets.ps1 remove NONEXISTENT 2>&1 | Out-Null
+          if ($LASTEXITCODE -ne 1) {
+              Write-Error "llm-secrets remove NONEXISTENT: expected exit 1, got $LASTEXITCODE"
+              exit 1
+          }
+          Write-Host "OK: llm-secrets remove non-existent exits 1"
+          Remove-Item $env:SECRETS_FILE -Force -ErrorAction SilentlyContinue
+
       - name: Run thedoc.ps1 wrapper tests
         shell: pwsh
         run: pwsh -NoProfile -File tests/test_wrapper.ps1
