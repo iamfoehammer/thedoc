@@ -362,7 +362,10 @@ function Invoke-TricorderScan {
     Write-Host -NoNewline "${scan}git..."
     Wait-Dramatic -Milliseconds 200
     if (Get-Command git -ErrorAction SilentlyContinue) {
-        Write-Host ' installed' -ForegroundColor Green
+        # `git version 2.43.0` -> 3rd whitespace-separated field.
+        $gitVer = (& git --version 2>$null) -split '\s+' | Select-Object -Index 2
+        if (-not $gitVer) { $gitVer = 'unknown' }
+        Write-Host " installed ($gitVer)" -ForegroundColor Green
     } else {
         Write-Host ' not found' -ForegroundColor Red
         Write-Host '          (required - install Git for Windows: https://git-scm.com/download/win)' -ForegroundColor DarkGray
@@ -371,7 +374,10 @@ function Invoke-TricorderScan {
     Write-Host -NoNewline "${scan}claude..."
     Wait-Dramatic -Milliseconds 200
     if (Get-Command claude -ErrorAction SilentlyContinue) {
-        Write-Host ' installed' -ForegroundColor Green
+        # `claude --version` emits e.g. `2.1.139 (Claude Code)`. First field.
+        $claudeVer = (& claude --version 2>$null) -split '\s+' | Select-Object -Index 0
+        if (-not $claudeVer) { $claudeVer = 'unknown' }
+        Write-Host " installed ($claudeVer)" -ForegroundColor Green
     } else {
         Write-Host ' not found' -ForegroundColor Yellow
     }

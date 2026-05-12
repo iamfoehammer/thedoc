@@ -466,13 +466,22 @@ detect_platform() {
     fi
 
     HAS_GIT="no"
+    GIT_VER=""
     if command -v git &>/dev/null; then
         HAS_GIT="yes"
+        # `git version 2.43.0` -> third whitespace-separated field.
+        # awk over cut so a future format with extra prefix tokens
+        # doesn't shift the field index unexpectedly.
+        GIT_VER="$(git --version 2>/dev/null | awk '{print $3}' || echo "unknown")"
     fi
 
     HAS_CLAUDE="no"
+    CLAUDE_VER=""
     if command -v claude &>/dev/null; then
         HAS_CLAUDE="yes"
+        # `claude --version` emits e.g. `2.1.139 (Claude Code)` - take
+        # the first field. Trim to be defensive against future prefix.
+        CLAUDE_VER="$(claude --version 2>/dev/null | awk '{print $1}' || echo "unknown")"
     fi
 }
 
@@ -524,7 +533,7 @@ tricorder_scan() {
     echo -ne "${scan_prefix}git..."
     _dramatic_sleep 0.2
     if [ "$HAS_GIT" = "yes" ]; then
-        echo -e " ${GREEN}installed${RESET}"
+        echo -e " ${GREEN}installed${RESET} (${GIT_VER})"
     else
         echo -e " ${RED}not found${RESET} (required)"
     fi
@@ -532,7 +541,7 @@ tricorder_scan() {
     echo -ne "${scan_prefix}claude..."
     _dramatic_sleep 0.2
     if [ "$HAS_CLAUDE" = "yes" ]; then
-        echo -e " ${GREEN}installed${RESET}"
+        echo -e " ${GREEN}installed${RESET} (${CLAUDE_VER})"
     else
         echo -e " ${YELLOW}not found${RESET}"
     fi
