@@ -142,6 +142,7 @@ Running setup creates a new **instance folder** in your projects directory:
   DOCTOR.md                    # Shared brain (diagnostic logic, personality)
   .framework-updates           # Link to thedoc framework for updates
   .applied-updates             # Tracks which updates you've processed
+  .gitignore                   # Keeps .framework-updates etc. out of git
 ```
 
 ### Staying Up To Date
