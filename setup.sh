@@ -713,7 +713,17 @@ prompt_projects_dir() {
         while true; do
             echo ""
             read -rp "  Enter the full path: " custom_path
-            custom_path="${custom_path/#\~/$HOME}"
+            # Expand leading ~ ONLY when it's the entire path or followed
+            # by '/'. The previous one-liner `${custom_path/#\~/$HOME}`
+            # also stripped the bare ~ off `~user/foo`, turning it into
+            # $HOMEuser/foo (concatenation, not the requested user's
+            # homedir). The wizard doesn't support ~user expansion;
+            # leave it alone so existence-check fails clearly instead
+            # of inventing a weird-looking path.
+            case "$custom_path" in
+                \~)    custom_path="$HOME" ;;
+                \~/*)  custom_path="$HOME${custom_path:1}" ;;
+            esac
             # Trim leading/trailing whitespace
             custom_path="$(echo "$custom_path" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
             # Strip a single trailing slash so "$PROJECTS_DIR/$x" doesn't

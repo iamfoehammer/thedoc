@@ -629,7 +629,17 @@ function Get-ProjectsDir {
             Write-Host ''
             $custom = Read-Line '  Enter the full path: '
             $custom = $custom.Trim()
-            $custom = $custom -replace '^~', $HOME
+            # Expand leading ~ ONLY when it's the entire path or
+            # followed by '/' or '\'. Previous `-replace '^~', $HOME`
+            # also stripped the bare ~ off `~user/foo`, turning it
+            # into $HOMEuser/foo (concatenation, not the requested
+            # user's homedir). Mirrors the iter 246 case-statement
+            # fix in setup.sh.
+            if ($custom -eq '~') {
+                $custom = $HOME
+            } elseif ($custom -match '^~[/\\]') {
+                $custom = $HOME + $custom.Substring(1)
+            }
             # Strip a single trailing slash/backslash so "$ProjectsDir\foo"
             # doesn't produce a double separator in later messages. Skip
             # for root-like paths ("/" or "C:\").
