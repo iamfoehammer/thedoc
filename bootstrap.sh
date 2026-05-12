@@ -46,7 +46,12 @@ if ! command -v git &>/dev/null; then
     exit 1
 fi
 
-TMP_DIR="$(mktemp -d)/thedoc"
+# Clone into the mktemp dir directly (no `/thedoc` subdir). git clone
+# accepts an existing empty dir as destination, and using mktemp's
+# output as the clone root means setup.sh's `mv $TMP_DIR $THEDOC_FINAL`
+# renames the entire tempdir away in one syscall - no leftover empty
+# parent dir like /tmp/tmp.XXXXXX/ orphaned after a successful install.
+TMP_DIR="$(mktemp -d)"
 
 # Clone to temp. Wrap with a friendly framing - without this the user
 # would see raw 'fatal: Could not resolve host' / 'fatal: unable to

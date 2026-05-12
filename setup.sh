@@ -915,6 +915,11 @@ if is_first_run; then
             echo -e "  ${YELLOW}$(short_path "$THEDOC_FINAL") already exists - updating...${RESET}"
             cp -rf "$THEDOC_BOOTSTRAP_DIR/"* "$THEDOC_FINAL/" 2>/dev/null || true
             cp -rf "$THEDOC_BOOTSTRAP_DIR/".[!.]* "$THEDOC_FINAL/" 2>/dev/null || true
+            # Mirror the re-bootstrap update branch and the mv-fallback below:
+            # purge $THEDOC_BOOTSTRAP_DIR after the copy. Otherwise a clone
+            # of the entire framework sits in /tmp until reboot or manual
+            # cleanup. The mv branch below renames the dir so no leak there.
+            rm -rf "$THEDOC_BOOTSTRAP_DIR" 2>/dev/null || true
         else
             # mv can fail across filesystems (tmp -> Windows drive), fall back to cp
             if ! mv "$THEDOC_BOOTSTRAP_DIR" "$THEDOC_FINAL" 2>/dev/null; then
