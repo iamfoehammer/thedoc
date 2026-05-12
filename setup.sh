@@ -721,7 +721,12 @@ prompt_projects_dir() {
                     echo -e "  ${DIM}Check permissions or try a different path.${RESET}"
                     continue
                 fi
-                echo -e "  ${GREEN}Created${RESET} $custom_path"
+                # short_path so a $HOME-relative typed path renders as ~/foo
+                # to match the surrounding messages (line 1138 + the "Your
+                # doctors will live in: ${short}/" line below). Without it
+                # the user sees the full /home/<user>/... here and the
+                # ~-prefixed form everywhere else.
+                echo -e "  ${GREEN}Created${RESET} $(short_path "$custom_path")"
             fi
             PROJECTS_DIR="$custom_path"
             return

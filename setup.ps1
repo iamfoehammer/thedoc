@@ -600,7 +600,8 @@ function Get-ProjectsDir {
                 }
                 try {
                     New-Item -Type Directory -Path $custom -Force | Out-Null
-                    Write-Host "  Created $custom" -ForegroundColor Green
+                    # Match bash + the surrounding ~-prefixed messages.
+                    Write-Host "  Created $(Get-ShortPath $custom)" -ForegroundColor Green
                 } catch {
                     Write-Host "  Failed to create $custom." -ForegroundColor Red
                     Write-Host '  Check permissions or try a different path.' -ForegroundColor DarkGray
