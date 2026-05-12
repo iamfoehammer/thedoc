@@ -827,6 +827,37 @@ def name_validation_assertions(*required_messages):
     return _check
 
 
+def non_thedoc_folder_assertions(cleaned, ctx=None):
+    """User's projects dir had an unrelated folder at the default-name
+    path (claude-code-doctor/ with README.md + main.py but NO DOCTOR.md).
+    The wizard MUST refuse it, re-prompt, and create the new instance at
+    'fresh-instance' INSTEAD - never write into the unrelated folder.
+
+    name_validation_assertions on 'isn't a thedoc instance' catches the
+    REJECTION message branch, but a regression where the message still
+    prints AND the wizard subsequently writes DOCTOR.md into the
+    unrelated folder anyway (e.g. the `continue` got removed) would
+    still pass that check. Verify the safety contract:
+      1. Unrelated folder is intact (README.md still there, no DOCTOR.md
+         injected).
+      2. New instance landed at <project_dir>/fresh-instance/DOCTOR.md.
+    """
+    failures = list(default_assertions(cleaned, ctx))
+    if "isn't a thedoc instance" not in cleaned:
+        failures.append("Did not see 'isn't a thedoc instance' rejection")
+    other = os.path.join(ctx['project_dir'], 'claude-code-doctor')
+    if not os.path.exists(os.path.join(other, 'README.md')):
+        failures.append(f"Unrelated folder lost README.md: {other}")
+    if os.path.exists(os.path.join(other, 'DOCTOR.md')):
+        failures.append(
+            f"Safety check broken: DOCTOR.md was written into the "
+            f"unrelated folder at {other}")
+    fresh = os.path.join(ctx['project_dir'], 'fresh-instance', 'DOCTOR.md')
+    if not os.path.exists(fresh):
+        failures.append(f"Re-prompted instance not at {fresh}")
+    return failures
+
+
 def returning_user_assertions(cleaned, ctx=None):
     """Returning-user flow: state file exists, setup.sh should skip the
     first-run greeting (Voyager check, tricorder scan, projects-folder
@@ -1143,8 +1174,7 @@ def main():
                                            'OK - pick a different name'))),
         ('non-thedoc-folder', dict(steps=NON_THEDOC_FOLDER_STEPS,
                                    pre_setup=pre_create_non_thedoc_folder,
-                                   assertions=name_validation_assertions(
-                                       "isn't a thedoc instance"))),
+                                   assertions=non_thedoc_folder_assertions)),
         ('returning-user',    dict(steps=RETURNING_USER_STEPS,
                                    pre_setup=pre_write_state,
                                    assertions=returning_user_assertions)),
