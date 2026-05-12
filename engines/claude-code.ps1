@@ -1,21 +1,34 @@
 # Engine: Claude Code (PowerShell)
 # Native counterpart to engines/claude-code.sh. Launches a Claude Code
 # session in the doctor instance directory. Normally invoked by
-# setup.ps1, not directly - the [Parameter(Mandatory)] on $InstanceDir
-# triggers an interactive prompt if missing.
+# setup.ps1, not directly.
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][string]$InstanceDir,
+    [string]$InstanceDir,
     [string]$SetupMode  = 'quick',
     [string]$DoctorType = 'claude-code'
 )
 
 $ErrorActionPreference = 'Stop'
 
+# Match the bash side's `[ "$#" -lt 1 ]` usage check rather than
+# [Parameter(Mandatory)]. Mandatory would prompt interactively on a
+# stdin-attached console (annoying) and hang/throw in non-interactive
+# contexts (CI, piped stdin). Explicit usage-and-exit is predictable
+# either way and mirrors engines/claude-code.sh exactly.
+if ([string]::IsNullOrWhiteSpace($InstanceDir)) {
+    $scriptName = Split-Path -Leaf $PSCommandPath
+    [Console]::Error.WriteLine('')
+    [Console]::Error.WriteLine("  Usage: $scriptName <INSTANCE_DIR> [SETUP_MODE] [DOCTOR_TYPE]")
+    [Console]::Error.WriteLine('  This launcher is normally invoked by setup.ps1, not directly.')
+    [Console]::Error.WriteLine('')
+    exit 2
+}
+
 if (-not (Test-Path -LiteralPath $InstanceDir -PathType Container)) {
-    Write-Host ''
-    Write-Host "  Instance directory does not exist: $InstanceDir"
-    Write-Host ''
+    [Console]::Error.WriteLine('')
+    [Console]::Error.WriteLine("  Instance directory does not exist: $InstanceDir")
+    [Console]::Error.WriteLine('')
     exit 2
 }
 
