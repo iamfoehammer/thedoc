@@ -336,6 +336,24 @@ else
     failures=$((failures + 1))
 fi
 
+# 12. No em/en dashes in tracked files. CLAUDE.local.md style rule:
+# "Never use em dashes or en dashes - plain hyphens only." Iters 213-214
+# swept the existing drift; this guards regressions.
+#
+# Build the search pattern via $'\xHH' so the literal em/en chars
+# never appear in this file - otherwise the check would always find
+# itself. Bash 2.x+ supports `$'\xHH'` ANSI-C quoting.
+_dash_pat=$'\xe2\x80\x94|\xe2\x80\x93'
+_dash_files=$(cd "$REPO_ROOT" && git ls-files | xargs grep -lE "$_dash_pat" 2>/dev/null || true)
+if [ -z "$_dash_files" ]; then
+    echo -e "  ${GREEN}PASS${RESET}: no em/en dashes in tracked files"
+else
+    echo -e "  ${RED}FAIL${RESET}: em/en dashes found - plain hyphens only per CLAUDE.local.md"
+    echo "        Offending files:"
+    echo "$_dash_files" | sed 's/^/          /'
+    failures=$((failures + 1))
+fi
+
 echo ""
 echo "============================================================"
 if [ "$failures" -eq 0 ]; then
