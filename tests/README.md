@@ -43,8 +43,9 @@ finishes in ~45s. Exit codes: 0 = all PASS, 1 = at least one FAIL,
 For each scenario, the driver:
 
 1. Spawns `setup.sh` under a real PTY (so tty-only behaviors -
-   `read -rsn1`, the async space-to-skip in `typeit`, `prompt_choice`'s
-   `flush_input` - fire the same code path a real user hits).
+   `IFS= read -rsn1` at the "Press any key (space to skip)" prompts
+   and `prompt_choice`'s `flush_input` - fire the same code path a
+   real user hits).
 2. Builds an isolated `$HOME` with a real `~/GitHub/placeholder-project/`
    so the projects-folder scan succeeds without depending on the
    developer's actual `~/GitHub/`.
