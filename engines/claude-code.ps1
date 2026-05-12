@@ -46,3 +46,10 @@ if (Test-Path -LiteralPath $secretsFile -PathType Leaf) {
 
 Set-Location -LiteralPath $InstanceDir
 & claude $launchPrompt
+# Propagate claude's exit code. Bash engines/claude-code.sh ends with
+# `exec claude "$PROMPT"`, where exec replaces the bash process so the
+# child's exit code IS the script's exit code automatically. PS's `&`
+# does not propagate (iter 162 - PS gotcha #5), so without this an
+# `claude` crash would surface as engine exit 0 upstream and setup.ps1
+# / thedoc.ps1 / CI would think the launch succeeded.
+exit $LASTEXITCODE
