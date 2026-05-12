@@ -964,11 +964,13 @@ if is_first_run; then
         # false-positive on unrelated lines like 'alias thedocify=...'
         # or a path containing 'thedoc' from another project).
         THEDOC_PATH_LINE="export PATH=\"$THEDOC_FINAL:\$PATH\""
+        _path_added=no
         if ! grep -qF "$THEDOC_FINAL" "$SHELL_RC" 2>/dev/null; then
             echo "" >> "$SHELL_RC"
             echo "# thedoc - Emergency Medical Hologram framework" >> "$SHELL_RC"
             echo "$THEDOC_PATH_LINE" >> "$SHELL_RC"
             echo -e "  ${GREEN}Added${RESET} thedoc to PATH in $(basename "$SHELL_RC")"
+            _path_added=yes
         else
             # On re-bootstrap, tell the user the PATH is fine. Otherwise the
             # bootstrap branch ends abruptly after "Installed thedoc to ..."
@@ -982,11 +984,24 @@ if is_first_run; then
         # or unrelated files like '.secrets.json' in other lines.
         SECRETS_LINE='[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"'
         if ! grep -qF 'source "$HOME/.secrets"' "$SHELL_RC" 2>/dev/null; then
+            # When PATH wasn't added in THIS run (already there from a
+            # prior bootstrap), the secrets line would otherwise jam
+            # against whatever unrelated content sits at the end of the
+            # rc file. Emit our own separator + comment so the user can
+            # see where the line came from. When PATH WAS just added,
+            # the secrets line sits naturally under the thedoc block
+            # header that the PATH branch above wrote - no duplicate
+            # comment needed. Mirrors setup.ps1 line 1022's behavior.
+            if [ "$_path_added" = "no" ]; then
+                echo "" >> "$SHELL_RC"
+                echo "# thedoc - load llm-secrets" >> "$SHELL_RC"
+            fi
             echo "$SECRETS_LINE" >> "$SHELL_RC"
             echo -e "  ${GREEN}Added${RESET} secrets sourcing to $(basename "$SHELL_RC")"
         else
             echo -e "  ${DIM}secrets sourcing already wired in $(basename "$SHELL_RC")${RESET}"
         fi
+        unset _path_added
 
         export PATH="$THEDOC_FINAL:$PATH"
         echo ""

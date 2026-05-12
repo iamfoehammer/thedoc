@@ -72,6 +72,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `openclaw-doctor` | Picks OpenClaw doctor type (non-default slug) → exercises cp/symlink for a slug ≠ "claude-code" | iter 63 |
 | `bootstrap-install` | Sets THEDOC_BOOTSTRAP_DIR to a fake clone; verifies the install branch moves it + adds to PATH | iter 79 |
 | `bootstrap-reinstall` | Pre-populated .bashrc; verifies the idempotency check skips the append and the file still has exactly one of each line | iter 81 |
+| `bootstrap-partial-wire` | Pre-populated .bashrc with PATH but NOT secrets + an unrelated trailing block; verifies the secrets line is appended with its own separator + comment marker, not jammed against the trailing content | iter 235 |
 | `bootstrap-rerun` | Existing install + state + new clone: verifies the re-bootstrap branch updates in place, copies new files, and exits before the wizard | iter 100 |
 | `bootstrap-rerun-missing-install` | State intact but framework dir deleted + new clone: re-bootstrap moves the clone over instead of orphaning it | iter 101 |
 | `negative-name` | Slash and leading-dot rejection in the instance-name validation loop | `44ab195` |

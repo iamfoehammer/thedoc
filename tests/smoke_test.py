@@ -471,6 +471,72 @@ def bootstrap_reinstall_assertions(cleaned, ctx):
     return failures
 
 
+def pre_bootstrap_partial_wire(project_dir, state_dir):
+    """Like pre_bootstrap_reinstall, but pre-populates HOME/.bashrc with
+    ONLY the PATH line - secrets sourcing missing AND followed by an
+    unrelated trailing block. Simulates the realistic case where a user
+    set up thedoc PATH manually (or via an earlier framework version
+    that didn't wire secrets), then re-bootstraps to pick up the secrets
+    sourcing. The fix from iter 235 ensures the secrets line gets its
+    own separator+comment so it doesn't jam against the trailing block.
+    """
+    extras = pre_bootstrap(project_dir, state_dir)
+    fake_home = os.path.dirname(project_dir)
+    thedoc_final = os.path.join(project_dir, 'thedoc')
+    bashrc = os.path.join(fake_home, '.bashrc')
+    with open(bashrc, 'w') as f:
+        f.write('# thedoc - Emergency Medical Hologram framework\n')
+        f.write(f'export PATH="{thedoc_final}:$PATH"\n')
+        f.write('\n')
+        f.write('# unrelated trailing block - should NOT have secrets jammed against it\n')
+        f.write('alias ll="ls -la"\n')
+    return extras
+
+
+def bootstrap_partial_wire_assertions(cleaned, ctx):
+    """Bootstrap-partial-wire scenario: .bashrc had PATH but not secrets.
+    setup.sh must skip the PATH append (idempotent) AND must append the
+    secrets line WITH a separating blank line and '# thedoc - load
+    llm-secrets' comment so the user can see where the line came from -
+    not silently jammed against whatever unrelated rc content trailed
+    the file. Mirrors setup.ps1's profile-edit pattern (iter 235)."""
+    failures = list(default_assertions(cleaned, ctx))
+    if 'Installed thedoc to' not in cleaned:
+        failures.append("Bootstrap branch did not run ('Installed thedoc to' missing)")
+    if 'Added thedoc to PATH' in cleaned:
+        failures.append("PATH was appended on re-run (idempotency check broken)")
+    if 'already on PATH' not in cleaned:
+        failures.append("PATH idempotency did not acknowledge")
+    if 'Added' not in cleaned or 'secrets sourcing' not in cleaned:
+        failures.append("Secrets sourcing was not appended ('Added ... secrets sourcing' missing)")
+
+    bashrc = os.path.join(ctx['fake_home'], '.bashrc')
+    if not os.path.exists(bashrc):
+        failures.append("Bootstrap branch unexpectedly removed .bashrc")
+    else:
+        with open(bashrc) as f:
+            rc_content = f.read()
+        path_lines    = rc_content.count('export PATH="') + rc_content.count("export PATH='")
+        secrets_lines = rc_content.count('source "$HOME/.secrets"')
+        if path_lines != 1:
+            failures.append(f".bashrc has {path_lines} PATH lines after re-run (expected 1)")
+        if secrets_lines != 1:
+            failures.append(f".bashrc has {secrets_lines} secrets-source lines (expected 1)")
+        # The new line must have a comment marker immediately above so
+        # the user can identify where it came from. Without the marker,
+        # the line lands bare against trailing rc content.
+        if '# thedoc - load llm-secrets' not in rc_content:
+            failures.append(".bashrc missing '# thedoc - load llm-secrets' comment header above appended secrets line")
+        # Layout: the secrets line must come AFTER the comment header,
+        # not before it. Catches a regression where someone reorders
+        # the writes.
+        comment_pos = rc_content.find('# thedoc - load llm-secrets')
+        secrets_pos = rc_content.find('source "$HOME/.secrets"')
+        if comment_pos >= 0 and secrets_pos >= 0 and comment_pos > secrets_pos:
+            failures.append(".bashrc 'load llm-secrets' comment appears AFTER the secrets line (order wrong)")
+    return failures
+
+
 def pre_typed_path_decline(project_dir, state_dir):
     """Decline scenario types a non-existent path first (must NOT exist),
     then a real path on re-prompt (must exist). Reset both fixtures - the
@@ -1332,6 +1398,9 @@ def main():
         ('bootstrap-reinstall', dict(steps=HAPPY_PATH_STEPS,
                                      pre_setup=pre_bootstrap_reinstall,
                                      assertions=bootstrap_reinstall_assertions)),
+        ('bootstrap-partial-wire', dict(steps=HAPPY_PATH_STEPS,
+                                        pre_setup=pre_bootstrap_partial_wire,
+                                        assertions=bootstrap_partial_wire_assertions)),
         ('bootstrap-rerun',   dict(steps=[],
                                    pre_setup=pre_bootstrap_rerun_with_state,
                                    assertions=bootstrap_rerun_assertions,
