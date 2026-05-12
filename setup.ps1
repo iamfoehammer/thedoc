@@ -61,6 +61,18 @@ For most users the friendlier entry point is the 'thedoc' wrapper:
     exit 0
 }
 
+# Reject unknown args explicitly (iter 261 parity with setup.sh). Pre-
+# iter-261 the script silently ran the wizard on any unrecognized arg,
+# so a typo like `--debug` or `setup.ps1 foo` looked like nothing was
+# wrong. Mirrors the bash port's case-with-explicit-rejection.
+if ($args.Count -gt 0) {
+    [Console]::Error.WriteLine('')
+    [Console]::Error.WriteLine("  Unknown argument: $($args[0])")
+    [Console]::Error.WriteLine("  Run 'setup.ps1 --help' for usage.")
+    [Console]::Error.WriteLine('')
+    exit 1
+}
+
 # ── Preflight ────────────────────────────────────────────────────────
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Host ""

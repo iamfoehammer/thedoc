@@ -3,8 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# ── --help short-circuit ────────────────────────────────────────────
+# ── --help short-circuit + unknown-arg rejection ───────────────────
 case "${1:-}" in
+    "")
+        # No args - run the wizard. Falls through past the case.
+        :
+        ;;
     --help|-h|help)
         cat <<'EOF'
 thedoc setup wizard
@@ -43,6 +47,19 @@ For most users the friendlier entry point is the 'thedoc' wrapper:
   thedoc help       show wrapper help
 EOF
         exit 0
+        ;;
+    *)
+        # Reject unknown args explicitly. Pre-iter-261 the case fell
+        # through silently, so `setup.sh --debug` or `thedoc setup foo`
+        # ran the wizard like nothing was wrong - typos disappeared
+        # without feedback. Exits BEFORE the EXIT trap is installed
+        # (that trap lives ~100 lines down) so no suppression flag
+        # needed - the trap can't double-message what it can't see.
+        echo "" >&2
+        echo "  Unknown argument: $1" >&2
+        echo "  Run 'setup.sh --help' for usage." >&2
+        echo "" >&2
+        exit 1
         ;;
 esac
 
