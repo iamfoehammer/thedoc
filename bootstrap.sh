@@ -25,6 +25,7 @@ Requirements:
 Manual install (no curl pipe):
   git clone https://github.com/iamfoehammer/thedoc.git ~/GitHub/thedoc
   echo 'export PATH="$HOME/GitHub/thedoc:$PATH"' >> ~/.bashrc
+  echo '[ -f "$HOME/.secrets" ] && source "$HOME/.secrets"' >> ~/.bashrc
   source ~/.bashrc
   thedoc
 EOF
