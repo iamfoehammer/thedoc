@@ -469,7 +469,16 @@ function Show-Menu {
 function Read-Line {
     param([string]$Prompt = '')
     if ($Prompt) { [Console]::Write($Prompt) }
-    return [Console]::ReadLine()
+    $line = [Console]::ReadLine()
+    # Coerce $null (EOF / closed stdin / pipe shutdown) to "". Without
+    # this, callers that do `(Read-Line ...).Trim()` crash with
+    # MethodInvocationException - line 594's "Enter the full path"
+    # prompt is the canonical site. Bash's `read -rp` leaves the var
+    # empty on EOF rather than throwing, and the surrounding loop
+    # spins on empty until the user types a real value (or Ctrl+C's
+    # out). Matching that here is gracefully-degrades parity.
+    if ($null -eq $line) { return '' }
+    return $line
 }
 
 # ── Dramatic pauses ──────────────────────────────────────────────────
