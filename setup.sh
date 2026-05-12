@@ -1158,10 +1158,10 @@ if [ ! -d "$INSTANCE_DIR" ]; then
     cp "$SCRIPT_DIR/doctors/${doctor_slug}/DOCTOR.md" "$INSTANCE_DIR/DOCTOR.md"
     echo -e "  ${GREEN}Copied${RESET} DOCTOR.md (${doctor_name})"
 
-    # Create updates dir in instance
-    mkdir -p "$INSTANCE_DIR/updates"
-
-    # Symlink back to framework updates
+    # Symlink to framework updates. The instance folder used to also get
+    # an empty `updates/` directory (in the initial release), but nothing
+    # in the doctor templates or the `thedoc update` flow ever referenced
+    # it - dead since day one. Removed iter 189.
     ln -sf "$SCRIPT_DIR/doctors/${doctor_slug}/updates" "$INSTANCE_DIR/.framework-updates"
     echo -e "  ${GREEN}Linked${RESET} framework updates"
 

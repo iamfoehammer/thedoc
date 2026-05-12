@@ -759,11 +759,11 @@ function New-DoctorInstance {
                   -Destination  (Join-Path $instanceDir 'DOCTOR.md')
         Write-Host "  Copied DOCTOR.md ($DoctorName)" -ForegroundColor Green
 
-        New-Item -Type Directory -Path (Join-Path $instanceDir 'updates') -Force | Out-Null
-
         # Junction is the Windows-friendly equivalent of `ln -s` for dirs;
         # works without admin/dev mode. Falls back to a text file holding
         # the absolute path if the FS rejects it (e.g. some network shares).
+        # An empty `updates/` dir used to be created here too - dead code
+        # since the initial release, removed iter 189.
         $junctionPath   = Join-Path $instanceDir '.framework-updates'
         $junctionTarget = Join-Path $ScriptDir "doctors/$DoctorSlug/updates"
         try {
