@@ -198,11 +198,21 @@ is_first_run() {
 
 save_state() {
     mkdir -p "$STATE_DIR"
-    cat > "$STATE_FILE" << EOF
+    # Write to a tmp file then rename atomically. Direct `cat > $file`
+    # can leave a partial state file if the shell is killed mid-
+    # heredoc (concurrent crash, OS signal, power loss, etc.) -
+    # iter 274 added a recovery path for that corruption mode but
+    # avoiding the corruption in the first place is better. The mv
+    # is atomic on the same filesystem; readers always see either
+    # the previous complete state or the new complete state, never
+    # a partial.
+    local tmp="$STATE_FILE.tmp.$$"
+    cat > "$tmp" << EOF
 first_run=${FIRST_RUN_DATE:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 projects_dir=${PROJECTS_DIR}
 platform=${PLATFORM}
 EOF
+    mv "$tmp" "$STATE_FILE"
 }
 
 load_state() {

@@ -229,7 +229,14 @@ function Save-State {
         "projects_dir=$ProjectsDir"
         "platform=$Platform"
     )
-    Set-Content -LiteralPath $StateFile -Value $lines -Encoding UTF8
+    # Atomic-rename pattern: write to tmp then Move-Item -Force.
+    # Direct Set-Content can leave a partial file if the process is
+    # killed mid-write (signal, power loss, etc.) - iter 274 added a
+    # recovery path for that corruption mode but avoiding the corruption
+    # in the first place is better. Mirrors iter-276 bash save_state.
+    $tmp = "$StateFile.tmp.$PID"
+    Set-Content -LiteralPath $tmp -Value $lines -Encoding UTF8
+    Move-Item -LiteralPath $tmp -Destination $StateFile -Force
 }
 
 function Get-State {
