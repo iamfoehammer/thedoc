@@ -58,8 +58,10 @@ Useful smoke flags when investigating a rendering issue:
   Several rendering bugs (iter 82's hanging indent, iter 84's stub
   redundancy, iter 86's wrap overflow) were found by reading the
   transcript directly, not by writing more assertions.
-- `--clean-logs` — nuke all kept logs and exit. `/tmp/` can accumulate
-  hundreds of files from repeated `--keep-logs` runs.
+- `--clean-logs` — nuke all kept logs AND preserved `fake_home`/state
+  tempdirs and exit. `/tmp/thedoc-{smoke,home,state}-*` can accumulate
+  hundreds of entries from repeated `--keep-logs` runs and from
+  scenarios that FAIL (where `fake_home` is preserved for inspection).
 
 ## Code style and portability
 

@@ -1410,7 +1410,7 @@ def main():
         print('  python3 tests/smoke_test.py <scenario> [<sc2>...]  Run named scenarios')
         print('  python3 tests/smoke_test.py --list                 List scenario labels')
         print('  python3 tests/smoke_test.py --keep-logs            Keep PTY logs on PASS (default deletes)')
-        print('  python3 tests/smoke_test.py --clean-logs           Remove all /tmp/thedoc-smoke-*.log and exit')
+        print('  python3 tests/smoke_test.py --clean-logs           Remove /tmp/thedoc-{smoke,home,state}-* tempdirs/logs and exit')
         print('  python3 tests/smoke_test.py --help                 Show this help')
         print()
         print('Exit codes: 0 = all PASS, 1 = any FAIL, 2 = unknown scenario name')
@@ -1419,17 +1419,31 @@ def main():
     keep_logs = '--keep-logs' in argv
     argv = [a for a in argv if a != '--keep-logs']
 
-    # --clean-logs: nuke all kept PTY logs and exit. Hundreds of /tmp/thedoc-smoke-*
-    # logs can accumulate from --keep-logs / failed runs; this is the recovery.
+    # --clean-logs: nuke all kept PTY logs AND any leftover fake_home
+    # dirs preserved by iter 181's "keep on FAIL" cleanup change.
+    # Hundreds of /tmp/thedoc-smoke-* logs and /tmp/thedoc-home-* dirs
+    # can accumulate from --keep-logs / failed runs; this is the recovery.
     if '--clean-logs' in argv:
-        removed = 0
+        removed_files = 0
         for p in glob.glob('/tmp/thedoc-smoke-*.log'):
             try:
                 os.remove(p)
-                removed += 1
+                removed_files += 1
             except OSError:
                 pass
-        print(f'Removed {removed} log file(s) under /tmp/thedoc-smoke-*.log')
+        removed_dirs = 0
+        for d in glob.glob('/tmp/thedoc-home-*'):
+            if os.path.isdir(d):
+                shutil.rmtree(d, ignore_errors=True)
+                removed_dirs += 1
+        # State dirs only orphan if a run was SIGKILL'd mid-flight - they
+        # get cleaned at the end of each run otherwise. Sweep them too.
+        for d in glob.glob('/tmp/thedoc-state-*'):
+            if os.path.isdir(d):
+                shutil.rmtree(d, ignore_errors=True)
+                removed_dirs += 1
+        print(f'Removed {removed_files} log file(s) and {removed_dirs} tempdir(s) '
+              f'under /tmp/thedoc-{{smoke,home,state}}-*')
         return
 
     requested = argv
