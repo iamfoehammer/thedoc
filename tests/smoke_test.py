@@ -1442,8 +1442,11 @@ def main():
             if os.path.isdir(d):
                 shutil.rmtree(d, ignore_errors=True)
                 removed_dirs += 1
-        print(f'Removed {removed_files} log file(s) and {removed_dirs} tempdir(s) '
-              f'under /tmp/thedoc-{{smoke,home,state}}-*')
+        if removed_files == 0 and removed_dirs == 0:
+            print('Nothing to clean under /tmp/thedoc-{smoke,home,state}-*')
+        else:
+            print(f'Removed {removed_files} log file(s) and {removed_dirs} tempdir(s) '
+                  f'under /tmp/thedoc-{{smoke,home,state}}-*')
         return
 
     requested = argv
