@@ -88,6 +88,27 @@ _on_interrupt() {
 }
 trap _on_interrupt INT TERM
 
+# Surface unexpected exits with a friendly line so the user knows the
+# wizard didn't complete. Canonical trigger: stdin is closed mid-flow
+# (user pipes a script that runs out, or `setup.sh </dev/null`); `read`
+# returns 1 on EOF, `set -e` exits the script, and without this trap
+# there's no message at all - the user just sees the last prompt then
+# a fresh shell prompt with exit=1. Skipped on:
+#   - 0  : normal completion
+#   - 130: _on_interrupt already printed its own message
+# Sites that already print their own error message set
+# _suppress_exit_message=yes before `exit 1` so we don't double up.
+_on_exit() {
+    local rc=$?
+    if [ "$rc" -ne 0 ] && [ "$rc" -ne 130 ] && [ "${_suppress_exit_message:-no}" != "yes" ]; then
+        echo "" >&2
+        echo "  Setup did not complete (exit $rc). No instance was created." >&2
+        echo "  If stdin was piped/closed, run setup.sh interactively." >&2
+        echo "" >&2
+    fi
+}
+trap _on_exit EXIT
+
 # ── Colors ──────────────────────────────────────────────────────────
 # Honor https://no-color.org/ - if NO_COLOR is set (any non-empty value),
 # emit no ANSI escape codes. Useful for accessibility, log capture, and
@@ -1168,6 +1189,7 @@ if [ ! -d "$INSTANCE_DIR" ]; then
         if [ ! -d "$INSTANCE_DIR" ]; then
             echo -e "  ${RED}Failed to create $(short_path "$INSTANCE_DIR")${RESET}"
             echo -e "  ${DIM}Try creating it manually and re-running.${RESET}"
+            _suppress_exit_message=yes
             exit 1
         fi
     fi
