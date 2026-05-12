@@ -906,6 +906,11 @@ if (Test-FirstRun) {
             # (not the dir itself) by globbing the bootstrap dir.
             Copy-Item -Path (Join-Path $env:THEDOC_BOOTSTRAP_DIR '*') `
                       -Destination $thedocFinal -Recurse -Force -ErrorAction SilentlyContinue
+            # Mirror the catch-branch below: purge $THEDOC_BOOTSTRAP_DIR
+            # after the copy. The Move-Item branch below takes care of
+            # cleanup naturally; this branch was the parity-outlier (same
+            # gap iter 165 fixed on the bash side).
+            Remove-Item -LiteralPath $env:THEDOC_BOOTSTRAP_DIR -Recurse -Force -ErrorAction SilentlyContinue
         }
         else {
             # Move-Item fails across volumes (TEMP on C:, projects on D:).
