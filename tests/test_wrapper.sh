@@ -394,6 +394,23 @@ set -e
 _assert_exit_code  "setup.sh --help: exit 0 (regression guard)" 0 "$rc"
 _assert_contains   "setup.sh --help: still shows help"  "thedoc setup wizard" "$out"
 
+# 10e. bootstrap.sh rejects unknown args (iter 263 parity with 10d).
+# The curl|bash main path passes no args, so this only fires on
+# manual `bash bootstrap.sh <typo>`. Locks the rejection branch in
+# AND verifies --help still short-circuits cleanly.
+set +e
+out=$(bash "$REPO_ROOT/bootstrap.sh" --debug 2>&1)
+rc=$?
+set -e
+_assert_exit_code  "bootstrap.sh --debug: exit non-zero" 1 "$rc"
+_assert_contains   "bootstrap.sh --debug: explains why" "Unknown argument" "$out"
+set +e
+out=$(bash "$REPO_ROOT/bootstrap.sh" --help 2>&1)
+rc=$?
+set -e
+_assert_exit_code  "bootstrap.sh --help: exit 0 (regression guard)" 0 "$rc"
+_assert_contains   "bootstrap.sh --help: still shows help"  "thedoc bootstrap" "$out"
+
 echo ""
 
 # 11. tests/README.md scenario table stays in sync with smoke_test.py.
