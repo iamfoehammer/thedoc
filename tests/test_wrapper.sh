@@ -376,6 +376,24 @@ _assert_contains   "llm-secrets set '123foo': explains why"   "Invalid variable 
 _assert_exit_code  "llm-secrets set '123foo': nothing written" 0 "$_size2"
 rm -f "$_secrets"
 
+# 10d. setup.sh rejects unknown args with a friendly message + exit 1.
+# Iter 261 added the explicit-rejection branch; before that, typos like
+# `--debug` silently ran the wizard. Mirrors the wrapper's iter-150
+# unknown-subcommand pattern.
+set +e
+out=$(bash "$REPO_ROOT/setup.sh" --debug 2>&1)
+rc=$?
+set -e
+_assert_exit_code  "setup.sh --debug: exit non-zero" 1 "$rc"
+_assert_contains   "setup.sh --debug: explains why" "Unknown argument" "$out"
+# Also verify the --help branch is unaffected by the new case
+set +e
+out=$(bash "$REPO_ROOT/setup.sh" --help 2>&1)
+rc=$?
+set -e
+_assert_exit_code  "setup.sh --help: exit 0 (regression guard)" 0 "$rc"
+_assert_contains   "setup.sh --help: still shows help"  "thedoc setup wizard" "$out"
+
 echo ""
 
 # 11. tests/README.md scenario table stays in sync with smoke_test.py.
