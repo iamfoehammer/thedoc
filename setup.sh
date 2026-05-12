@@ -181,15 +181,19 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/thedoc"
 STATE_FILE="$STATE_DIR/state"
 
 is_first_run() {
-    # First-run if the state file is missing OR exists but is empty.
-    # An empty state file (concurrent-run crash, manual touch, or FS
-    # corruption) used to slip past `[ ! -f ]` - the wizard then
-    # skipped get_projects_dir, PROJECTS_DIR stayed empty, and
-    # `INSTANCE_DIR="$PROJECTS_DIR/$name"` became `/$name` which
-    # mkdir promptly rejected with an opaque permission error. Treat
-    # 0-byte state as "no usable state" and run the full first-time
-    # flow so the file gets re-populated correctly.
-    [ ! -f "$STATE_FILE" ] || [ ! -s "$STATE_FILE" ]
+    # First-run if state is missing, empty, OR loaded state doesn't
+    # contain a usable projects_dir. The third clause catches a
+    # partial-write situation: state file has some content (first_run=
+    # got flushed) but projects_dir= line never landed because a
+    # concurrent crash / signal killed the writer mid-heredoc. Without
+    # this clause, the wizard skipped get_projects_dir on partial
+    # state, PROJECTS_DIR stayed empty, and downstream
+    # `mkdir "$PROJECTS_DIR/$name"` failed obscurely. The first two
+    # clauses were iter 270's fix; iter 274 added the third.
+    #
+    # Depends on load_state having run before is_first_run (it does -
+    # line ~907, before all is_first_run uses at lines 922+ and 956+).
+    [ ! -f "$STATE_FILE" ] || [ ! -s "$STATE_FILE" ] || [ -z "${PROJECTS_DIR:-}" ]
 }
 
 save_state() {

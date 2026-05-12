@@ -192,13 +192,15 @@ $StateDir = if ($env:XDG_STATE_HOME) {
 $StateFile = Join-Path $StateDir 'state'
 
 function Test-FirstRun {
-    # First-run if the state file is missing OR exists but is empty.
-    # Mirrors the iter-270 bash fix in is_first_run. An empty state
-    # file (concurrent-run crash, FS corruption) used to slip past
-    # the existence check and the wizard would skip the projects-
-    # folder picker, then fail downstream with an opaque error.
+    # First-run if state is missing, empty, OR has no usable
+    # projects_dir entry. Three clauses match bash's is_first_run
+    # (iter 270 added clauses 1-2 for missing/empty file; iter 274
+    # added clause 3 for partial-write state files that have some
+    # content but never wrote the projects_dir= line).
     if (-not (Test-Path -LiteralPath $StateFile)) { return $true }
-    return ((Get-Item -LiteralPath $StateFile).Length -eq 0)
+    if ((Get-Item -LiteralPath $StateFile).Length -eq 0) { return $true }
+    $state = Get-State
+    return ($null -eq $state -or [string]::IsNullOrEmpty($state.projects_dir))
 }
 
 function Save-State {
