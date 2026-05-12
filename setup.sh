@@ -331,11 +331,15 @@ print_greeting() {
 
         if [[ "$voyager_answer" == "y" || "$voyager_answer" == "Y" ]]; then
             if [ -f "$SCRIPT_DIR/thedoc.txt" ]; then
-                echo ""
-                echo -e "  ${CYAN}"
+                # Set cyan, cat the art, reset. Skip leading "  " on the
+                # ANSI-toggle echos so cleaned transcript doesn't carry
+                # whitespace-only lines. Drop the redundant pre-art blank
+                # (line 330's `echo ""` after the read already provides
+                # vertical breathing room). Iter 228 polish matching PS
+                # Show-Greeting's tighter render.
+                echo -e "${CYAN}"
                 cat "$SCRIPT_DIR/thedoc.txt"
-                echo -e "  ${RESET}"
-                echo ""
+                echo -e "${RESET}"
                 echo -e "  ${BOLD}The Emergency Medical Hologram, reporting for duty.${RESET}"
                 echo ""
                 echo -e "  ${DIM}Press any key to continue...${RESET}"
