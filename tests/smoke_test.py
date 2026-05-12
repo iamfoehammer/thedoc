@@ -581,6 +581,51 @@ def pre_write_state(project_dir, state_dir, slug='claude-code'):
         f.write('platform=linux\n')
 
 
+def pre_write_state_empty(project_dir, state_dir):
+    """Pre-create a 0-byte state file. Iter 270 made is_first_run /
+    Test-FirstRun treat empty state files as first-run (concurrent-
+    crash or FS-corruption scenarios). Before the fix, the wizard
+    skipped get_projects_dir, PROJECTS_DIR stayed empty, and the
+    eventual `INSTANCE_DIR=$PROJECTS_DIR/$name` evaluated to /$name -
+    mkdir then failed with a confusing permission error far from
+    the actual cause. The scenario asserts the first-run greeting
+    fires + a complete state file gets written after the run."""
+    thedoc_dir = os.path.join(state_dir, 'thedoc')
+    os.makedirs(thedoc_dir, exist_ok=True)
+    state_path = os.path.join(thedoc_dir, 'state')
+    open(state_path, 'w').close()  # 0-byte file
+
+
+def empty_state_recovery_assertions(cleaned, ctx=None):
+    """Empty state file: setup.sh must route through full first-run
+    flow (greeting + projects-folder pick + structure explainer) and
+    end up rewriting state with usable content."""
+    failures = list(default_assertions(cleaned, ctx))
+    # First-run signatures - must be present (the inverse of
+    # returning_user_assertions's negative-check list)
+    for required in (
+        'Have you ever seen Star Trek: Voyager?',
+        "Here's how thedoc works:",
+    ):
+        if required not in cleaned:
+            failures.append(
+                f"First-run path did not fire on empty state: missing {required!r}")
+    state_file = os.path.join(ctx['state_dir'], 'thedoc', 'state')
+    if not os.path.exists(state_file):
+        failures.append(f"State file missing after run: {state_file}")
+    else:
+        with open(state_file) as f:
+            state = f.read()
+        if not state.strip():
+            failures.append(
+                "State file still empty after run - save_state should "
+                "have populated it with first_run/projects_dir/platform")
+        if 'projects_dir=' not in state:
+            failures.append(
+                f"State file missing projects_dir= line:\n{state}")
+    return failures
+
+
 def pre_write_state_wrong_platform(project_dir, state_dir):
     """Pre-write state with `platform=windows` (a value detect_platform
     would NEVER produce on Linux/macOS - smoke tests run only there).
@@ -1597,6 +1642,10 @@ def main():
                               dict(steps=RETURNING_USER_STEPS,
                                    pre_setup=pre_write_state_wrong_platform,
                                    assertions=returning_user_wrong_platform_assertions)),
+        ('empty-state-recovery',
+                              dict(steps=HAPPY_PATH_STEPS,
+                                   pre_setup=pre_write_state_empty,
+                                   assertions=empty_state_recovery_assertions)),
         # Stale-state warning scenario: state file's projects_dir is gone,
         # setup.sh falls back to dirname-of-script. We only need to verify
         # the warning appears - the full doctor-creation flow lands the

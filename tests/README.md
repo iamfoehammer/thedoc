@@ -85,6 +85,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `returning-user` | State file present → wizard skips greeting/scan/projects, jumps to doctor pick | baseline |
 | `returning-user-stale-state` | State file points at a deleted projects_dir → setup warns + falls back to dirname-of-script | iter 104 |
 | `returning-user-wrong-platform` | State file has `platform=windows` (impossible on the smoke runners); verifies setup.sh's `detect_platform` value flows into the generated CLAUDE.md instead of the stale state value | iter 258 |
+| `empty-state-recovery` | State file exists but is 0 bytes (concurrent-crash / corruption sim); verifies setup.sh routes through the full first-run flow rather than treating it as a returning user with empty PROJECTS_DIR | iter 271 |
 | `coming-soon` | Stub doctor type (Gemini) → "templates are coming soon" early exit | `5a93d35` |
 | `typed-path` | Custom projects-folder path, target already exists | baseline |
 | `typed-path-create` | Custom projects-folder path, target doesn't exist → mkdir branch | baseline |
