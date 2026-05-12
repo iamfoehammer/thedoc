@@ -33,9 +33,11 @@ EOF
 esac
 
 REPO="https://github.com/iamfoehammer/thedoc.git"
-TMP_DIR="$(mktemp -d)/thedoc"
 
-# Check requirements
+# Preflight BEFORE mktemp so a missing git doesn't leave an orphaned
+# /tmp/tmp.XXXXXX/ directory behind. (Minor on a single host, but
+# bootstrap is the most-curl-piped script in the repo - errors here
+# repeat at scale.)
 if ! command -v git &>/dev/null; then
     echo ""
     echo "  git is required but not installed."
@@ -43,6 +45,8 @@ if ! command -v git &>/dev/null; then
     echo ""
     exit 1
 fi
+
+TMP_DIR="$(mktemp -d)/thedoc"
 
 # Clone to temp. Wrap with a friendly framing - without this the user
 # would see raw 'fatal: Could not resolve host' / 'fatal: unable to
