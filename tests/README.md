@@ -7,7 +7,7 @@ Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 |---|---|---|
 | `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface - non-PTY, exit codes + output strings | ~600ms |
 | `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands - same assertions on the PowerShell side | ~1s |
-| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 26 scenarios | ~60s |
+| `smoke_test.py` | `setup.sh` end-to-end via real PTY across 27 scenarios | ~60s |
 
 `thedoc test` runs the bash wrapper + smoke (POSIX shells) or
 parse-checks .ps1 + the PowerShell wrapper suite (Windows). Both
@@ -34,7 +34,7 @@ loss, color-bleed) don't trip the regex/error-pattern assertions
 but show clearly in the cleaned PTY transcript.
 
 The smoke suite requires Python 3 and a real PTY (Linux/macOS - won't run
-under cmd.exe). Each scenario takes 1-3s; the full 26-scenario suite
+under cmd.exe). Each scenario takes 1-3s; the full 27-scenario suite
 finishes in ~60s. Exit codes: 0 = all PASS, 1 = at least one FAIL,
 2 = unknown smoke scenario name.
 
@@ -86,6 +86,7 @@ captured PTY log preserved at `/tmp/thedoc-smoke-*.log` for postmortem.
 | `returning-user-stale-state` | State file points at a deleted projects_dir → setup warns + falls back to dirname-of-script | iter 104 |
 | `returning-user-wrong-platform` | State file has `platform=windows` (impossible on the smoke runners); verifies setup.sh's `detect_platform` value flows into the generated CLAUDE.md instead of the stale state value | iter 258 |
 | `empty-state-recovery` | State file exists but is 0 bytes (concurrent-crash / corruption sim); verifies setup.sh routes through the full first-run flow rather than treating it as a returning user with empty PROJECTS_DIR | iter 271 |
+| `partial-state-recovery` | State file has `first_run=` but no `projects_dir=` (mid-heredoc-write crash sim); verifies the same recovery as empty-state | iter 275 |
 | `coming-soon` | Stub doctor type (Gemini) → "templates are coming soon" early exit | `5a93d35` |
 | `typed-path` | Custom projects-folder path, target already exists | baseline |
 | `typed-path-create` | Custom projects-folder path, target doesn't exist → mkdir branch | baseline |

@@ -581,6 +581,45 @@ def pre_write_state(project_dir, state_dir, slug='claude-code'):
         f.write('platform=linux\n')
 
 
+def pre_write_state_partial(project_dir, state_dir):
+    """Pre-write a partial state file: first_run= present but no
+    projects_dir= line. Simulates a writer killed mid-heredoc, or a
+    hand-edited file with a missing field. Iter 274 extends iter 270's
+    empty-state fix: is_first_run now also returns true when state
+    has content but lacks projects_dir, so the wizard re-prompts the
+    user rather than running with PROJECTS_DIR empty and failing
+    mkdir downstream."""
+    thedoc_dir = os.path.join(state_dir, 'thedoc')
+    os.makedirs(thedoc_dir, exist_ok=True)
+    with open(os.path.join(thedoc_dir, 'state'), 'w') as f:
+        f.write('first_run=2026-05-09T12:00:00+00:00\n')
+        # Deliberately no projects_dir= and no platform= line.
+
+
+def partial_state_recovery_assertions(cleaned, ctx=None):
+    """Partial state file: setup.sh must route through full first-run
+    flow exactly like the empty-state case."""
+    failures = list(default_assertions(cleaned, ctx))
+    for required in (
+        'Have you ever seen Star Trek: Voyager?',
+        "Here's how thedoc works:",
+    ):
+        if required not in cleaned:
+            failures.append(
+                f"First-run path did not fire on partial state: missing {required!r}")
+    state_file = os.path.join(ctx['state_dir'], 'thedoc', 'state')
+    if not os.path.exists(state_file):
+        failures.append(f"State file missing after run: {state_file}")
+    else:
+        with open(state_file) as f:
+            state = f.read()
+        if 'projects_dir=' not in state:
+            failures.append(
+                f"State file STILL missing projects_dir= after run "
+                f"(save_state should have filled it in):\n{state}")
+    return failures
+
+
 def pre_write_state_empty(project_dir, state_dir):
     """Pre-create a 0-byte state file. Iter 270 made is_first_run /
     Test-FirstRun treat empty state files as first-run (concurrent-
@@ -1646,6 +1685,10 @@ def main():
                               dict(steps=HAPPY_PATH_STEPS,
                                    pre_setup=pre_write_state_empty,
                                    assertions=empty_state_recovery_assertions)),
+        ('partial-state-recovery',
+                              dict(steps=HAPPY_PATH_STEPS,
+                                   pre_setup=pre_write_state_partial,
+                                   assertions=partial_state_recovery_assertions)),
         # Stale-state warning scenario: state file's projects_dir is gone,
         # setup.sh falls back to dirname-of-script. We only need to verify
         # the warning appears - the full doctor-creation flow lands the
