@@ -31,7 +31,7 @@ Usage:
   setup.ps1 --help    Show this help.
 
 The wizard walks through:
-  1. System scan (platform, shell, git, claude)
+  1. System scan (platform, PowerShell, git, claude)
   2. Picking your projects directory
   3. Choosing a doctor type (Claude Code or OpenClaw today)
   4. Choosing an LLM engine
