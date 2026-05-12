@@ -593,6 +593,7 @@ detect_projects_dirs() {
                         "${userdir}dev"
                         "${userdir}Documents/GitHub"
                         "${userdir}Documents/projects"
+                        "${userdir}source/repos"
                     )
                 done
             fi
