@@ -41,15 +41,19 @@ function Ensure-File {
 }
 
 function Set-Secret {
+    # Error paths use `exit 1` (not `return`) to match the bash port's
+    # exit-code contract: bad-input branches surface as non-zero so
+    # wrappers / CI / scripted callers can distinguish "secret saved"
+    # from "user error." Pre-iter-255 PS port always exited 0.
     if (-not $VarName) {
         Write-Host "Usage: secret set VAR_NAME"
-        return
+        exit 1
     }
 
     if ($VarName -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
         Write-Host "Invalid variable name: $VarName"
         Write-Host "Use letters, numbers, and underscores only."
-        return
+        exit 1
     }
 
     $secureValue = Read-Host -Prompt "Value for $VarName" -AsSecureString
@@ -58,7 +62,7 @@ function Set-Secret {
 
     if ([string]::IsNullOrEmpty($value)) {
         Write-Host "No value provided. Aborted."
-        return
+        exit 1
     }
 
     Ensure-File
@@ -134,16 +138,17 @@ function Get-SecretList {
 }
 
 function Remove-Secret {
+    # Error paths exit 1 to match bash's cmd_remove behavior.
     if (-not $VarName) {
         Write-Host "Usage: llm-secrets remove VAR_NAME"
-        return
+        exit 1
     }
 
     Ensure-File
 
     if (-not (Select-String -Path $SecretsFile -Pattern "^\`$env:${VarName}\s*=" -Quiet)) {
         Write-Host "$VarName not found in $SecretsFile"
-        return
+        exit 1
     }
 
     $lines = Get-Content $SecretsFile | Where-Object { $_ -notmatch "^\`$env:${VarName}\s*=" }
@@ -186,5 +191,11 @@ switch -Regex ($Command) {
     default {
         Write-Host "Unknown command: $Command"
         Write-Host "Run 'llm-secrets help' for usage."
+        # Bash port's switch fall-through actually invokes cmd_set with
+        # the args (treating unknown commands as shorthand "set" names).
+        # PS port's $Command is a single positional, so we can't
+        # forward args the same way - just exit non-zero on unknown
+        # input so wrappers/CI catch typos.
+        exit 1
     }
 }
