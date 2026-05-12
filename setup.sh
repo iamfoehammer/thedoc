@@ -181,7 +181,15 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/thedoc"
 STATE_FILE="$STATE_DIR/state"
 
 is_first_run() {
-    [ ! -f "$STATE_FILE" ]
+    # First-run if the state file is missing OR exists but is empty.
+    # An empty state file (concurrent-run crash, manual touch, or FS
+    # corruption) used to slip past `[ ! -f ]` - the wizard then
+    # skipped get_projects_dir, PROJECTS_DIR stayed empty, and
+    # `INSTANCE_DIR="$PROJECTS_DIR/$name"` became `/$name` which
+    # mkdir promptly rejected with an opaque permission error. Treat
+    # 0-byte state as "no usable state" and run the full first-time
+    # flow so the file gets re-populated correctly.
+    [ ! -f "$STATE_FILE" ] || [ ! -s "$STATE_FILE" ]
 }
 
 save_state() {
