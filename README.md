@@ -17,6 +17,7 @@ A framework for creating dedicated "doctor" instances that diagnose, configure, 
 - [Architecture](#architecture)
 - [Why "The Doc"?](#why-the-doc)
 - [Contributing](#contributing)
+- [License](#license)
 
 ## Quick Start
 
