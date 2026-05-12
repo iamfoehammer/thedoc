@@ -26,8 +26,8 @@ thedoc/
 
 ```bash
 # POSIX shells (Linux/macOS/WSL/Git Bash)
-bash tests/test_wrapper.sh             # wrapper subcommand assertions, ~50ms
-python3 tests/smoke_test.py            # setup.sh end-to-end via PTY, ~45s
+bash tests/test_wrapper.sh             # wrapper subcommand assertions, ~600ms
+python3 tests/smoke_test.py            # setup.sh end-to-end via PTY, ~60s (26 scenarios)
 python3 tests/smoke_test.py --help     # all driver flags + exit codes
 
 # PowerShell

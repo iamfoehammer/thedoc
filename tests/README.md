@@ -5,7 +5,7 @@ Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 
 | File | What it covers | Runtime |
 |---|---|---|
-| `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface - non-PTY, exit codes + output strings | ~50ms |
+| `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface - non-PTY, exit codes + output strings | ~600ms |
 | `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands - same assertions on the PowerShell side | ~1s |
 | `smoke_test.py` | `setup.sh` end-to-end via real PTY across 26 scenarios | ~60s |
 
