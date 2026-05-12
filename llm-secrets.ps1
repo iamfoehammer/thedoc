@@ -66,7 +66,17 @@ function Set-Secret {
     # Remove existing entry if present
     if (Test-Path $SecretsFile) {
         $lines = Get-Content $SecretsFile | Where-Object { $_ -notmatch "^\`$env:${VarName}\s*=" }
-        $lines | Set-Content $SecretsFile
+        # If the existing secret being updated was the only one, $lines
+        # is $null. Piping $null to Set-Content varies by PS version -
+        # some leave the file unchanged, some write a stray newline.
+        # Truncate explicitly so the subsequent Add-Content writes a
+        # clean single-line file. Mirrors iter-253 cmd_set fix on the
+        # bash side and the same iter-249 pattern in Remove-Secret.
+        if (-not $lines) {
+            Clear-Content -LiteralPath $SecretsFile
+        } else {
+            $lines | Set-Content -LiteralPath $SecretsFile
+        }
     }
 
     # Append new entry
