@@ -160,7 +160,12 @@ function Test-FirstRun { -not (Test-Path $StateFile) }
 
 function Save-State {
     param([string]$ProjectsDir, [string]$Platform)
-    if (-not (Test-Path $StateDir)) { New-Item -Type Directory -Path $StateDir | Out-Null }
+    # -Force auto-creates parent directories (matches bash setup.sh's
+    # `mkdir -p "$STATE_DIR"`). Without it, an XDG_STATE_HOME pointing
+    # at a not-yet-created path (test harnesses, scripted first-run
+    # scenarios, unusual user setups) throws an unhandled
+    # DirectoryNotFoundException instead of just creating the tree.
+    if (-not (Test-Path $StateDir)) { New-Item -Type Directory -Path $StateDir -Force | Out-Null }
     # Preserve first_run across saves. Bash setup.sh loads FIRST_RUN_DATE
     # from the existing state file (lines 161-168) and re-writes the same
     # value via `${FIRST_RUN_DATE:-current-time}`. PS Save-State was
