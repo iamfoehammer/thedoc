@@ -40,6 +40,17 @@ Manual install (no irm | iex):
     exit 0
 }
 
+# Reject unknown args explicitly (mirrors setup.ps1 iter 261 and
+# bootstrap.sh's case statement). irm | iex passes no args so this
+# only fires when a user runs `pwsh -File bootstrap.ps1 <typo>`.
+if ($args.Count -gt 0) {
+    [Console]::Error.WriteLine('')
+    [Console]::Error.WriteLine("  Unknown argument: $($args[0])")
+    [Console]::Error.WriteLine("  Run 'bootstrap.ps1 --help' for usage.")
+    [Console]::Error.WriteLine('')
+    exit 1
+}
+
 $Repo   = 'https://github.com/iamfoehammer/thedoc.git'
 $TmpDir = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-$([guid]::NewGuid())"
 

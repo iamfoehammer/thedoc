@@ -4,6 +4,10 @@
 set -euo pipefail
 
 case "${1:-}" in
+    "")
+        # No args - normal curl-piped invocation. Fall through.
+        :
+        ;;
     --help|-h|help)
         cat <<'EOF'
 thedoc bootstrap
@@ -30,6 +34,16 @@ Manual install (no curl pipe):
   thedoc
 EOF
         exit 0
+        ;;
+    *)
+        # Reject unknown args (mirrors setup.sh iter 261). Curl-piped
+        # invocation passes no args, so this only fires on
+        # `bash bootstrap.sh <typo>` from a manual run.
+        echo "" >&2
+        echo "  Unknown argument: $1" >&2
+        echo "  Run 'bootstrap.sh --help' for usage." >&2
+        echo "" >&2
+        exit 1
         ;;
 esac
 
