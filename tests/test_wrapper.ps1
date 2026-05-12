@@ -383,6 +383,84 @@ try {
     Remove-Item -LiteralPath $scratchNoTests -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# 11. tests/README.md scenario table stays in sync with smoke_test.py.
+# Catches the kind of doc drift where someone adds a scenario but
+# forgets to row it in the README. Mirrors bash test #11.
+#
+# python3 isn't on Windows by default - prefer it, fall back to
+# `python`. Skip with a notice rather than fail if neither exists
+# so this test stays useful even on developer machines without
+# Python (the bash side will still catch any drift on Linux CI).
+$pyCmd = $null
+foreach ($candidate in 'python3','python') {
+    if (Get-Command $candidate -ErrorAction SilentlyContinue) {
+        $pyCmd = $candidate
+        break
+    }
+}
+if (-not $pyCmd) {
+    Write-Host '  SKIP: tests/README.md sync check (no python found - bash CI covers this)' -ForegroundColor DarkGray
+} else {
+    $readmePath = Join-Path $RepoRoot 'tests/README.md'
+    $smokePath  = Join-Path $RepoRoot 'tests/smoke_test.py'
+    $readmeRows = (Select-String -LiteralPath $readmePath -Pattern '^\| `[a-z-]+` \|').Count
+    $smokeList  = (& $pyCmd $smokePath --list 2>$null) -split "`n" |
+                    Where-Object { $_ -match '\S' }
+    $smokeCount = $smokeList.Count
+    if ($readmeRows -eq $smokeCount) {
+        Write-Host "  PASS: tests/README.md scenario table matches smoke_test.py ($smokeCount rows)" -ForegroundColor Green
+    } else {
+        Write-Host "  FAIL: tests/README.md has $readmeRows scenario rows, smoke_test.py has $smokeCount" -ForegroundColor Red
+        $readmeLabels = Select-String -LiteralPath $readmePath -Pattern '^\| `([a-z-]+)`' |
+                        ForEach-Object { $_.Matches[0].Groups[1].Value } | Sort-Object
+        $codeLabels   = $smokeList | Sort-Object
+        $missingFromReadme = $codeLabels | Where-Object { $readmeLabels -notcontains $_ }
+        $missingFromCode   = $readmeLabels | Where-Object { $codeLabels -notcontains $_ }
+        if ($missingFromReadme) {
+            Write-Host "        Missing from README: $($missingFromReadme -join ', ')"
+        }
+        if ($missingFromCode) {
+            Write-Host "        Missing from code:   $($missingFromCode -join ', ')"
+        }
+        $script:failures++
+    }
+}
+
+# 12. No em/en dashes in tracked files. CLAUDE.local.md style rule:
+# "Never use em dashes or en dashes - plain hyphens only." Iters 213-214
+# swept the existing drift; this guards regressions. Mirrors bash test #12.
+#
+# Build the search pattern via [char] codepoints so the literal em/en
+# chars never appear in this file - otherwise the check would always
+# find itself (bash side hit this in iter 215).
+$emDash = [char]0x2014
+$enDash = [char]0x2013
+$dashPattern = "$emDash|$enDash"
+Push-Location $RepoRoot
+try {
+    $tracked = (& git ls-files) -split "`n" | Where-Object { $_ -match '\S' }
+    $dashFiles = @()
+    foreach ($f in $tracked) {
+        if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { continue }
+        # -Raw avoids per-line allocation; -SimpleMatch:$false (default)
+        # keeps regex alternation working.
+        $content = Get-Content -LiteralPath $f -Raw -ErrorAction SilentlyContinue
+        if ($content -and ($content -match $dashPattern)) {
+            $dashFiles += $f
+        }
+    }
+} finally {
+    Pop-Location
+}
+if ($dashFiles.Count -eq 0) {
+    Write-Host '  PASS: no em/en dashes in tracked files' -ForegroundColor Green
+} else {
+    Write-Host '  FAIL: em/en dashes found - plain hyphens only per CLAUDE.local.md' -ForegroundColor Red
+    Write-Host '        Offending files:'
+    $dashFiles | ForEach-Object { Write-Host "          $_" }
+    $script:failures++
+}
+
 Write-Host ''
 Write-Host '============================================================'
 if ($failures -eq 0) {
