@@ -1281,6 +1281,10 @@ def run(steps=HAPPY_PATH_STEPS, timeout=20.0, columns=80, label='happy-path',
     print(f'  elapsed:      {elapsed:.2f}s')
     print(f'  log:          {log_path}')
     if failures:
+        # Iter 181 made fake_home persist on FAIL for inspection; iter 182
+        # surfaces the path so the developer doesn't have to know to look.
+        # state_dir is always cleaned regardless.
+        print(f'  fake_home:    {fake_home}  (preserved for inspection)')
         print(f'  result:       {red("FAIL")}')
         for f in failures:
             print(f'    - {red(f)}')
