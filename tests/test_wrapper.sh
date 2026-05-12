@@ -349,6 +349,33 @@ rm -f "$_secrets"
 _assert_exit_code  "llm-secrets remove (last): file is 0 bytes" 0 "$_size"
 _assert_contains   "llm-secrets list (post-remove): says No secrets stored"  "No secrets stored" "$_list_out"
 
+# 10c. llm-secrets `set` rejects names that to_var_name can't turn
+# into a valid shell identifier. Before iter 251 the bash port
+# silently wrote `export ="x"` (all-punctuation input -> empty)
+# or `export 123FOO=x` (leading-digit input) and the user only
+# discovered the corruption on the next `source ~/.secrets`.
+_secrets=$(mktemp)
+: > "$_secrets"
+set +e
+out=$(SECRETS_FILE="$_secrets" "$REPO_ROOT/llm-secrets" set '!@#$%' <<< "x" 2>&1)
+rc1=$?
+set -e
+_size1=$(wc -c <"$_secrets" | tr -d ' ')
+_assert_exit_code  "llm-secrets set '!@#\$%': exit non-zero" 1 "$rc1"
+_assert_contains   "llm-secrets set '!@#\$%': explains why"   "Invalid variable name" "$out"
+_assert_exit_code  "llm-secrets set '!@#\$%': nothing written" 0 "$_size1"
+
+: > "$_secrets"
+set +e
+out=$(SECRETS_FILE="$_secrets" "$REPO_ROOT/llm-secrets" set '123foo' <<< "x" 2>&1)
+rc2=$?
+set -e
+_size2=$(wc -c <"$_secrets" | tr -d ' ')
+_assert_exit_code  "llm-secrets set '123foo': exit non-zero" 1 "$rc2"
+_assert_contains   "llm-secrets set '123foo': explains why"   "Invalid variable name" "$out"
+_assert_exit_code  "llm-secrets set '123foo': nothing written" 0 "$_size2"
+rm -f "$_secrets"
+
 echo ""
 
 # 11. tests/README.md scenario table stays in sync with smoke_test.py.
