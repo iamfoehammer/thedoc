@@ -88,6 +88,31 @@ _assert_exit_code   "thedoc version (non-git dir): exit 0" 0 "$rc"
 _assert_contains    "thedoc version (non-git dir): says so" "not a git checkout" "$out"
 rm -rf "$_scratch_ver"
 
+# 1g. `thedoc version` from a git worktree (where .git is a FILE
+# containing "gitdir: <path>", not a directory). Iter 195 switched
+# the existence check from `-d` to `-e`. Without the fix the user
+# would falsely see "(not a git checkout)" even though git pull
+# would have worked. This test pins the fix.
+_scratch_wt="$(mktemp -d)"
+cp "$THEDOC" "$_scratch_wt/thedoc"
+# Synthesize a worktree-style .git file. The gitdir path can be
+# bogus - thedoc only needs to detect that the path EXISTS and is
+# either a file or directory; the actual git describe will then fail
+# and the wrapper falls back to "unknown" rather than the
+# "(not a git checkout)" branch we are testing.
+printf 'gitdir: /nonexistent/wt\n' > "$_scratch_wt/.git"
+out=$("$_scratch_wt/thedoc" version 2>&1)
+rc=$?
+_assert_exit_code   "thedoc version (worktree): exit 0" 0 "$rc"
+# Negative-assert: the non-git fallback branch must NOT fire.
+if echo "$out" | grep -qF "not a git checkout"; then
+    echo -e "  ${RED}FAIL${RESET}: thedoc version (worktree): falsely reports 'not a git checkout'"
+    failures=$((failures + 1))
+else
+    echo -e "  ${GREEN}PASS${RESET}: thedoc version (worktree): does not mis-report 'not a git checkout'"
+fi
+rm -rf "$_scratch_wt"
+
 # 1d. `thedoc setup --help` forwards to setup.sh --help (iter 120).
 # Without forwarding the user would get the wizard, not the help text.
 out=$("$THEDOC" setup --help 2>&1)

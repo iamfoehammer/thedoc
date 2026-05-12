@@ -103,6 +103,30 @@ try {
     Remove-Item -LiteralPath $scratchVer -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# 1g. `thedoc version` from a git worktree (where .git is a FILE
+# containing "gitdir: <path>", not a directory). Iter 195 dropped
+# -PathType Container from the existence check; without that fix
+# the user would falsely see "(not a git checkout)" even though
+# git pull would have worked. Mirror of bash test #1g.
+$scratchWt = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-wrapper-wt-$([guid]::NewGuid())"
+New-Item -ItemType Directory -Path $scratchWt -Force | Out-Null
+try {
+    Copy-Item -LiteralPath $TheDoc -Destination (Join-Path $scratchWt 'thedoc.ps1')
+    Set-Content -LiteralPath (Join-Path $scratchWt '.git') -Value 'gitdir: /nonexistent/wt'
+    $scratchTheDoc = Join-Path $scratchWt 'thedoc.ps1'
+    $output = & $scratchTheDoc version 2>&1 | Out-String
+    $rc = $LASTEXITCODE
+    Assert-ExitCode  'thedoc version (worktree): exit 0' 0 $rc
+    if ($output -match 'not a git checkout') {
+        Write-Host '  FAIL: thedoc version (worktree): falsely reports "not a git checkout"' -ForegroundColor Red
+        $script:failures++
+    } else {
+        Write-Host '  PASS: thedoc version (worktree): does not mis-report "not a git checkout"' -ForegroundColor Green
+    }
+} finally {
+    Remove-Item -LiteralPath $scratchWt -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # 1d. `thedoc setup --help` forwards --help through to setup.ps1
 # (iter 120). Without forwarding the user would get the wizard
 # preflight instead of help text. Mirror of the bash 1d test.
