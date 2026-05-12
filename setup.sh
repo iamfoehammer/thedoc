@@ -181,14 +181,23 @@ load_state() {
         # POSIX sed - works on BSD (macOS) and GNU. grep -oP is GNU-only.
         FIRST_RUN_DATE=$(sed -n 's/^first_run=//p' "$STATE_FILE" 2>/dev/null || echo "")
         PROJECTS_DIR=$(sed -n 's/^projects_dir=//p' "$STATE_FILE" 2>/dev/null || echo "")
-        PLATFORM=$(sed -n 's/^platform=//p' "$STATE_FILE" 2>/dev/null || echo "")
+        # PLATFORM is deliberately NOT loaded from state. detect_platform
+        # ran before load_state and already set the correct runtime value.
+        # If a previous run on a different shell or OS wrote a different
+        # platform string (e.g. setup.ps1 on Windows wrote "windows", now
+        # the user is in WSL2/Git Bash and the actual platform is
+        # "linux-wsl2"), the CLAUDE.md emitted at the end would otherwise
+        # mis-record the platform - matters because Claude reads CLAUDE.md
+        # at session start and tailors advice to the recorded platform.
+        # save_state below writes whatever detect_platform produced this
+        # run, so state always reflects the LATEST detection.
+
         # Strip trailing CR. PS Save-State on Windows may write CRLF; sed
         # preserves the \r in the captured value, which breaks [ -d ] tests
         # on what looks like a valid path. iter 108: don't trust the LF
         # contract across ports.
         FIRST_RUN_DATE="${FIRST_RUN_DATE%$'\r'}"
         PROJECTS_DIR="${PROJECTS_DIR%$'\r'}"
-        PLATFORM="${PLATFORM%$'\r'}"
     fi
 }
 
