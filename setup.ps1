@@ -311,7 +311,10 @@ function Show-Greeting {
 
         # Voyager check
         Write-Host ''
-        Write-Host '  Have you ever seen Star Trek: Voyager? [y/n]'
+        # White approximates bash's BOLD; DarkGray on [y/n] mirrors bash's DIM
+        # so the emphasis split matches.
+        Write-Host -NoNewline '  Have you ever seen Star Trek: Voyager?' -ForegroundColor White
+        Write-Host ' [y/n]' -ForegroundColor DarkGray
         $key = [System.Console]::ReadKey($true)
         Write-Host ''
 
@@ -327,7 +330,7 @@ function Show-Greeting {
                     Write-Host $_ -ForegroundColor Cyan
                 }
                 Write-Host ''
-                Write-Host '  The Emergency Medical Hologram, reporting for duty.'
+                Write-Host '  The Emergency Medical Hologram, reporting for duty.' -ForegroundColor White
                 Write-Host ''
                 Write-Host '  Press any key to continue...' -ForegroundColor DarkGray
                 [System.Console]::ReadKey($true) | Out-Null
@@ -851,7 +854,7 @@ Add new issues and fixes to the Known Issues & Fixes table above.
     }
 
     Write-Host ''
-    Write-Host '  Ready to launch.'
+    Write-Host '  Ready to launch.' -ForegroundColor White
     Write-Host ''
 
     # Compute the platform string the same way Invoke-TricorderScan
