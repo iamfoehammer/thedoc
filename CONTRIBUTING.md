@@ -37,7 +37,7 @@ pwsh -File tests/test_wrapper.ps1      # thedoc.ps1 subcommand assertions
 thedoc test                            # forwards args to smoke (--keep-logs, scenario name, etc.)
 ```
 
-The smoke driver uses `pty.fork()` and is POSIX-only — it won't
+The smoke driver uses `pty.fork()` and is POSIX-only - it won't
 run under cmd.exe or native Windows pwsh. On Windows, CI's parse
 + AST function-presence check plus `tests/test_wrapper.ps1` are
 the closest equivalents. Every PR runs the bash + smoke suite on
@@ -53,12 +53,12 @@ under a debugger that doesn't propagate the env var.
 
 Useful smoke flags when investigating a rendering issue:
 
-- `--keep-logs` — preserve `/tmp/thedoc-smoke-*.log` even on PASS so
+- `--keep-logs` - preserve `/tmp/thedoc-smoke-*.log` even on PASS so
   you can `sed 's/\x1b\[[0-9;]*m//g'` and read the cleaned PTY transcript.
   Several rendering bugs (iter 82's hanging indent, iter 84's stub
   redundancy, iter 86's wrap overflow) were found by reading the
   transcript directly, not by writing more assertions.
-- `--clean-logs` — nuke all kept logs AND preserved `fake_home`/state
+- `--clean-logs` - nuke all kept logs AND preserved `fake_home`/state
   tempdirs and exit. `/tmp/thedoc-{smoke,home,state}-*` can accumulate
   hundreds of entries from repeated `--keep-logs` runs and from
   scenarios that FAIL (where `fake_home` is preserved for inspection).
@@ -139,7 +139,7 @@ add a `*.ext text eol=lf` line to `.gitattributes`.
 
 1. Create `doctors/<slug>/DOCTOR.md` with the doctor's brain. If the
    doctor isn't actually implemented yet, include the literal string
-   `not yet supported` in the first 5 lines — the gate in setup.sh
+   `not yet supported` in the first 5 lines - the gate in setup.sh
    (`is_stub` helper) and setup.ps1 (`Test-IsStub`) treats that as a
    stub and gracefully exits with "templates are coming soon" instead
    of dropping the user into Claude reading a useless brain.
@@ -179,7 +179,7 @@ MY_NEW_STEPS = [
 failures += run(steps=MY_NEW_STEPS, label='my-new')
 ```
 
-Include `THEDOC_NO_LAUNCH=1` is set automatically — your scenario
+Include `THEDOC_NO_LAUNCH=1` is set automatically - your scenario
 exits before spawning a real Claude session. If your scenario doesn't
 reach `Ready to launch.`, write a custom `assertions(cleaned)` function
 and pass it via `assertions=` (see `coming_soon_assertions` for an

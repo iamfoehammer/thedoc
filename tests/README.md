@@ -5,8 +5,8 @@ Ubuntu and macOS; the PowerShell wrapper suite runs on Windows.
 
 | File | What it covers | Runtime |
 |---|---|---|
-| `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface — non-PTY, exit codes + output strings | ~50ms |
-| `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands — same assertions on the PowerShell side | ~1s |
+| `test_wrapper.sh` | bash `thedoc` wrapper subcommand surface - non-PTY, exit codes + output strings | ~50ms |
+| `test_wrapper.ps1` | `thedoc.ps1` wrapper subcommands - same assertions on the PowerShell side | ~1s |
 | `smoke_test.py` | `setup.sh` end-to-end via real PTY across 22 scenarios | ~45s |
 
 `thedoc test` runs the bash wrapper + smoke (POSIX shells) or
@@ -33,8 +33,8 @@ setup.sh actually rendered - some glitches (mid-bullet wrap, indent
 loss, color-bleed) don't trip the regex/error-pattern assertions
 but show clearly in the cleaned PTY transcript.
 
-The smoke suite requires Python 3 and a real PTY (Linux/macOS — won't run
-under cmd.exe). Each scenario takes 1–3s; the full 22-scenario suite
+The smoke suite requires Python 3 and a real PTY (Linux/macOS - won't run
+under cmd.exe). Each scenario takes 1-3s; the full 22-scenario suite
 finishes in ~45s. Exit codes: 0 = all PASS, 1 = at least one FAIL,
 2 = unknown smoke scenario name.
 
@@ -42,9 +42,9 @@ finishes in ~45s. Exit codes: 0 = all PASS, 1 = at least one FAIL,
 
 For each scenario, the driver:
 
-1. Spawns `setup.sh` under a real PTY (so tty-only behaviors —
+1. Spawns `setup.sh` under a real PTY (so tty-only behaviors -
    `read -rsn1`, the async space-to-skip in `typeit`, `prompt_choice`'s
-   `flush_input` — fire the same code path a real user hits).
+   `flush_input` - fire the same code path a real user hits).
 2. Builds an isolated `$HOME` with a real `~/GitHub/placeholder-project/`
    so the projects-folder scan succeeds without depending on the
    developer's actual `~/GitHub/`.

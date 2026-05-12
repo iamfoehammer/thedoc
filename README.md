@@ -153,7 +153,7 @@ Running setup creates a new **instance folder** in your projects directory:
 thedoc update                # git pull the framework, with friendly preflight
 ```
 
-Or re-paste the install one-liner — the bootstrap will update an existing
+Or re-paste the install one-liner - the bootstrap will update an existing
 install in place instead of orphaning a new clone in `$TMPDIR`.
 
 Next time you open your doctor instance, it checks for new updates and walks you through each one:
@@ -289,7 +289,7 @@ Want to add support for a new doctor type or engine? The framework is designed t
 - **New templates:** Add to `common/templates/`
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on portability rules
-(this code runs on macOS too — no GNU-only flags), the stub-marker
+(this code runs on macOS too - no GNU-only flags), the stub-marker
 convention, and how to add a smoke test scenario.
 
 PRs welcome.
