@@ -39,6 +39,7 @@ def _cleanup_typed_path_fixtures():
     interrupted run leaks /tmp/thedoc-smoke-typed-projects-<pid>/ dirs."""
     shutil.rmtree(TYPED_PATH_FIXTURE, ignore_errors=True)
     shutil.rmtree(TYPED_PATH_CREATE,  ignore_errors=True)
+    shutil.rmtree(TYPED_PATH_SPACES,  ignore_errors=True)
 
 
 def _cleanup_bootstrap_fixtures():
@@ -65,6 +66,13 @@ atexit.register(_cleanup_bootstrap_fixtures)
 # remove them on suite completion AND on Ctrl+C / unhandled exception.
 TYPED_PATH_FIXTURE = f'/tmp/thedoc-smoke-typed-projects-{os.getpid()}'
 TYPED_PATH_CREATE  = f'/tmp/thedoc-smoke-typed-projects-to-create-{os.getpid()}'
+# Path with a literal space in a directory name. Common on Windows
+# ("C:\Users\Some Name\Projects") and on macOS where iCloud-synced
+# Documents can land under "Mobile Documents/com~apple~CloudDocs".
+# Catches any unquoted-variable regression in setup.sh's typed-path
+# branch where the path word-splits on whitespace - the wizard would
+# silently use a different/shorter path or error out partway.
+TYPED_PATH_SPACES  = f'/tmp/thedoc-smoke-typed projects with spaces-{os.getpid()}'
 
 ANSI_RE = re.compile(rb'\x1b\[[0-9;]*[A-Za-z]')
 
@@ -215,6 +223,18 @@ def pre_typed_path_create(project_dir, state_dir):
     """Ensure TYPED_PATH_CREATE does NOT exist so setup.sh hits the
     'doesn't exist. Create it? [Y/n]' branch and exercises mkdir."""
     shutil.rmtree(TYPED_PATH_CREATE, ignore_errors=True)
+
+
+def pre_typed_path_spaces(project_dir, state_dir):
+    """Pre-create TYPED_PATH_SPACES (a path with a literal space in a
+    directory name) so the 'Type a path' branch accepts it like any
+    other absolute existing path. Iter 245 added the scenario after
+    realizing no existing test exercised spaces in the typed path -
+    a regression where an `mkdir $custom_path` (unquoted) gets
+    introduced would leave the wizard creating two separate dirs
+    silently while the test transcript still showed 'Ready to launch.'"""
+    shutil.rmtree(TYPED_PATH_SPACES, ignore_errors=True)
+    os.makedirs(os.path.join(TYPED_PATH_SPACES, 'sub-project'))
 
 
 def pre_bootstrap(project_dir, state_dir):
@@ -628,6 +648,25 @@ TYPED_PATH_RELATIVE_STEPS = [
     (re.compile(r'Setup mode\?'),                           b'1',                                 'Mode: 1'),
     (re.compile(r'Name for your doctor instance folder'),   b'\n',                                'Default name'),
     (re.compile(r'already exists.*\[Y/n\]'),                b'\n',                                'Open existing if any'),
+]
+
+
+# Like TYPED_PATH_STEPS, but the typed path contains a literal space in
+# a directory name ("typed projects with spaces"). Verifies the wizard
+# correctly preserves embedded whitespace from the prompt through to
+# the state file (a regression where someone introduces an unquoted
+# $custom_path expansion would split the path on the space silently).
+TYPED_PATH_SPACES_STEPS = [
+    (re.compile(r'Star Trek: Voyager\?'),                   b'n',                                'Voyager: n'),
+    (re.compile(r'Press any key to begin the scan'),        b' ',                                'Skip animations'),
+    (re.compile(r'Which one is your projects folder\?'),    b'3',                                'Projects: option 3 (Type a path)'),
+    (re.compile(r'Enter the full path:'),                   (TYPED_PATH_SPACES + '\n').encode(), 'Type fixture path with spaces'),
+    (re.compile(r'Press any key to continue \(space'),      b' ',                                'Continue from explainer'),
+    (re.compile(r'What is this doctor for\?'),              b'1',                                'Doctor type: 1'),
+    (re.compile(r'Which LLM engine'),                       b'1',                                'Engine: 1'),
+    (re.compile(r'Setup mode\?'),                           b'1',                                'Mode: 1'),
+    (re.compile(r'Name for your doctor instance folder'),   b'\n',                               'Default name'),
+    (re.compile(r'already exists.*\[Y/n\]'),                b'\n',                               'Open existing if any'),
 ]
 
 
@@ -1451,6 +1490,10 @@ def main():
                                      pre_setup=pre_typed_path_create,
                                      assertions=typed_path_assertions(
                                          TYPED_PATH_CREATE))),
+        ('typed-path-spaces',   dict(steps=TYPED_PATH_SPACES_STEPS,
+                                     pre_setup=pre_typed_path_spaces,
+                                     assertions=typed_path_assertions(
+                                         TYPED_PATH_SPACES))),
         ('typed-path-decline',  dict(steps=TYPED_PATH_DECLINE_STEPS,
                                      pre_setup=pre_typed_path_decline,
                                      assertions=typed_path_decline_assertions)),
