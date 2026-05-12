@@ -581,6 +581,24 @@ def pre_write_state(project_dir, state_dir, slug='claude-code'):
         f.write('platform=linux\n')
 
 
+def pre_write_state_wrong_platform(project_dir, state_dir):
+    """Pre-write state with `platform=windows` (a value detect_platform
+    would NEVER produce on Linux/macOS - smoke tests run only there).
+    Iter 257 found bash's load_state was reading PLATFORM from state
+    file, clobbering the freshly-detected runtime value, so a state
+    written by setup.ps1 on Windows then re-read by setup.sh in WSL2
+    or macOS would generate a CLAUDE.md with `Platform: windows` -
+    Claude reads CLAUDE.md on session start and tailors advice. After
+    iter 257, load_state ignores platform; detect_platform's value
+    flows into the CLAUDE.md as expected."""
+    thedoc_dir = os.path.join(state_dir, 'thedoc')
+    os.makedirs(thedoc_dir, exist_ok=True)
+    with open(os.path.join(thedoc_dir, 'state'), 'w') as f:
+        f.write('first_run=2026-05-09T12:00:00+00:00\n')
+        f.write(f'projects_dir={project_dir}\n')
+        f.write('platform=windows\n')
+
+
 # Returning user: state file exists, setup skips greeting/scan/projects
 # and jumps straight to doctor-type pick. Most-common real-world flow -
 # the user already ran setup once.
@@ -1224,6 +1242,55 @@ def returning_user_assertions(cleaned, ctx=None):
     return failures
 
 
+def returning_user_wrong_platform_assertions(cleaned, ctx=None):
+    """Pre-state had `platform=windows`. After iter 257, bash setup.sh
+    re-detects the runtime platform and writes that to both the state
+    file AND the generated CLAUDE.md. Before iter 257, load_state
+    clobbered detect_platform's value with the stale state - so
+    CLAUDE.md said `Platform: windows` even though we're running on
+    Linux or macOS.
+
+    Pin: CLAUDE.md must NOT contain `Platform: windows` (the value
+    written into pre-state); it must contain a value detect_platform
+    can produce (linux / linux-wsl2 / macos / windows-gitbash, in
+    practice linux/macos on CI). Also pin the state file after the
+    run - save_state should have overwritten the stale platform with
+    the runtime value too."""
+    failures = list(returning_user_assertions(cleaned, ctx))
+    expected_instance = os.path.join(ctx['project_dir'], 'claude-code-doctor')
+    claude_md = os.path.join(expected_instance, 'CLAUDE.md')
+    if not os.path.exists(claude_md):
+        failures.append(f"CLAUDE.md missing: {claude_md}")
+    else:
+        with open(claude_md) as f:
+            md = f.read()
+        # The generated CLAUDE.md uses Markdown bold:
+        # `- **Platform:** <value>`. Match against that exact form so
+        # the negative check below doesn't accidentally false-positive
+        # on a line like `# Why Platform: windows is hard`.
+        if '**Platform:** windows' in md:
+            failures.append(
+                "CLAUDE.md mis-recorded `Platform: windows` from stale state - "
+                "load_state should ignore platform and let detect_platform's "
+                "runtime value flow through (iter 257)")
+        # Spot the runtime-detected platforms positively. On smoke
+        # runners we expect one of these.
+        if not any(f'**Platform:** {p}' in md for p in
+                   ('linux', 'linux-wsl2', 'macos')):
+            failures.append(
+                f"CLAUDE.md doesn't record a runtime-plausible platform. "
+                f"Content excerpt:\n{_excerpt(md, 'Platform:')}")
+    state_file = os.path.join(ctx['state_dir'], 'thedoc', 'state')
+    if os.path.exists(state_file):
+        with open(state_file) as f:
+            state = f.read()
+        if 'platform=windows' in state:
+            failures.append(
+                "state file still has `platform=windows` after the run - "
+                "save_state should overwrite with detect_platform's value")
+    return failures
+
+
 def engine_fallback_assertions(cleaned, ctx=None):
     """User picked the OpenClaw engine (stub), accepted the 'Run with
     Claude Code instead?' fallback. Transcript checks confirm the
@@ -1526,6 +1593,10 @@ def main():
         ('returning-user',    dict(steps=RETURNING_USER_STEPS,
                                    pre_setup=pre_write_state,
                                    assertions=returning_user_assertions)),
+        ('returning-user-wrong-platform',
+                              dict(steps=RETURNING_USER_STEPS,
+                                   pre_setup=pre_write_state_wrong_platform,
+                                   assertions=returning_user_wrong_platform_assertions)),
         # Stale-state warning scenario: state file's projects_dir is gone,
         # setup.sh falls back to dirname-of-script. We only need to verify
         # the warning appears - the full doctor-creation flow lands the
