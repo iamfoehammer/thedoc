@@ -49,7 +49,7 @@ case "${1:-setup}" in
         ;;
     test)
         # Run the framework's full test suite: wrapper tests (fast, non-PTY)
-        # then the E2E smoke test (PTY-based, ~45s). Mirrors what CI runs
+        # then the E2E smoke test (PTY-based, ~60s). Mirrors what CI runs
         # so `thedoc test` after `thedoc update` is a faithful local check.
         if [ ! -f "$SCRIPT_DIR/tests/test_wrapper.sh" ] || \
            [ ! -f "$SCRIPT_DIR/tests/smoke_test.py" ]; then
