@@ -318,6 +318,22 @@ set -e
 _assert_exit_code   "thedoc test (no tests/ dir): exit non-zero" 1 "$rc"
 _assert_contains    "thedoc test (no tests/ dir): explains why"  "Tests not found" "$out"
 
+# 10. setup.sh with closed stdin surfaces a friendly "Setup did not
+# complete" line instead of dying silently at exit 1. Iter 241 added
+# the EXIT trap; this locks the behavior in.
+_eof_home=$(mktemp -d)
+_eof_state=$(mktemp -d)
+mkdir -p "$_eof_home/GitHub/placeholder-project"
+set +e
+out=$(HOME="$_eof_home" XDG_STATE_HOME="$_eof_state" THEDOC_NO_LAUNCH=1 \
+      THEDOC_TEST_SKIP_TYPING=1 bash "$REPO_ROOT/setup.sh" </dev/null 2>&1)
+rc=$?
+set -e
+rm -rf "$_eof_home" "$_eof_state"
+_assert_exit_code   "setup.sh </dev/null: exit non-zero" 1 "$rc"
+_assert_contains    "setup.sh </dev/null: friendly message"  "Setup did not complete" "$out"
+_assert_contains    "setup.sh </dev/null: hint about stdin"  "stdin was piped" "$out"
+
 echo ""
 
 # 11. tests/README.md scenario table stays in sync with smoke_test.py.
