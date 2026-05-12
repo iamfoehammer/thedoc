@@ -245,6 +245,8 @@ The framework ships with battle-tested templates in `common/templates/`:
 
 ```
 thedoc/                          # The framework (this repo)
+  bootstrap.sh                   # One-liner installer (bash)
+  bootstrap.ps1                  # One-liner installer (PowerShell)
   thedoc                         # Main command (bash)
   thedoc.ps1                     # Main command (PowerShell)
   thedoc.cmd                     # cmd.exe shim for thedoc.ps1
