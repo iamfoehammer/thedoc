@@ -150,18 +150,23 @@ function Remove-Secret {
         exit 1
     }
 
+    # Atomic write-then-rename: build new content in tmp file, then
+    # Move-Item -Force. Same pattern as iter-277 Set-Secret and
+    # iter-276 Save-State. The 0-byte case (removing the last secret)
+    # is handled below by writing an empty array to Set-Content
+    # (which produces a 0-byte file in PS 7+, unlike piping $null
+    # which is version-dependent).
     $lines = Get-Content $SecretsFile | Where-Object { $_ -notmatch "^\`$env:${VarName}\s*=" }
-    # If that was the last remaining secret, explicitly truncate to
-    # 0 bytes rather than relying on `$null | Set-Content` behavior
-    # (varies by PS version - some leave the file unchanged, some
-    # write a stray newline). Get-SecretList's
-    # `(Get-Item).Length -eq 0` is the byte-size check; matching
-    # bash's iter-249 fix to llm-secrets's cmd_remove.
+    $tmp = "$SecretsFile.tmp.$PID"
     if (-not $lines) {
-        Clear-Content -LiteralPath $SecretsFile
+        # Empty array -> 0-byte file. Explicit New-Item is more
+        # reliable than `@() | Set-Content` across PS versions.
+        Set-Content -LiteralPath $tmp -Value ''
+        Clear-Content -LiteralPath $tmp
     } else {
-        $lines | Set-Content -LiteralPath $SecretsFile
+        $lines | Set-Content -LiteralPath $tmp
     }
+    Move-Item -LiteralPath $tmp -Destination $SecretsFile -Force
 
     Write-Host "Removed $VarName"
     Write-Host "Run '. ~/.secrets.ps1' or open a new shell to unload it."
