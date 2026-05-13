@@ -404,6 +404,29 @@ try {
     Remove-Item Env:SECRETS_FILE -ErrorAction SilentlyContinue
 }
 
+# 10a2. llm-secrets.ps1 set happy path - now testable via piped
+# stdin (iter 289). Exercises Set-Secret's full flow including the
+# atomic-write tmp+rename (iter 277). Pre-iter-289 Read-Host
+# -AsSecureString ignored the pipe and the test would have hung.
+$happyFile = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-wrapper-happy-$([guid]::NewGuid()).ps1"
+try {
+    $env:SECRETS_FILE = $happyFile
+    'pipeline-value' | & $llmSecrets set HAPPY_VAR 2>&1 | Out-Null
+    $rc = $LASTEXITCODE
+    Assert-ExitCode 'llm-secrets set (piped value): exit 0' 0 $rc
+    if (Test-Path -LiteralPath $happyFile) {
+        $content = Get-Content -LiteralPath $happyFile -Raw
+        Assert-Contains 'llm-secrets set (piped value): file has the export line' '$env:HAPPY_VAR' $content
+        Assert-Contains 'llm-secrets set (piped value): value persisted' 'pipeline-value' $content
+    } else {
+        Write-Host '  FAIL: llm-secrets set (piped value): file missing' -ForegroundColor Red
+        $script:failures++
+    }
+} finally {
+    Remove-Item -LiteralPath $happyFile -Force -ErrorAction SilentlyContinue
+    Remove-Item Env:SECRETS_FILE -ErrorAction SilentlyContinue
+}
+
 # 10b. llm-secrets.ps1 error paths exit 1 (parity with bash test #10c
 # locking in iter 255's PS exit-code fix). Pre-iter-255 the PS port
 # used function-level `return` on every error path, which doesn't
