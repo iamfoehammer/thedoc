@@ -417,6 +417,31 @@ $out = & $llmSecrets set 2>&1 | Out-String
 Assert-ExitCode  'llm-secrets set (no name): exit non-zero' 1 $LASTEXITCODE
 Assert-Contains  'llm-secrets set (no name): shows usage'   'Usage: secret set' $out
 
+# 10c. setup.ps1 rejects unknown args (parity with bash test #10d
+# locking in iter 261). --debug or any non-help arg should exit 1
+# with "Unknown argument" rather than silently running the wizard.
+$setupPs1 = Join-Path $RepoRoot 'setup.ps1'
+$out = & $setupPs1 --debug 2>&1 | Out-String
+Assert-ExitCode  'setup.ps1 --debug: exit non-zero' 1 $LASTEXITCODE
+Assert-Contains  'setup.ps1 --debug: explains why'  'Unknown argument' $out
+# --help must still short-circuit cleanly (regression guard - the
+# new rejection branch must not break the help case that lived
+# above it in the script).
+$out = & $setupPs1 --help 2>&1 | Out-String
+Assert-ExitCode  'setup.ps1 --help: exit 0 (regression guard)' 0 $LASTEXITCODE
+Assert-Contains  'setup.ps1 --help: still shows help'  'thedoc setup wizard' $out
+
+# 10d. bootstrap.ps1 rejects unknown args (parity with bash #10e
+# locking in iter 263). irm|iex passes no args so this only fires
+# on `pwsh -File bootstrap.ps1 <typo>` manual invocations.
+$bootstrapPs1 = Join-Path $RepoRoot 'bootstrap.ps1'
+$out = & $bootstrapPs1 --debug 2>&1 | Out-String
+Assert-ExitCode  'bootstrap.ps1 --debug: exit non-zero' 1 $LASTEXITCODE
+Assert-Contains  'bootstrap.ps1 --debug: explains why'  'Unknown argument' $out
+$out = & $bootstrapPs1 --help 2>&1 | Out-String
+Assert-ExitCode  'bootstrap.ps1 --help: exit 0 (regression guard)' 0 $LASTEXITCODE
+Assert-Contains  'bootstrap.ps1 --help: still shows help'  'thedoc bootstrap' $out
+
 # 11. tests/README.md scenario table stays in sync with smoke_test.py.
 # Catches the kind of doc drift where someone adds a scenario but
 # forgets to row it in the README. Mirrors bash test #11.
