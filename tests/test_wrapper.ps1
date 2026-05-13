@@ -383,6 +383,40 @@ try {
     Remove-Item -LiteralPath $scratchNoTests -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# 10b. llm-secrets.ps1 error paths exit 1 (parity with bash test #10c
+# locking in iter 255's PS exit-code fix). Pre-iter-255 the PS port
+# used function-level `return` on every error path, which doesn't
+# propagate to a process exit code - wrappers / CI saw exit 0 on
+# user errors and couldn't distinguish "secret saved" from "bad
+# input." Three cases, each safe to run unattended (no Read-Host
+# prompts reachable from these branches):
+$llmSecrets = Join-Path $RepoRoot 'llm-secrets.ps1'
+
+# set with invalid name (regex rejects before any Read-Host)
+$out = & $llmSecrets set '!@#$' 2>&1 | Out-String
+Assert-ExitCode  "llm-secrets set '!@#\$': exit non-zero" 1 $LASTEXITCODE
+Assert-Contains  "llm-secrets set '!@#\$': explains why"  'Invalid variable name' $out
+
+# remove non-existent variable (sandbox SECRETS_FILE so we don't
+# touch the runner's actual secrets store)
+$sandboxSecrets = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-wrapper-secrets-$([guid]::NewGuid()).ps1"
+New-Item -ItemType File -Path $sandboxSecrets -Force | Out-Null
+try {
+    $env:SECRETS_FILE = $sandboxSecrets
+    $out = & $llmSecrets remove NONEXISTENT_VAR 2>&1 | Out-String
+    Assert-ExitCode  'llm-secrets remove NONEXISTENT: exit non-zero' 1 $LASTEXITCODE
+    Assert-Contains  'llm-secrets remove NONEXISTENT: explains why'  'not found' $out
+} finally {
+    Remove-Item -LiteralPath $sandboxSecrets -Force -ErrorAction SilentlyContinue
+    Remove-Item Env:SECRETS_FILE -ErrorAction SilentlyContinue
+}
+
+# set with no var name - prints Usage and exit 1 (no Read-Host
+# reached, function returns early on -not $VarName)
+$out = & $llmSecrets set 2>&1 | Out-String
+Assert-ExitCode  'llm-secrets set (no name): exit non-zero' 1 $LASTEXITCODE
+Assert-Contains  'llm-secrets set (no name): shows usage'   'Usage: secret set' $out
+
 # 11. tests/README.md scenario table stays in sync with smoke_test.py.
 # Catches the kind of doc drift where someone adds a scenario but
 # forgets to row it in the README. Mirrors bash test #11.
