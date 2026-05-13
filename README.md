@@ -195,7 +195,7 @@ Without `llm-secrets`, every approach leaks your token:
 - Use the `!` prefix? Output still shows up.
 
 With `llm-secrets`:
-- Secrets live in `~/.secrets` (chmod 600, never monitored)
+- Secrets live in `~/.secrets` (bash, chmod 600) or `~/.secrets.ps1` (PowerShell, ACL'd to the user) - never monitored
 - Your shell sources it on startup - standard env vars
 - AI tools can use `$MY_GITHUB_PAT` in commands without seeing the value
 - Masked input (shows `*` for each character)
