@@ -411,6 +411,25 @@ set -e
 _assert_exit_code  "bootstrap.sh --help: exit 0 (regression guard)" 0 "$rc"
 _assert_contains   "bootstrap.sh --help: still shows help"  "thedoc bootstrap" "$out"
 
+# 10f. llm-secrets set happy path - pipe a value, verify the file
+# round-trips. Parity with PS test #10a2 (iter 290). Locks in the
+# atomic write-then-rename from iter 277.
+_happy_secrets=$(mktemp)
+set +e
+out=$(SECRETS_FILE="$_happy_secrets" "$REPO_ROOT/llm-secrets" set HAPPY_VAR <<< "pipeline-value" 2>&1)
+rc=$?
+set -e
+_assert_exit_code  "llm-secrets set (piped): exit 0" 0 "$rc"
+if [ -f "$_happy_secrets" ]; then
+    _content=$(cat "$_happy_secrets")
+    _assert_contains "llm-secrets set (piped): export line in file"   "export HAPPY_VAR=" "$_content"
+    _assert_contains "llm-secrets set (piped): value round-trips"     "pipeline-value"    "$_content"
+else
+    echo -e "  ${RED}FAIL${RESET}: llm-secrets set (piped): file missing"
+    failures=$((failures + 1))
+fi
+rm -f "$_happy_secrets"
+
 echo ""
 
 # 11. tests/README.md scenario table stays in sync with smoke_test.py.
