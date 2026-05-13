@@ -236,10 +236,22 @@ llm-secrets                       # Interactive (prompts for everything)
 llm-secrets set                   # Same as above
 llm-secrets set 'my github pat'  # Auto-converts to MY_GITHUB_PAT
 llm-secrets set MY_VAR_NAME      # Exact name also works
-llm-secrets my openai key         # Shorthand - skips "set"
+llm-secrets my openai key         # Shorthand - skips "set" (bash port only)
 llm-secrets list                  # List secret names (not values)
 llm-secrets remove VAR_NAME      # Remove a secret
 llm-secrets help                  # Show help
+```
+
+**Scripted use** (CI, dotfiles bootstrap, automation): pipe the value
+into `set` so the prompt doesn't block waiting for keyboard input.
+Both bash and PowerShell ports accept piped stdin:
+
+```bash
+echo "$GITHUB_TOKEN" | llm-secrets set GITHUB_TOKEN          # bash
+```
+
+```powershell
+"$env:GITHUB_TOKEN" | llm-secrets.ps1 set GITHUB_TOKEN       # PowerShell
 ```
 
 ## Included Templates
