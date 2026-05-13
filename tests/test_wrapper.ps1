@@ -383,6 +383,27 @@ try {
     Remove-Item -LiteralPath $scratchNoTests -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+# 10a. llm-secrets.ps1 remove-last-secret produces a 0-byte file
+# (parity with bash test #10b locking in iter 254's fix). Set-Secret
+# uses Read-Host -AsSecureString which doesn't accept stdin pipe,
+# so write the secrets-file entry directly instead of calling `set`
+# - this isolates the Remove-Secret last-entry behavior, which is
+# the actual regression target.
+$llmSecrets = Join-Path $RepoRoot 'llm-secrets.ps1'
+$lastSecretsFile = Join-Path ([System.IO.Path]::GetTempPath()) "thedoc-wrapper-lastsec-$([guid]::NewGuid()).ps1"
+try {
+    $env:SECRETS_FILE = $lastSecretsFile
+    Set-Content -LiteralPath $lastSecretsFile -Value '$env:FOOTEST = "sandbox-value"'
+    & $llmSecrets remove FOOTEST 2>&1 | Out-Null
+    $size = (Get-Item -LiteralPath $lastSecretsFile).Length
+    $listOut = & $llmSecrets list 2>&1 | Out-String
+    Assert-ExitCode 'llm-secrets remove (last): file is 0 bytes' 0 $size
+    Assert-Contains 'llm-secrets list (post-remove): No secrets stored' 'No secrets stored' $listOut
+} finally {
+    Remove-Item -LiteralPath $lastSecretsFile -Force -ErrorAction SilentlyContinue
+    Remove-Item Env:SECRETS_FILE -ErrorAction SilentlyContinue
+}
+
 # 10b. llm-secrets.ps1 error paths exit 1 (parity with bash test #10c
 # locking in iter 255's PS exit-code fix). Pre-iter-255 the PS port
 # used function-level `return` on every error path, which doesn't
@@ -390,7 +411,6 @@ try {
 # user errors and couldn't distinguish "secret saved" from "bad
 # input." Three cases, each safe to run unattended (no Read-Host
 # prompts reachable from these branches):
-$llmSecrets = Join-Path $RepoRoot 'llm-secrets.ps1'
 
 # set with invalid name (regex rejects before any Read-Host)
 $out = & $llmSecrets set '!@#$' 2>&1 | Out-String
