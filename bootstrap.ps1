@@ -34,7 +34,7 @@ Requirements:
 Manual install (no irm | iex):
   git clone https://github.com/iamfoehammer/thedoc.git $HOME\GitHub\thedoc
   $env:PATH = "$HOME\GitHub\thedoc;$env:PATH"
-  Add-Content $PROFILE.CurrentUserAllHosts 'if (Test-Path "$HOME/.secrets.ps1") { . "$HOME/.secrets.ps1" }'
+  Add-Content $PROFILE.CurrentUserAllHosts 'if (Test-Path "$HOME/.secrets.ps1") { try { . "$HOME/.secrets.ps1" } catch { Write-Warning "~/.secrets.ps1: $($_.Exception.Message)" } }'
   .\thedoc.ps1
 '@
     exit 0

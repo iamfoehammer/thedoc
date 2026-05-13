@@ -1088,7 +1088,16 @@ if (Test-FirstRun) {
         if (-not (Test-Path -LiteralPath $profileDir -PathType Container)) {
             New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
         }
-        $secretsLine = 'if (Test-Path "$HOME/.secrets.ps1") { . "$HOME/.secrets.ps1" }'
+        # Defensive single-line form: try/catch the dot-source so a
+        # broken ~/.secrets.ps1 (manual edit, partial write, accidental
+        # keystroke) produces a Write-Warning at shell open rather than
+        # a fatal stack trace. The user still sees something's wrong
+        # and can fix the file, but the shell still loads. iter 296
+        # added the same guard at the two thedoc-internal dot-source
+        # sites (engines/claude-code.ps1, thedoc.ps1 open); this
+        # extends the resilience to every new PS shell the user opens
+        # after thedoc wired the profile.
+        $secretsLine = 'if (Test-Path "$HOME/.secrets.ps1") { try { . "$HOME/.secrets.ps1" } catch { Write-Warning "~/.secrets.ps1: $($_.Exception.Message)" } }'
         $existing = if (Test-Path -LiteralPath $profilePath -PathType Leaf) {
             Get-Content -LiteralPath $profilePath -Raw
         } else { '' }
