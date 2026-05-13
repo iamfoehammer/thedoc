@@ -198,7 +198,7 @@ With `llm-secrets`:
 - Secrets live in `~/.secrets` (bash, chmod 600) or `~/.secrets.ps1` (PowerShell, ACL'd to the user) - never monitored
 - Your shell sources it on startup - standard env vars
 - AI tools can use `$MY_GITHUB_PAT` in commands without seeing the value
-- Masked input (shows `*` for each character)
+- Hidden input - characters never display (bash uses silent read; PS uses SecureString with `*` per character)
 - Copies the variable reference to your clipboard on save
 
 ### Install (standalone)
