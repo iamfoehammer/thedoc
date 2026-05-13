@@ -72,6 +72,14 @@ function Set-Secret {
             [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureValue))
     }
 
+    # Confirm capture - bash llm-secrets has the same message (iter 308
+    # parity). Especially useful for piped use: catches accidentally-
+    # empty input ("echo '' | llm-secrets set X") and gives a visible
+    # length for sanity check ("did my 40-char PAT actually arrive?").
+    if (-not [string]::IsNullOrEmpty($value)) {
+        Write-Host "($($value.Length) characters received)"
+    }
+
     if ([string]::IsNullOrEmpty($value)) {
         Write-Host "No value provided. Aborted."
         exit 1
