@@ -57,7 +57,7 @@ $env:PATH = "$HOME\GitHub\thedoc;$env:PATH"
 # Persist across sessions:
 [Environment]::SetEnvironmentVariable('PATH', "$HOME\GitHub\thedoc;$([Environment]::GetEnvironmentVariable('PATH', 'User'))", 'User')
 # Wire llm-secrets into your PowerShell profile (loads env vars on new shells):
-Add-Content $PROFILE.CurrentUserAllHosts 'if (Test-Path "$HOME/.secrets.ps1") { try { . "$HOME/.secrets.ps1" } catch { Write-Warning "~/.secrets.ps1: $($_.Exception.Message)" } }'
+Add-Content $PROFILE.CurrentUserAllHosts 'if (Test-Path "$HOME/.secrets.ps1") { try { . "$HOME/.secrets.ps1" } catch { Write-Host "~/.secrets.ps1: $($_.Exception.Message)" -ForegroundColor Yellow } }'
 thedoc
 ```
 

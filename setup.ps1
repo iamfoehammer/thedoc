@@ -1097,7 +1097,13 @@ if (Test-FirstRun) {
         # sites (engines/claude-code.ps1, thedoc.ps1 open); this
         # extends the resilience to every new PS shell the user opens
         # after thedoc wired the profile.
-        $secretsLine = 'if (Test-Path "$HOME/.secrets.ps1") { try { . "$HOME/.secrets.ps1" } catch { Write-Warning "~/.secrets.ps1: $($_.Exception.Message)" } }'
+        # Write-Host with -ForegroundColor instead of Write-Warning so a
+        # user who sets $WarningPreference='Stop' (rare, but power
+        # users do) doesn't get a fresh terminating error in their
+        # catch block. Write-Host bypasses the warning preference
+        # entirely - the message always shows, in yellow, on every
+        # new shell where ~/.secrets.ps1 has issues.
+        $secretsLine = 'if (Test-Path "$HOME/.secrets.ps1") { try { . "$HOME/.secrets.ps1" } catch { Write-Host "~/.secrets.ps1: $($_.Exception.Message)" -ForegroundColor Yellow } }'
         $existing = if (Test-Path -LiteralPath $profilePath -PathType Leaf) {
             Get-Content -LiteralPath $profilePath -Raw
         } else { '' }
