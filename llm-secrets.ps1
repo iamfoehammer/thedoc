@@ -56,9 +56,21 @@ function Set-Secret {
         exit 1
     }
 
-    $secureValue = Read-Host -Prompt "Value for $VarName" -AsSecureString
-    $value = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-        [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureValue))
+    # Read the value: prefer Read-Host -AsSecureString for interactive
+    # use (chars don't echo to the console), but fall back to
+    # [Console]::In.ReadLine() when stdin is redirected. Read-Host
+    # ignores piped stdin and blocks waiting for console input, so
+    # scripted use (`echo "value" | llm-secrets.ps1 set MYVAR`) used
+    # to hang. Bash `read -rsp` accepts pipe transparently; this is
+    # parity with that.
+    if ([Console]::IsInputRedirected) {
+        $value = [Console]::In.ReadLine()
+        if ($null -eq $value) { $value = '' }
+    } else {
+        $secureValue = Read-Host -Prompt "Value for $VarName" -AsSecureString
+        $value = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
+            [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureValue))
+    }
 
     if ([string]::IsNullOrEmpty($value)) {
         Write-Host "No value provided. Aborted."
