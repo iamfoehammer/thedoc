@@ -856,7 +856,6 @@ NEGATIVE_NAME_STEPS = COMMON_FIRSTRUN_STEPS + [
 
 def green(s):  return f'\x1b[32m{s}\x1b[0m'
 def red(s):    return f'\x1b[31m{s}\x1b[0m'
-def yellow(s): return f'\x1b[33m{s}\x1b[0m'
 
 
 def default_assertions(cleaned, ctx=None):
