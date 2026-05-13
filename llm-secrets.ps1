@@ -10,7 +10,7 @@
 # Values never appear in terminal output or command history.
 #
 # Add to your PowerShell profile ($PROFILE):
-#   if (Test-Path "$HOME/.secrets.ps1") { . "$HOME/.secrets.ps1" }
+#   if (Test-Path "$HOME/.secrets.ps1") { try { . "$HOME/.secrets.ps1" } catch { Write-Host "~/.secrets.ps1: $($_.Exception.Message)" -ForegroundColor Yellow } }
 #   function llm-secrets { & "$HOME\GitHub\thedoc\llm-secrets.ps1" @args }
 
 param(

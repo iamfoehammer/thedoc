@@ -222,7 +222,7 @@ source ~/.bashrc
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/iamfoehammer/thedoc/main/llm-secrets.ps1" -OutFile "$HOME\llm-secrets.ps1"
 
 # Add to your profile (run: notepad $PROFILE)
-if (Test-Path "$HOME\.secrets.ps1") { . "$HOME\.secrets.ps1" }
+if (Test-Path "$HOME\.secrets.ps1") { try { . "$HOME\.secrets.ps1" } catch { Write-Host "~/.secrets.ps1: $($_.Exception.Message)" -ForegroundColor Yellow } }
 function llm-secrets { & "$HOME\llm-secrets.ps1" @args }
 
 # Reload
