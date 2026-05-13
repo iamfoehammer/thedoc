@@ -199,7 +199,7 @@ With `llm-secrets`:
 - Your shell sources it on startup - standard env vars
 - AI tools can use `$MY_GITHUB_PAT` in commands without seeing the value
 - Hidden input - characters never display (bash uses silent read; PS uses SecureString with `*` per character)
-- Copies the variable reference to your clipboard on save
+- Copies the variable reference to your clipboard on save (or tells you it couldn't on headless / minimal-install systems)
 
 ### Install (standalone)
 
