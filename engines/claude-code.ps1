@@ -54,7 +54,21 @@ else {
 # how setup.ps1 got invoked. Mirrors thedoc.ps1's open subcommand.
 $secretsFile = Join-Path $HOME '.secrets.ps1'
 if (Test-Path -LiteralPath $secretsFile -PathType Leaf) {
-    . $secretsFile
+    # Wrap in try/catch so a syntax error in the secrets file (manual
+    # edit, accidental keystroke, partial write from an earlier crash)
+    # degrades to a warning + launching claude WITHOUT env vars, rather
+    # than throwing under $ErrorActionPreference='Stop' and dumping a
+    # stack trace. The user sees a clear message and can fix the file.
+    try {
+        . $secretsFile
+    } catch {
+        Write-Host ''
+        Write-Host '  Warning: ~/.secrets.ps1 has syntax errors and could not be loaded:' -ForegroundColor Yellow
+        Write-Host "    $($_.Exception.Message)" -ForegroundColor DarkGray
+        Write-Host '  Launching claude without env vars from llm-secrets.' -ForegroundColor DarkGray
+        Write-Host '  Edit ~/.secrets.ps1 to fix, or remove broken lines.' -ForegroundColor DarkGray
+        Write-Host ''
+    }
 }
 
 Set-Location -LiteralPath $InstanceDir

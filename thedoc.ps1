@@ -273,7 +273,18 @@ switch ($Command) {
         # with llm-secrets.ps1.
         $secretsFile = Join-Path $HOME '.secrets.ps1'
         if (Test-Path -LiteralPath $secretsFile -PathType Leaf) {
-            . $secretsFile
+            # Wrap in try/catch (iter 296 parity with engines/claude-code.ps1)
+            # so a syntax error in the secrets file degrades to a warning
+            # rather than throwing under $ErrorActionPreference='Stop'.
+            try {
+                . $secretsFile
+            } catch {
+                Write-Host ''
+                Write-Host '  Warning: ~/.secrets.ps1 has syntax errors and could not be loaded:' -ForegroundColor Yellow
+                Write-Host "    $($_.Exception.Message)" -ForegroundColor DarkGray
+                Write-Host '  Launching claude without env vars from llm-secrets.' -ForegroundColor DarkGray
+                Write-Host ''
+            }
         }
         Push-Location $instanceDir
         try {
