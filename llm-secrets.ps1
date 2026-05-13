@@ -67,24 +67,23 @@ function Set-Secret {
 
     Ensure-File
 
-    # Remove existing entry if present
-    if (Test-Path $SecretsFile) {
-        $lines = Get-Content $SecretsFile | Where-Object { $_ -notmatch "^\`$env:${VarName}\s*=" }
-        # If the existing secret being updated was the only one, $lines
-        # is $null. Piping $null to Set-Content varies by PS version -
-        # some leave the file unchanged, some write a stray newline.
-        # Truncate explicitly so the subsequent Add-Content writes a
-        # clean single-line file. Mirrors iter-253 cmd_set fix on the
-        # bash side and the same iter-249 pattern in Remove-Secret.
-        if (-not $lines) {
-            Clear-Content -LiteralPath $SecretsFile
-        } else {
-            $lines | Set-Content -LiteralPath $SecretsFile
-        }
+    # Atomic write-then-rename so a kill mid-update can't leave the
+    # secrets file in a "old entry removed, new entry not yet written"
+    # state. Mirrors iter-277 cmd_set fix on the bash side, and the
+    # iter-276 atomic save_state pattern. Build complete new content
+    # in a tmp file, then Move-Item -Force to overwrite atomically.
+    $existing = if (Test-Path -LiteralPath $SecretsFile) {
+        Get-Content -LiteralPath $SecretsFile
+    } else { @() }
+    $wasPresent = $existing | Where-Object { $_ -match "^\`$env:${VarName}\s*=" } | Select-Object -First 1
+    $newLines   = $existing | Where-Object { $_ -notmatch "^\`$env:${VarName}\s*=" }
+    $newLines  += "`$env:${VarName} = `"${value}`""
+    $tmp = "$SecretsFile.tmp.$PID"
+    $newLines | Set-Content -LiteralPath $tmp
+    Move-Item -LiteralPath $tmp -Destination $SecretsFile -Force
+    if ($wasPresent) {
+        Write-Host "(Updated existing secret)"
     }
-
-    # Append new entry
-    Add-Content $SecretsFile "`$env:${VarName} = `"${value}`""
 
     # Copy variable reference to clipboard. Set-Clipboard is Windows-only
     # in PS <7.4 and may throw on Linux pwsh (Wayland/headless sessions).
