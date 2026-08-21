@@ -94,6 +94,10 @@ _cc_tmux() {
 
     # Already inside tmux: repurpose the current window
     if [ -n "$TMUX" ]; then
+        # tmux runs with automatic-rename on by default, which relabels a
+        # window after whatever is in the foreground, which is how windows end
+        # up called "bash" or "claude". An explicit rename-window turns
+        # automatic-rename off for that window, so this name sticks.
         tmux rename-window "$win_name"
         cd "$work_dir" || return 1
         exec $cmd
@@ -118,11 +122,10 @@ _cc_tmux() {
 # projects dir, walks up to the project root and runs claude there.
 # Outside any tracked project, falls back to $PWD itself.
 #
-# The suffix derivation here is the simple sed initials rule
-# (folder-name -> first-letter-of-each-hyphen-part). It does NOT honor
-# ~/.cc-suffix-overrides because the alias file is sourced into bash
-# 3.2+ shells and `declare -A` would break there. If a folder needs a
-# pinned suffix, use the explicit `cc-<override>` form.
+# The tmux window is titled with the project folder name, so the title
+# describes what is actually open in it. The terse suffix (clv, nmtb)
+# remains the alias ergonomic only; it is not a window title, because
+# nobody can read a window bar full of initials.
 _cc_bare() {
     local cmd_args="$1"; shift
     local projects_dir="$HOME/GitHub"
@@ -144,11 +147,10 @@ _cc_bare() {
     done
     [ -z "$proj_root" ] && proj_root="$PWD"
 
-    local folder_name short
+    local folder_name
     folder_name="$(basename "$proj_root")"
-    short="$(echo "$folder_name" | sed 's/\([a-zA-Z0-9]\)[a-zA-Z0-9]*/\1/g; s/-//g')"
 
-    _cc_tmux "$short" "$proj_root" $cmd_args
+    _cc_tmux "$folder_name" "$proj_root" $cmd_args
 }
 
 cc()  { _cc_bare "claude --continue"; }
@@ -199,21 +201,21 @@ for dir in "$GITHUB_DIR"/*/; do
     SUFFIX_CLAIMED_BY[$short]="$folder_name"
 
     # Continue aliases
-    echo "alias cc-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude --continue'" >> "$ALIAS_FILE"
-    echo "alias dcc-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions --continue'" >> "$ALIAS_FILE"
+    echo "alias cc-${folder_name}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --continue'" >> "$ALIAS_FILE"
+    echo "alias dcc-${folder_name}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --dangerously-skip-permissions --continue'" >> "$ALIAS_FILE"
     # New conversation aliases
-    echo "alias cn-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude'" >> "$ALIAS_FILE"
-    echo "alias dcn-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions'" >> "$ALIAS_FILE"
+    echo "alias cn-${folder_name}='_cc_tmux \"${folder_name}\" \"${dir}\" claude'" >> "$ALIAS_FILE"
+    echo "alias dcn-${folder_name}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --dangerously-skip-permissions'" >> "$ALIAS_FILE"
     # Resume aliases (session picker)
-    echo "alias cr-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude --resume'" >> "$ALIAS_FILE"
-    echo "alias dcr-${folder_name}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions --resume'" >> "$ALIAS_FILE"
+    echo "alias cr-${folder_name}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --resume'" >> "$ALIAS_FILE"
+    echo "alias dcr-${folder_name}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --dangerously-skip-permissions --resume'" >> "$ALIAS_FILE"
     if [ "$short" != "$folder_name" ]; then
-        echo "alias cc-${short}='_cc_tmux \"${short}\" \"${dir}\" claude --continue'" >> "$ALIAS_FILE"
-        echo "alias dcc-${short}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions --continue'" >> "$ALIAS_FILE"
-        echo "alias cn-${short}='_cc_tmux \"${short}\" \"${dir}\" claude'" >> "$ALIAS_FILE"
-        echo "alias dcn-${short}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions'" >> "$ALIAS_FILE"
-        echo "alias cr-${short}='_cc_tmux \"${short}\" \"${dir}\" claude --resume'" >> "$ALIAS_FILE"
-        echo "alias dcr-${short}='_cc_tmux \"${short}\" \"${dir}\" claude --dangerously-skip-permissions --resume'" >> "$ALIAS_FILE"
+        echo "alias cc-${short}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --continue'" >> "$ALIAS_FILE"
+        echo "alias dcc-${short}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --dangerously-skip-permissions --continue'" >> "$ALIAS_FILE"
+        echo "alias cn-${short}='_cc_tmux \"${folder_name}\" \"${dir}\" claude'" >> "$ALIAS_FILE"
+        echo "alias dcn-${short}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --dangerously-skip-permissions'" >> "$ALIAS_FILE"
+        echo "alias cr-${short}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --resume'" >> "$ALIAS_FILE"
+        echo "alias dcr-${short}='_cc_tmux \"${folder_name}\" \"${dir}\" claude --dangerously-skip-permissions --resume'" >> "$ALIAS_FILE"
     fi
     EMITTED_FOLDERS+=("$folder_name")
     EMITTED_SHORTS+=("$short")
