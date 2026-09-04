@@ -262,6 +262,7 @@ The framework ships with battle-tested templates in `common/templates/`:
 - **generate-cc-aliases** - Auto-generates project shortcuts (`cc-*`, `cn-*`, `dcc-*`, `dcn-*`) for every folder in your projects directory
 - **tmux-session-shortcuts.sh** - Jump to any tmux session by typing `t<name>` (`twebsite`, `tlogo`), matched on a case-insensitive prefix and created on the fly if it doesn't exist yet. No per-session alias to declare
 - **ssh-config-examples** - SSH shortcut patterns for quick access to remote machines
+- **command-palette/** - Windows Command Palette extension. Type `go` then space to search every Claude Code session on the machine by title, folder, branch or conversation content; Enter opens PowerShell in that folder and resumes it. SSH sessions resume over `ssh -t`. The Windows counterpart to `tmux-session-shortcuts.sh`
 
 ## Architecture
 
