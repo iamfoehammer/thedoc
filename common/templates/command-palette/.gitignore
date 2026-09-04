@@ -1,0 +1,12 @@
+# .NET build output
+bin/
+obj/
+publish/
+
+# MSIX packaging
+AppxLayout/
+*.msix
+*.appx
+
+*.user
+.vs/
