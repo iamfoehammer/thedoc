@@ -258,7 +258,7 @@ echo "$GITHUB_TOKEN" | llm-secrets set GITHUB_TOKEN          # bash
 
 The framework ships with battle-tested templates in `common/templates/`:
 
-- **tmux.conf** - Windows/WSL2-friendly config with OSC 52 clipboard, working scroll, drag-to-copy, right-click paste, double/triple-click selection, and a cheat sheet status bar
+- **tmux.conf** - Cross-platform config (WSL2, macOS, native Linux) with system clipboard integration, working scroll, drag-to-copy, right-click paste, double/triple-click selection, and a cheat sheet status bar
 - **generate-cc-aliases** - Auto-generates project shortcuts (`cc-*`, `cn-*`, `dcc-*`, `dcn-*`) for every folder in your projects directory
 - **tmux-session-shortcuts.sh** - Jump to any tmux session by typing `t<name>` (`twebsite`, `tlogo`), matched on a case-insensitive prefix and created on the fly if it doesn't exist yet. No per-session alias to declare
 - **ssh-config-examples** - SSH shortcut patterns for quick access to remote machines

@@ -14,7 +14,7 @@ Before doing anything else, read CLAUDE.md in this directory. It contains:
 - **Known Issues & Fixes** - instance-specific problems and solutions
 
 The framework path points to the thedoc repo (e.g. `~/thedoc` or `~/GitHub/thedoc`). Inside it:
-- `common/templates/tmux.conf` - battle-tested tmux config for Windows/WSL2 (OSC 52 clipboard, cheat sheet status bar, drag-to-copy, right-click paste, double/triple-click)
+- `common/templates/tmux.conf` - battle-tested tmux config for WSL2, macOS and native Linux (system clipboard integration, cheat sheet status bar, drag-to-copy, right-click paste, double/triple-click)
 - `common/templates/generate-cc-aliases` - alias generator for project shortcuts
 - `common/templates/ssh-config-examples` - SSH shortcut patterns
 - `llm-secrets` - secure secret storage tool
