@@ -14,7 +14,7 @@ Before doing anything else, read CLAUDE.md in this directory. It contains:
 - **Known Issues & Fixes** - instance-specific problems and solutions
 
 The framework path points to the thedoc repo (e.g. `~/thedoc` or `~/GitHub/thedoc`). Inside it:
-- `common/templates/tmux.conf` - battle-tested tmux config for Windows/WSL2 (OSC 52 clipboard, cheat sheet status bar, drag-to-copy, right-click paste, double/triple-click)
+- `common/templates/tmux.conf` - battle-tested tmux config for WSL2, macOS and native Linux (system clipboard integration, cheat sheet status bar, drag-to-copy, right-click paste, double/triple-click)
 - `common/templates/generate-cc-aliases` - alias generator for project shortcuts (window level, inside one `claude` session)
 - `common/templates/tmux-session-shortcuts.sh` - `t<name>` jump-to-session shortcuts (session level)
 - `common/templates/ssh-config-examples` - SSH shortcut patterns
@@ -235,7 +235,7 @@ The framework includes these templates at `<framework>/common/templates/`:
 
 | Template | What it does |
 |----------|-------------|
-| `tmux.conf` | Windows/WSL2-friendly tmux config with OSC 52 clipboard, status bar cheat sheet, drag-to-copy, right-click paste |
+| `tmux.conf` | Cross-platform tmux config (WSL2, macOS, native Linux) with system clipboard integration, status bar cheat sheet, drag-to-copy, right-click paste |
 | `generate-cc-aliases` | Auto-generates cc-*/cn-*/dcc-*/dcn-* project shortcuts for tmux windows |
 | `tmux-session-shortcuts.sh` | `t`, `t <name>`, `t<name>` shortcuts to jump to (or create) whole tmux sessions by prefix |
 | `ssh-config-examples` | SSH Host entry patterns for quick access to machines |
